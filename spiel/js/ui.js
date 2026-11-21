@@ -2510,19 +2510,19 @@ function pcNavHTML() {
   const act = ['title', 'story', 'setup'].includes(CUR) ? 'play' : CUR === 'quiz' ? 'rules' : CUR;
   const st = dailyState(), shopN = st.shop.filter(id => shopItem(id) && !owns(id)).length;
   // Jeder Menüpunkt hat sein eigenes Bild. In Ruhe ist nur ein Streifen davon zu sehen, beim Drüberfahren rollt es von oben aus.
-  const item = (key, go, label, art, info) => `<button type="button" class="pn-item${act === key ? ' on' : ''}" data-go="${go}"${act === key ? ' aria-current="page"' : ''} style="--art:url('${new URL(art, document.baseURI).href}')">` +
+  const item = (key, go, label, art, info) => `<button type="button" class="pn-item c-${key}${act === key ? ' on' : ''}" data-go="${go}"${act === key ? ' aria-current="page"' : ''} style="--art:url('${new URL(art, document.baseURI).href}')">` +
     `<span class="pn-bg" aria-hidden="true"></span><span class="pn-lbl"><b>${label}</b><small>${info}</small></span></button>`;
   const ct = coinTier(STORY.coins), bx = myBg(), signed = typeof CLOUD !== 'undefined' && CLOUD.uid;
   return `<button type="button" class="wn-logo" data-go="home" aria-label="Spielen"><img src="art/logo-klein.webp" alt="Plundo"></button>` +
     `<div class="pn-items">` +
-      item('play', 'home', 'Spielen', 'art/kachel-frei.webp', 'Story, Freies Spiel, bald Online') +
-      item('cards', 'cards', 'Karten und Deck', 'art/hub-karten.webp', 'Alle Karten ansehen, Deck wählen') +
-      item('shop', 'shop', 'Krämerladen', 'art/hub-laden.webp', shopN ? `Heute ${shopN} ${shopN === 1 ? 'Angebot' : 'Angebote'}` : 'Alles ausverkauft') +
-      item('rules', 'rules', 'Regeln', 'art/hub-regeln.webp', 'FAQ, Probespiel und Quiz') +
-      item('settings', 'settings', 'Optionen', 'art/hub-optionen.webp', 'Klang, Spiel, Konto') +
+      item('play', 'home', 'Spielen', 'art/menu-spielen.webp', 'Story, Freies Spiel, bald Online') +
+      item('cards', 'cards', 'Karten und Deck', 'art/menu-karten.webp', 'Alle Karten ansehen, Deck wählen') +
+      item('shop', 'shop', 'Krämerladen', 'art/menu-laden.webp', shopN ? `Heute ${shopN} ${shopN === 1 ? 'Angebot' : 'Angebote'}` : 'Alles ausverkauft') +
+      item('rules', 'rules', 'Regeln', 'art/menu-regeln.webp', 'FAQ, Probespiel und Quiz') +
+      item('settings', 'settings', 'Optionen', 'art/menu-optionen.webp', 'Klang, Spiel, Konto') +
     `</div>` +
     `<div class="pn-right">` +
-      `<button type="button" class="pn-coins t${ct.t}" data-go="shop" title="${ct.l}"><img src="${ct.img}" alt=""><span><b>${STORY.coins}</b><small>Münzen</small></span></button>` +
+      `<button type="button" class="pn-coins t${ct.t}" data-go="shop" title="${ct.l}"><span><b>${STORY.coins}</b><small>Münzen</small></span></button>` +
       // Shop für Echtgeld (Werbung aus, Welten): kommt später, Platz ist schon da
       `<button type="button" class="pn-shop" data-pnshop><span><b>Shop</b><small>bald</small></span></button>` +
       `<button type="button" class="pn-me${act === 'profile' ? ' on' : ''}${bx[2] ? ' hasbg' : ''}" data-go="profile"${bx[2] ? ` style="--bg:url('${new URL(bgSrc(bx), document.baseURI).href}');--bgp:${bx[4] || '50% 50%'}"` : ''}>` +

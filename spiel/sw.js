@@ -1,5 +1,5 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-1b3cb15fc3';
+const CACHE = 'loota-4f16b2172b';
 const FILES = [
 "./",
 "index.html",
@@ -144,6 +144,11 @@ const FILES = [
 "art/logo-emblem.webp",
 "art/logo-klein.webp",
 "art/logo-plundo.webp",
+"art/menu-karten.webp",
+"art/menu-laden.webp",
+"art/menu-optionen.webp",
+"art/menu-regeln.webp",
+"art/menu-spielen.webp",
 "art/monster-bademeister-golem.webp",
 "art/monster-baerlauch-baer.webp",
 "art/monster-betrunkener-klabautermann.webp",
@@ -204,6 +209,10 @@ const FILES = [
 "art/monster-wuetender-gartenzwerg.webp",
 "art/monster-zitteraal.webp",
 "art/monster-zombie-hausmeister.webp",
+"art/muenzen-1.webp",
+"art/muenzen-2.webp",
+"art/muenzen-3.webp",
+"art/muenzen-4.webp",
 "art/plunk.webp",
 "art/rasse-elf.webp",
 "art/rasse-halbling.webp",
@@ -226,6 +235,7 @@ const FILES = [
 "art/schriftrolle.webp",
 "art/serie-brett-aus.webp",
 "art/serie-brett.webp",
+"art/shop-kissen.webp",
 "art/sonder-gluecksamulett.webp",
 "art/sonder-ungebetener-gast.webp",
 "art/stoffbanner.webp",

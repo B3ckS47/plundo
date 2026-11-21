@@ -2067,3 +2067,18 @@ html.pcnav .wnav{gap:18px;padding-left:20px;padding-right:20px}
 .pn-items{flex:1;min-width:0}
 .pn-item{flex:1 1 0;width:auto;min-width:0;max-width:180px}
 .pn-lbl b{white-space:normal;line-height:1.02;font-size:clamp(16px,1.25vw,21px)}
+
+/* Menübilder: oben dunkel für den Titel, das Bild rollt von oben aus */
+.pn-bg{background:linear-gradient(rgba(18,10,5,.35),rgba(18,10,5,0) 40%),var(--art) center top/100% auto no-repeat,#120a06}
+.pn-item:not(:hover) .pn-bg{filter:brightness(.9)}
+/* Farbige Schilder hinter den Titeln, in den Farben der Kartenarten */
+.pn-item{--pc:#6b4a2b}
+.pn-item.c-play{--pc:#9e2a22}.pn-item.c-cards{--pc:#2f6b3a}.pn-item.c-shop{--pc:#a8781f}.pn-item.c-rules{--pc:#2c5a8a}.pn-item.c-settings{--pc:#6e3a80}
+.pn-lbl b{padding:5px 12px 6px;border-radius:9px;background:linear-gradient(color-mix(in srgb,var(--pc) 92%,#fff 8%),var(--pc));border:1.5px solid rgba(243,200,115,.55);box-shadow:0 3px 0 rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.18);text-shadow:0 2px 0 rgba(0,0,0,.5)}
+.pn-item.on .pn-bg{box-shadow:inset 0 0 0 1px rgba(243,200,115,.5),inset 0 -3px 0 var(--pc)}
+/* Münzen und Shop mit eigenem Bild */
+.pn-coins{position:relative;min-width:132px;justify-content:flex-end;padding:0 14px;background-size:cover!important;background-position:left center!important;overflow:hidden}
+.pn-coins.t1{background-image:url(../art/muenzen-1.webp)}.pn-coins.t2{background-image:url(../art/muenzen-2.webp)}.pn-coins.t3{background-image:url(../art/muenzen-3.webp)}.pn-coins.t4{background-image:url(../art/muenzen-4.webp)}
+.pn-coins span{align-items:flex-end;text-shadow:0 2px 3px #000}
+.pn-shop{background:url(../art/shop-kissen.webp) left center/cover no-repeat,#2a1630;min-width:120px;justify-content:flex-end}
+.pn-shop span{align-items:flex-end;text-shadow:0 2px 3px #000}
