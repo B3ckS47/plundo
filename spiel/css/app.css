@@ -2044,3 +2044,26 @@ html.pcnav{--nav:76px}
 html.pcnav .wnav{background:none;box-shadow:none}
 html.pcnav .wnav::before{content:"";position:absolute;z-index:-1;left:0;right:0;top:0;height:calc(var(--sat) + var(--nav));background:url(../art/leiste-balken.webp) left top/auto 100% repeat-x;filter:drop-shadow(0 8px 10px rgba(0,0,0,.7));pointer-events:none}
 html.pcnav .wnav{isolation:isolate}
+
+/* Menüpunkte: Titel und Info immer mittig */
+.pn-lbl{width:100%;align-items:center;text-align:center;padding:0 4px}
+.pn-lbl b{max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:clamp(16px,1.25vw,21px)}
+.pn-lbl small{width:100%;text-align:center}
+/* Shop (Echtgeld) neben den Münzen, gleich groß */
+.pn-shop{appearance:none;display:flex;align-items:center;justify-content:center;height:48px;min-width:96px;padding:0 14px;border-radius:14px;border:2px solid #5e3f23;box-shadow:inset 0 0 0 1px rgba(243,200,115,.3);cursor:pointer;color:#fbefd6;
+  background:radial-gradient(circle at 30% 40%,rgba(150,90,220,.35),transparent 65%),linear-gradient(#3a2440,#1f1224)}
+.pn-shop:hover{border-color:#b98a3e}
+.pn-shop span{display:flex;flex-direction:column;align-items:center;line-height:1}
+.pn-shop b{font:700 20px var(--display)}
+.pn-shop small{font:800 11px var(--body);color:#d6c0e8;text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
+/* Platz für Münzen, Shop, Profil und Abmelden auch bei 1400 px */
+html.pcnav .wnav{gap:18px;padding-left:20px;padding-right:20px}
+.pn-items{gap:6px}
+.pn-item{width:clamp(112px,8.4vw,170px)}
+.pn-right{gap:10px}
+.pn-me{width:clamp(200px,14vw,250px)}
+.pn-shop{min-width:84px}
+@media (max-width:1600px){.pn-out span{display:none}.pn-out{padding:0 12px}}
+.pn-items{flex:1;min-width:0}
+.pn-item{flex:1 1 0;width:auto;min-width:0;max-width:180px}
+.pn-lbl b{white-space:normal;line-height:1.02;font-size:clamp(16px,1.25vw,21px)}
