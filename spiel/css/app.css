@@ -2042,5 +2042,5 @@ html.pcnav .wnav{background:url(../art/leiste-balken.webp) left bottom/auto 100%
 /* Balken: ganze Plankenwand, die Schnitzkante unten ist freigestellt und ragt über den Inhalt */
 html.pcnav{--nav:76px}
 html.pcnav .wnav{background:none;box-shadow:none}
-html.pcnav .wnav::before{content:"";position:absolute;z-index:-1;left:0;right:0;top:0;height:calc(var(--sat) + var(--nav) / .898);background:url(../art/leiste-balken.webp) left top/auto 100% repeat-x;filter:drop-shadow(0 8px 10px rgba(0,0,0,.7));pointer-events:none}
+html.pcnav .wnav::before{content:"";position:absolute;z-index:-1;left:0;right:0;top:0;height:calc(var(--sat) + var(--nav));background:url(../art/leiste-balken.webp) left top/auto 100% repeat-x;filter:drop-shadow(0 8px 10px rgba(0,0,0,.7));pointer-events:none}
 html.pcnav .wnav{isolation:isolate}
