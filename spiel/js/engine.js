@@ -824,7 +824,7 @@ function newGame(allBots){
   TOKEN++;
   if(UI.reject){ const r=UI.reject; UI.prompt=null; UI.resolve=null; UI.reject=null; try{ r(); }catch(e){} }
   if(UI.sel){ const r=UI.sel.reject; UI.sel=null; try{ r(); }catch(e){} }
-  UI.menu=null; UI.roll=null; UI.seen={}; UI.logLen=0;
+  UI.menu=null; UI.roll=null; UI.seen={}; UI.logLen=0; UI.dview=null;
   UID=1;
   const sc=SCN;
   const d=buildDecks(sc && sc.counts);
@@ -920,13 +920,23 @@ async function draftStart(t){
       for(let i=0;i<N;i++){
         const p=P(i), pool=packs[i]; if(!pool.length) continue;
         let c;
-        if(pool.length===1) c=pool[0];
-        else if(p.human){
-          const v=await ask(()=>({title:'Draft', text:`${lbl}: Nimm eine Karte. Die übrigen ${pool.length-1} gehen an ${to(i).name}.`,
-            hint:['Beim Draft wählt jeder aus seinem Päckchen eine Karte und gibt den Rest weiter. Türkarten wandern im Uhrzeigersinn, Schatzkarten in die andere Richtung.'],
-            opts:pool.map((c,j)=>({l:c.n,v:j,kind:'primary'}))}), 'loot', {pool, draft:true, kind:lbl, pick, to:to(i)});
-          c=pool[v];
-        } else c=pool.slice().sort((a,b)=>draftValue(p,b)-draftValue(p,a))[0];
+        if(p.human){
+          // Das Päckchen fliegt verdeckt von der Seite ein, aus der es kommt, und dreht sich um.
+          // Nach der Wahl dreht sich der Rest wieder um und fliegt zum Nächsten, die gewählte Karte geht auf die Hand.
+          const view={pool, draft:true, kind:lbl, deck:k, pick, to:to(i), side: pick===1 ? 'top' : dir>0 ? 'right' : 'left', exit: dir>0 ? 'left' : 'right', phase:'in'};
+          UI.dview=view; render(); await sleep(UI.reduce ? 0 : 950);
+          if(pool.length===1) c=pool[0];
+          else {
+            view.phase='pick';
+            const v=await ask(()=>({title:'Draft', text:`${lbl}: Nimm eine Karte. Die übrigen ${pool.length-1} gehen an ${to(i).name}.`,
+              hint:['Beim Draft wählt jeder aus seinem Päckchen eine Karte und gibt den Rest weiter. Türkarten wandern im Uhrzeigersinn, Schatzkarten in die andere Richtung.'],
+              opts:pool.map((c,j)=>({l:c.n,v:j,kind:'primary'}))}), 'loot', view);
+            c=pool[v];
+          }
+          view.phase='out'; view.picked=c.uid; render(); await sleep(UI.reduce ? 0 : 820);
+        }
+        else if(pool.length===1) c=pool[0];
+        else c=pool.slice().sort((a,b)=>draftValue(p,b)-draftValue(p,a))[0];
         pool.splice(pool.indexOf(c),1); p.hand.push(c);
       }
       if(t!==TOKEN) throw STALE;
@@ -934,6 +944,7 @@ async function draftStart(t){
       if(packs.some(a=>a.length)) await sleep(HEADLESS?0:220);
     }
   }
+  UI.dview=null;
   log('Draft fertig. Jeder hat seine Starthand. Los geht’s!','sys');
   S.players.filter(p=>!p.human).forEach(botSetup);
   render();

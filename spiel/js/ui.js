@@ -691,7 +691,8 @@ function paintHud(hud, C) {
 function renderTable() {
   const el = $('#table');
   const C = S.combat, R = S.reveal;
-  const L = UI.prompt && UI.prompt.ctx === 'loot' ? UI.prompt.data : null;
+  const L = UI.prompt && UI.prompt.ctx === 'loot' ? UI.prompt.data : UI.dview || null;
+  if (L && L.draft) { renderDraft(el, L); return; }
   if (L) { if (W.tableKey !== 'loot') { W.tableKey = 'loot'; W.fightRef = null; el.__h = null; el.innerHTML = ''; } patch(el, lootHTML(L)); return; }
   const key = C ? 'fight' : R ? 'reveal:' + R.uid : 'idle';
   if (key !== W.tableKey || (C && C !== W.fightRef)) {
@@ -728,12 +729,24 @@ function renderTable() {
 const stripTags = h => String(h).replace(/<[^>]+>/g, '');
 const sellBtnHTML = p => { const b = sellBlock(p); return `<div class="acts"><button type="button" class="btn${UI.adv && UI.adv.sell ? ' rec' : ''}" data-go="sell"${b ? ' disabled' : ''}>Gegenstände verkaufen${b ? ` <small>(ab Stufe ${WINLVL() - 1} nicht mehr)</small>` : ''}</button>${b ? `<p>${esc(b)}</p>` : ''}</div>`; };
 // Beute mit Helfer: Die offenen Schätze liegen auf dem Tisch und werden dort angetippt
-function lootHTML(L) {
-  if (L.draft) {
-    const rec = UI.adv && UI.adv.opt !== undefined ? UI.adv.opt : -1;
-    return `<div class="arena lootar"><div class="loot-h">Draft · ${esc(L.kind)}</div><div class="loot-sub">Wahl ${L.pick} von 3 · der Rest geht an ${esc(L.to.name)}</div>` +
-      `<div class="loot-cards" data-n="${L.pool.length}">${L.pool.map((c, i) => cardMini(c, {where: 'loot', extra: 'lootc' + (i === rec ? ' rec' : '')})).join('')}</div></div>`;
+// Draft: eigenes Tischbild, damit die Flug- und Dreh-Animation nicht bei jedem Neuzeichnen neu startet
+function renderDraft(el, L) {
+  const key = 'draft:' + L.kind + ':' + L.pick, anim = !UI.reduce;
+  if (W.tableKey !== key) {
+    W.tableKey = key; W.fightRef = null; el.__h = null;
+    const sub = L.pool.length === 1 ? 'Die letzte Karte gehört dir' : `Wahl ${L.pick} von 3 · der Rest geht an ${esc(L.to.name)}`;
+    el.innerHTML = `<div class="arena lootar draft from-${L.side} to-${L.exit}"><div class="loot-h">Draft · ${esc(L.kind)}</div><div class="loot-sub">${sub}</div>` +
+      `<div class="loot-cards" data-n="${L.pool.length}">${L.pool.map((c, i) => `<div class="dcard${anim ? ' in' : ''}" style="--i:${i}" data-duid="${c.uid}"><div class="dflip">${cardMini(c, {where: 'loot', extra: 'lootc'})}<span class="back ${L.deck === 'door' ? 'door' : 'treas'} dback"></span></div></div>`).join('')}</div></div>`;
   }
+  const rec = L.phase === 'pick' && UI.adv && UI.adv.opt !== undefined ? UI.adv.opt : -1;
+  el.querySelectorAll('.dcard').forEach((d, i) => {
+    const mc = d.querySelector('.mc'); if (mc) mc.classList.toggle('rec', i === rec);
+    if (L.phase === 'out' && !d.classList.contains('gone')) {
+      d.classList.remove('in'); d.classList.add('gone', anim ? (+d.dataset.duid === L.picked ? 'taken' : 'out') : 'hide');
+    }
+  });
+}
+function lootHTML(L) {
   const rec = UI.adv && UI.adv.opt !== undefined ? UI.adv.opt : -1;
   const got = (p, a) => `<span class="lg-row"><img src="${portrait(p)}" alt=""><b>${p.human ? 'Du' : esc(p.name)}</b>${a.length ? a.map(c => `<span class="lg-c">${esc(c.n)}</span>`).join('') : '<span class="lg-none">noch nichts</span>'}</span>`;
   return `<div class="arena lootar"><div class="loot-h">Beute wählen</div>` +
