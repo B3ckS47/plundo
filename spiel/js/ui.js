@@ -2557,11 +2557,16 @@ function renderShopPage() {
 document.addEventListener('click', e => { if (e.target.closest('[data-pnshop]')) toast('Der Shop kommt bald: Werbung ausschalten, Welten freischalten und mehr.'); });
 
 // Inhaltsbreite am PC: von der linken Kante von „Spielen“ bis zur rechten Kante des Profils, live gemessen
-function pcEdges() {
+function pcEdgesNow() {
   const a = $('#wnav .pn-item'), b = $('#wnav .pn-me'), app = $('#app'); if (!a || !b || !app) return;
   const r = app.getBoundingClientRect(), root = document.documentElement.style;
   root.setProperty('--cl', Math.round(a.getBoundingClientRect().left - r.left) + 'px');
   root.setProperty('--cr', Math.round(r.right - b.getBoundingClientRect().right) + 'px');
+}
+function pcEdges() {
+  cancelAnimationFrame(pcEdges.r);
+  pcEdges.r = requestAnimationFrame(() => requestAnimationFrame(pcEdgesNow));
+  if (!pcEdges.ro && window.ResizeObserver) { const n = $('#wnav'); if (n) { pcEdges.ro = new ResizeObserver(() => { if (document.documentElement.classList.contains('pcnav')) pcEdgesNow(); }); pcEdges.ro.observe(n); } }
 }
 window.addEventListener('resize', () => { if (document.documentElement.classList.contains('pcnav')) pcEdges(); });
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (document.documentElement.classList.contains('pcnav')) pcEdges(); });
