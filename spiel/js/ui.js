@@ -2524,7 +2524,7 @@ function pcNavHTML() {
     `<div class="pn-right">` +
       `<button type="button" class="pn-coins t${ct.t}" data-go="shop" title="${ct.l}"><span><b>${STORY.coins}</b><small>Münzen</small></span></button>` +
       // Shop für Echtgeld (Werbung aus, Welten): kommt später, Platz ist schon da
-      `<button type="button" class="pn-shop" data-pnshop><span><b>Shop</b><small>bald</small></span></button>` +
+      `<button type="button" class="pn-shop" data-pnshop><span><b>Shop</b></span></button>` +
       `<button type="button" class="pn-me${act === 'profile' ? ' on' : ''}${bx[2] ? ' hasbg' : ''}" data-go="profile"${bx[2] ? ` style="--bg:url('${new URL(bgSrc(bx), document.baseURI).href}');--bgp:${bx[4] || '50% 50%'}"` : ''}>` +
         `<span class="pf-bigw"><img class="pf-big" src="${myPortrait()}" alt=""></span><span class="pn-who"><b>${esc(PROFILE.name || 'Abenteurer')}</b><small>${esc(myTitle() || 'Dein Charakter')}</small></span></button>` +
       (signed ? `<button type="button" class="pn-out" data-wnexit><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10"/></svg><span>Ausloggen</span></button>`
