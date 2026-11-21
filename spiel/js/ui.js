@@ -172,12 +172,13 @@ function storySave() { const d = load(K_STORYSAVE); return d && d.st && d.S && s
 function clearStorySave() { try { localStorage.removeItem(K_STORYSAVE); } catch (e) {} }
 const SET_V = 2;
 const SAVED_SET = load(K_SET);
-const SET = Object.assign({music: true, sfx: true, mvol: 0.5, svol: 0.8, vibrate: true, reduce: false, advice: false, coach: false, open: false, speed: 'normal', goal: 10, bots: 3, diff: 'normal', foes: 'zufall', test: false, mode: 'free'}, SAVED_SET || {});
+const SET = Object.assign({music: true, sfx: true, mvol: 0.5, svol: 0.8, vibrate: true, reduce: false, advice: false, coach: false, open: false, speed: 'normal', goal: 10, bots: 3, diff: 'normal', foes: 'zufall', test: false, mode: 'free', draft: false}, SAVED_SET || {});
 // Lernhilfen sind ab Einstellungs-Version 2 standardmäßig aus, auch für bereits gespeicherte Einstellungen
 if ((SET.sv || 1) < SET_V) { SET.advice = false; SET.coach = false; SET.sv = SET_V; if (SAVED_SET) store(K_SET, SET); }
 function saveSettings() { store(K_SET, SET); applySettings(); }
 function applySettings() {
-  UI.advice = SCN && SCN.tips ? true : SET.advice && !SCN; UI.coach = SCN && SCN.tips ? true : SET.coach && !SCN;   // Probepartie der Einführung: Tipps immer an UI.open = SET.open; UI.speed = SET.speed; UI.goal = SET.goal || 10;
+  UI.advice = SCN && SCN.tips ? true : SET.advice && !SCN; UI.coach = SCN && SCN.tips ? true : SET.coach && !SCN;   // Probepartie der Einführung: Tipps immer an
+  UI.open = SET.open; UI.speed = SET.speed; UI.goal = SET.goal || 10; UI.draft = !!SET.draft;
   if (!SCN) { UI.bots = SET.bots; UI.diff = SET.diff; }
   UI.reduce = SET.reduce || matchMedia('(prefers-reduced-motion: reduce)').matches;
   document.documentElement.classList.toggle('reduce', !!SET.reduce);
@@ -728,6 +729,11 @@ const stripTags = h => String(h).replace(/<[^>]+>/g, '');
 const sellBtnHTML = p => { const b = sellBlock(p); return `<div class="acts"><button type="button" class="btn${UI.adv && UI.adv.sell ? ' rec' : ''}" data-go="sell"${b ? ' disabled' : ''}>Gegenstände verkaufen${b ? ` <small>(ab Stufe ${WINLVL() - 1} nicht mehr)</small>` : ''}</button>${b ? `<p>${esc(b)}</p>` : ''}</div>`; };
 // Beute mit Helfer: Die offenen Schätze liegen auf dem Tisch und werden dort angetippt
 function lootHTML(L) {
+  if (L.draft) {
+    const rec = UI.adv && UI.adv.opt !== undefined ? UI.adv.opt : -1;
+    return `<div class="arena lootar"><div class="loot-h">Draft · ${esc(L.kind)}</div><div class="loot-sub">Wahl ${L.pick} von 3 · der Rest geht an ${esc(L.to.name)}</div>` +
+      `<div class="loot-cards" data-n="${L.pool.length}">${L.pool.map((c, i) => cardMini(c, {where: 'loot', extra: 'lootc' + (i === rec ? ' rec' : '')})).join('')}</div></div>`;
+  }
   const rec = UI.adv && UI.adv.opt !== undefined ? UI.adv.opt : -1;
   const got = (p, a) => `<span class="lg-row"><img src="${portrait(p)}" alt=""><b>${p.human ? 'Du' : esc(p.name)}</b>${a.length ? a.map(c => `<span class="lg-c">${esc(c.n)}</span>`).join('') : '<span class="lg-none">noch nichts</span>'}</span>`;
   return `<div class="arena lootar"><div class="loot-h">Beute wählen</div>` +
@@ -755,7 +761,7 @@ function promptCaption(q, ctx, data) {
   switch (ctx) {
     case 'kick': return q.text || q.title;
     case 'trouble': return 'Kein Monster hinter der Tür';
-    case 'loot': return 'Tipp auf dem Tisch auf einen Schatz';
+    case 'loot': return data && data.draft ? 'Tipp auf dem Tisch auf eine Karte' : 'Tipp auf dem Tisch auf einen Schatz';
     case 'charity': { const over = p.hand.length - handLimit(p); return over > 0 ? `Abgabe: ${over} ${pl(over, 'Karte', 'Karten')} zu viel` : 'Fertig? Dann Zug beenden'; }
     case 'helpWho': return 'Wen bittest du um Hilfe?';
     case 'helpOffer': return data && data.b ? `Wie viele Schätze bekommt ${data.b.name}?` : q.title;

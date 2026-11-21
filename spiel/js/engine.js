@@ -831,6 +831,7 @@ function newGame(allBots){
   S={players:[], door:d.door, tr:d.tr, doorDisc:[], trDisc:[], cur:0, turn:1, phase:0, combat:null, reveal:null, log:[], winner:null,
      scn: sc ? sc.id||true : null, stats:{played:0, lvlLost:0, curses:0, help:0, ran:0, bossBy:null, bossHelped:false, fightWon:false}};
   if(!sc && !allBots && UI.goal && UI.goal !== 10) S.goal = UI.goal;   // kürzere Partie im freien Spiel
+  if(!sc && UI.draft) S.draft = true;   // Starthand wird gedraftet
   // Freies Spiel: zufällige Gegner aus UI.roster (Name, Bild, Spielweise), sonst der Stammtisch
   const roster = !sc && UI.roster && UI.roster.length >= UI.bots ? UI.roster.slice(0, UI.bots) : null;
   const names = sc && sc.bots ? sc.bots : roster ? roster.map(r=>r.name) : ['Berta','Kalle','Uschi'].slice(0, UI.bots);
@@ -843,22 +844,23 @@ function newGame(allBots){
   S.players.forEach(p=>{
     if(p.id===0 && sc && sc.start) applyStart(p, sc.start);
     else if(!p.human && sc && sc.botStart && sc.botStart[p.name]) applyStart(p, sc.botStart[p.name]);
-    else for(let i=0;i<4;i++){ p.hand.push(drawDoor()); p.hand.push(drawTr()); }
+    else if(!S.draft) for(let i=0;i<4;i++){ p.hand.push(drawDoor()); p.hand.push(drawTr()); }
     if(!p.human && sc && sc.botStyles && sc.botStyles[p.name]) p.style=sc.botStyles[p.name];
   });
   // Probespiel: diese Karten liegen in genau der Reihenfolge oben auf den Stapeln (erste zuerst gezogen)
   if(sc && sc.deck) ['door','tr'].forEach(k=>{ const list=(sc.deck[k]||[]).map(pullCard); for(let i=list.length-1;i>=0;i--) S[k].push(list[i]); });
   buildCatalog(allCards());
-  S.players.filter(p=>!p.human).forEach(botSetup);
+  if(!S.draft) S.players.filter(p=>!p.human).forEach(botSetup);
   if(sc && sc.fight) log('Rätselkampf: Gewinne diesen einen Kampf mit dem, was du hast.','sys');
   else if(sc && sc.tut) log('Probespiel mit Hilde: Wer zuerst Stufe '+WINLVL()+' erreicht, gewinnt.','sys');
   else if(sc) log(`Neue Partie. Wer zuerst Stufe ${WINLVL()} erreicht, gewinnt.${sc.boss?` Irgendwo im Türstapel lauert ${sc.boss}: Wer ihn besiegt, gewinnt sofort.`:''} Du beginnst.`,'sys');
+  else if(S.draft) log(`Neue Partie mit Draft. Wer zuerst Stufe ${WINLVL()} erreicht, gewinnt. Alle starten auf Stufe 1 als Mensch ohne Klasse. Zuerst wählt jeder seine Starthand: 4 Türkarten, dann 4 Schatzkarten.`,'sys');
   else log(`Neue Partie. Wer zuerst Stufe ${WINLVL()} erreicht, gewinnt. Alle starten auf Stufe 1 als Mensch ohne Klasse und mit 4 Tür- und 4 Schatzkarten. Du beginnst.`,'sys');
   if(sc && sc.stars && sc.stars.length) log(`Sterne in dieser Station: ${sc.stars.map(t=>'★ '+t).join(' · ')}`,'sys');
   rule('Tippe deine Handkarten an, um sie auszuspielen. Volk, Klasse und Gegenstände darfst du gleich jetzt auslegen.');
   fx('newgame');
   const t=TOKEN;
-  return (sc && sc.fight ? puzzleLoop(t) : gameLoop(t)).catch(e=>{ if(e!==STALE){ console.error(e); if(!HEADLESS) log('Hoppla, ein Programmfehler: '+e.message,'sys'); else throw e; } });
+  return (sc && sc.fight ? puzzleLoop(t) : S.draft ? draftStart(t).then(()=>gameLoop(t)) : gameLoop(t)).catch(e=>{ if(e!==STALE){ console.error(e); if(!HEADLESS) log('Hoppla, ein Programmfehler: '+e.message,'sys'); else throw e; } });
 }
 function allCards(){ const a=[...S.door,...S.tr,...S.doorDisc,...S.trDisc]; S.players.forEach(p=>a.push(...p.hand,...p.eq,...p.pack,...[p.race,p.cls].filter(Boolean))); return a; }
 // Karte für ein Szenario holen: aus den Stapeln nehmen, sonst neu anlegen
@@ -900,6 +902,43 @@ async function puzzleLoop(t){
   fx('gameover',{winner:S.winner});
   render();
 }
+/* ================= Draft: Starthand reihum wählen ================= */
+// Jeder bekommt 4 Karten, nimmt eine und gibt den Rest weiter. Türkarten im Uhrzeigersinn (an den Nächsten),
+// danach Schatzkarten gegen den Uhrzeigersinn. Die letzte Karte eines Päckchens wird nicht gewählt, sie kommt einfach.
+function draftValue(p,c){
+  if(c.k==='race') return p.hand.some(x=>x.k==='race') ? 1 : 6;
+  if(c.k==='class') return p.hand.some(x=>x.k==='class') ? 1 : 6;
+  return keepValue(p,c);
+}
+async function draftStart(t){
+  const N=S.players.length;
+  for(const [k,dir,lbl] of [['door',1,'Türkarten'],['tr',-1,'Schatzkarten']]){
+    let packs=S.players.map(()=>{ const a=[]; for(let i=0;i<4;i++){ const c=k==='door'?drawDoor():drawTr(); if(c) a.push(c); } return a; });
+    const to=i=>P((i+dir+N)%N);
+    log(`Draft: ${lbl}. Nimm eine Karte, den Rest bekommt ${to(0).name}.`,'sys');
+    for(let pick=1; packs.some(a=>a.length); pick++){
+      for(let i=0;i<N;i++){
+        const p=P(i), pool=packs[i]; if(!pool.length) continue;
+        let c;
+        if(pool.length===1) c=pool[0];
+        else if(p.human){
+          const v=await ask(()=>({title:'Draft', text:`${lbl}: Nimm eine Karte. Die übrigen ${pool.length-1} gehen an ${to(i).name}.`,
+            hint:['Beim Draft wählt jeder aus seinem Päckchen eine Karte und gibt den Rest weiter. Türkarten wandern im Uhrzeigersinn, Schatzkarten in die andere Richtung.'],
+            opts:pool.map((c,j)=>({l:c.n,v:j,kind:'primary'}))}), 'loot', {pool, draft:true, kind:lbl, pick, to:to(i)});
+          c=pool[v];
+        } else c=pool.slice().sort((a,b)=>draftValue(p,b)-draftValue(p,a))[0];
+        pool.splice(pool.indexOf(c),1); p.hand.push(c);
+      }
+      if(t!==TOKEN) throw STALE;
+      packs=packs.map((_,i)=>packs[(i-dir+N)%N]);
+      if(packs.some(a=>a.length)) await sleep(HEADLESS?0:220);
+    }
+  }
+  log('Draft fertig. Jeder hat seine Starthand. Los geht’s!','sys');
+  S.players.filter(p=>!p.human).forEach(botSetup);
+  render();
+}
+
 async function gameLoop(t){
   while(S.winner==null && t===TOKEN){
     const p=P(S.cur);
@@ -1920,7 +1959,7 @@ function advise(){
       return {opt:n, text:`Biete ${n} ${pl(n,'Schatz','Schätze')} an.`, why:'Etwa die Hälfte ist ein faires Angebot. Bei zu wenig sagen viele Nein. Dein Helfer wählt zuerst, dann abwechselnd.'}; }
     case 'counter': return {opt:0, text:`Heb ${(counterTargets(C)[0]||{}).l||'die stärkste Karte'} auf.`, why:'Das ist die Karte, die dich am meisten kostet.'};
     case 'elfpick': return keepValue(p,d.b)>keepValue(p,d.a) ? {opt:'b', text:`Behalte ${d.b.n}.`, why:'Die ist für dich mehr wert.'} : {opt:'a', text:`Behalte ${d.a.n}.`, why:'Die ist für dich mehr wert.'};
-    case 'loot': { const best=d.pool.map((c,i)=>({c,i})).sort((a,b)=>keepValue(p,b.c)-keepValue(p,a.c))[0]; return {opt:best.i, text:`Nimm ${best.c.n}.`, why:'Die Karte ist für dich am meisten wert.'}; }
+    case 'loot': { const val=d.draft?draftValue:keepValue, best=d.pool.map((c,i)=>({c,i})).sort((a,b)=>val(p,b.c)-val(p,a.c))[0]; return {opt:best.i, text:`Nimm ${best.c.n}.`, why:'Die Karte ist für dich am meisten wert.'}; }
     case 'botHelp': return adviseBotHelp(p,C,d);
     case 'interfere': return adviseInterfere(p,C);
     case 'run': return adviseRun(p,d);

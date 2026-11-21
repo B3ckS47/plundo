@@ -2156,3 +2156,6 @@ div.pd-tile{cursor:default}
 .pd-tile>span{pointer-events:none}
 .pd-go{position:absolute;right:16px;z-index:3;min-width:0!important;padding:0 18px;height:44px}
 .pd-card>span.pd-bald{flex:none;display:block;min-width:0}
+.loot-sub{margin-top:-4px;font:700 13px var(--body);color:#e3cfa6;text-shadow:0 1px 2px #000}
+#app.lay-pc .loot-sub,#app.lay-tab .loot-sub{font-size:16px}
+#scr-setup .deckbtn+.trow{margin-top:12px}
