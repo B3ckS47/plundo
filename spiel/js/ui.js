@@ -2472,7 +2472,7 @@ function renderWnav() {
   const on = document.documentElement.classList.contains('wide-menu') && CUR !== 'game';
   nav.hidden = !on; document.documentElement.classList.toggle('has-wnav', on); if (!on) return;
   document.documentElement.classList.toggle('pcnav', on && mq().pc.matches);
-  if (mq().pc.matches) { patch(nav, pcNavHTML()); return; }
+  if (mq().pc.matches) { patch(nav, pcNavHTML()); pcEdges(); return; }
   const act = CUR === 'quiz' ? 'rules' : CUR;
   const tab = (go, scr, label) => `<button type="button" class="wn-tab${act === scr ? ' on' : ''}" data-go="${go}"${act === scr ? ' aria-current="page"' : ''}>${label}</button>`;
   patch(nav, `<button type="button" class="wn-logo" data-wnhome aria-label="Zur Startseite"><img src="art/logo-klein.webp" alt="Plundo"></button>` +
@@ -2555,3 +2555,13 @@ function renderShopPage() {
 }
 
 document.addEventListener('click', e => { if (e.target.closest('[data-pnshop]')) toast('Der Shop kommt bald: Werbung ausschalten, Welten freischalten und mehr.'); });
+
+// Inhaltsbreite am PC: von der linken Kante von „Spielen“ bis zur rechten Kante des Profils, live gemessen
+function pcEdges() {
+  const a = $('#wnav .pn-item'), b = $('#wnav .pn-me'), app = $('#app'); if (!a || !b || !app) return;
+  const r = app.getBoundingClientRect(), root = document.documentElement.style;
+  root.setProperty('--cl', Math.round(a.getBoundingClientRect().left - r.left) + 'px');
+  root.setProperty('--cr', Math.round(r.right - b.getBoundingClientRect().right) + 'px');
+}
+window.addEventListener('resize', () => { if (document.documentElement.classList.contains('pcnav')) pcEdges(); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (document.documentElement.classList.contains('pcnav')) pcEdges(); });
