@@ -162,6 +162,7 @@ document.addEventListener('input', e => {
 });
 
 /* ================= Einstellungen und Speicher ================= */
+let HUBST = false;   // Entwurf: Storykarte auf der Seite „Spielen“ (PC)
 const K_SET = 'loota.settings', K_SAVE = 'loota.save';
 function load(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
 function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
@@ -411,6 +412,7 @@ function storyGo() {
   const cw = currentWorld();
   if (!worldOwned(cw)) { show('story'); openSheet({id: 'buyworld', w: cw.id}); return; }
   const nx = nextStation(cw);
+  if (HUBST_ON()) { openHubStory(nx && nx.id); return; }
   show('story');
   if (nx) openStation(nx.id);
 }
@@ -1381,7 +1383,7 @@ function openStation(id) {
   if (!worldOwned(worldById(st.world)) && !STORY.done[st.id]) { openSheet({id: 'buyworld', w: st.world}); return; }
   if (!stationUnlocked(st) && !SET.test) { toast('Erst die Station davor schaffen.'); buzz(30); return; }
   if (st.type === 'shop') visitShop(st);
-  if (CUR === 'story' && SHEETS.length === 1 && topSheet().id === 'station') SHEETS.pop();   // breite Ansicht: Karte bleibt bedienbar, die neue Station ersetzt die alte
+  if ((CUR === 'story' || HUBST) && SHEETS.length === 1 && topSheet().id === 'station') SHEETS.pop();   // breite Ansicht: Karte bleibt bedienbar, die neue Station ersetzt die alte
   openSheet({id: 'station', st: id});
   renderStory();
 }
@@ -1703,8 +1705,8 @@ function go(a) {
     case 'tutorial': closeAllSheets(); startStation('w0s1'); break;
     case 'resetstory': confirmDialog('Storymodus zurücksetzen?', 'Alle Stationen, Sterne, Münzen und Belohnungen aus dem Storymodus gehen verloren.', 'Zurücksetzen', 'Abbrechen').then(ok => { if (ok) { resetStory(); clearStorySave(); toast('Storymodus zurückgesetzt'); } }); break;
     case 'reroll': ROSTER = rollRoster(); renderFoes(); Snd.sfx('deal'); break;
-    case 'home': closeAllSheets(); STACK.length = 0; setScreen('title'); break;
-    case 'story': show('story'); break;
+    case 'home': if (HUBST) { closeHubStory(); break; } closeAllSheets(); STACK.length = 0; setScreen('title'); break;
+    case 'story': if (HUBST_ON()) openHubStory(); else show('story'); break;
     case 'storymap': $$('.endov').forEach(x => x.remove()); closeAllSheets(); if (GAME_ON && S && S.scn && S.winner == null) { TOKEN++; } if (S && S.scn) GAME_ON = false; STACK.length = 0; STACK.push('title'); setScreen('story'); break;
     case 'start': startNewGame(); break;
     case 'rules': closeAllSheets(); show('rules'); break;
@@ -2395,8 +2397,11 @@ window.addEventListener('hashchange', hashEntry);
 // Storymodus am PC oder Tablet: Die Station steht rechts neben der Karte statt als Fenster darüber
 function dockSheet() {
   const wrap = $('#sheetwrap'); if (!wrap) return;
-  const on = document.documentElement.classList.contains('wide-menu') && CUR === 'story' && SHEETS.length === 1 && topSheet().id === 'station';
-  wrap.classList.toggle('dock', on);
+  const hd = !!HUBST && CUR === 'title' && SHEETS.length === 1 && topSheet().id === 'station';
+  const on = hd || (document.documentElement.classList.contains('wide-menu') && CUR === 'story' && SHEETS.length === 1 && topSheet().id === 'station');
+  wrap.classList.toggle('dock', on); wrap.classList.toggle('hubdock', hd);
+  if (hd) { const i = $('#t-hub .pd-stinfo'), a = $('#app'); if (i && a) { const r = i.getBoundingClientRect(), b = a.getBoundingClientRect(); Object.assign(wrap.style, {left: r.left - b.left + 'px', top: r.top - b.top + 'px', width: r.width + 'px', height: r.height + 'px'}); } }
+  else ['left', 'top', 'width', 'height'].forEach(k => wrap.style[k] = '');
   const side = $('#st-side'); if (side) side.classList.toggle('covered', on);
 }
 function renderStorySide() {
@@ -2555,6 +2560,7 @@ function pcNavHTML() {
 function pcPlayHTML(cw, nx, st, sk, dn, wait, ay, fg) {
   const play = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" /></svg>';
   const soon = (ic, kind, title, txt, msg) => `<button type="button" class="pd-card" data-soon="${esc(msg)}"><img class="pd-ic" src="${ic}" alt=""><span><small>${kind}</small><b>${title}</b><em>${txt}</em></span><span class="pd-bald">Bald</span></button>`;
+  if (HUBST) return hubStoryHTML(cw) + pcSideHTML(st, sk, dn, wait);
   return `<main class="pp-modes pd">` +
       `<section class="pd-online"><img src="art/kachel-online.webp" alt=""><span class="tc-badge pd-badge">Bald</span>` +
         `<div class="pd-on-txt"><span class="pp-mode">Online</span>` +
@@ -2571,14 +2577,53 @@ function pcPlayHTML(cw, nx, st, sk, dn, wait, ay, fg) {
         `<div class="pd-tile"><img src="art/karte-welt${cw.id.replace('w', '')}.webp" alt="" style="object-position:50% ${ay}%"><button type="button" class="pd-hit" data-go="story" aria-label="Zur Weltkarte"></button>` +
           `<span><b>Storymodus</b><small>${wLabel(cw)} · ${worldStars(cw)} / ${worldMaxStars(cw)} Sterne · schaltet Decks frei</small></span>` +
           `<button type="button" class="t-cta pd-go" data-go="storygo" title="${esc($('#t-cta').textContent)}">${play}<span>Weiter</span></button></div>` +
-        `<button type="button" class="pd-tile" data-go="setup"><img src="art/kachel-frei.webp" alt=""><span><b>Gegen Bots</b><small>${fg ? `${fg.live ? 'Läuft' : 'Gespeichert'} · Runde ${fg.turn}` : 'Freies Spiel mit deinen Regeln'}</small></span></button>` +
+        `<div class="pd-tile"><img src="art/kachel-frei.webp" alt=""><button type="button" class="pd-hit" data-go="setup" aria-label="Spiel erstellen"></button><span><b>Gegen Bots</b><small>${fg ? `${fg.live ? 'Läuft' : 'Gespeichert'} · Runde ${fg.turn}` : 'Freies Spiel mit deinen Regeln'}</small></span>` +
+          `<button type="button" class="t-cta pd-go" data-go="setup">${play}<span>Spiel erstellen</span></button></div>` +
       `</div></div>` +
     `</main>` +
-    `<aside class="pp-side">` +
-      `<section class="hub-daily"><header><img src="icons/portrait-hilde.png" alt=""><div><h3>Hildes Aufträge</h3><span>${dn} von 3 erledigt · neue in ${untilMidnight()}</span></div></header><div class="notes">${hubNotes(st)}</div></section>` +
-      `<button type="button" class="t-daily hub-streak${sk ? '' : ' dark'}" data-go="${wait ? 'chest' : 'daily'}">${candleHtml(sk > 0)}<span class="td-main">${streakTrack(sk).track}</span></button>` +
-    `</aside>`;
+    pcSideHTML(st, sk, dn, wait);
 }
+function pcSideHTML(st, sk, dn, wait) {
+  return `<aside class="pp-side">` +
+  `<section class="hub-daily"><header><img src="icons/portrait-hilde.png" alt=""><div><h3>Hildes Aufträge</h3><span>${dn} von 3 erledigt · neue in ${untilMidnight()}</span></div></header><div class="notes">${hubNotes(st)}</div></section>` +
+  `<button type="button" class="t-daily hub-streak${sk ? '' : ' dark'}" data-go="${wait ? 'chest' : 'daily'}">${candleHtml(sk > 0)}<span class="td-main">${streakTrack(sk).track}</span></button>` +
+  `</aside>`;
+}
+
+/* Entwurf: Storymodus direkt auf der Seite „Spielen“ (PC). Die Karte rollt aus der Kachel nach oben aus,
+   daneben stehen die Infos zur Station. Zum Ausprobieren mit ?entwurf in der Adresse. */
+const HUBST_ON = () => /entwurf/.test(location.search) && mq().pc.matches;
+function storyNext() { let next = null; const cw = currentWorld(); openWorlds().forEach(w => { const n = w.stations.find(st => stationUnlocked(st) && !STORY.done[st.id]); if (n && (!next || w === cw)) next = n; }); return next; }
+function hubStoryHTML(cw) {
+  SAVED_ST = (storySave() || {}).st || null;
+  const next = storyNext(), f = fogWorld();
+  const maps = openWorlds().map(w => worldMapHTML(w, next)).join('') + (f ? fogHTML(f, f.near) : '');
+  const all = openWorlds().reduce((a, w) => a + w.stations.length, 0), done = openWorlds().reduce((a, w) => a + w.stations.filter(st => STORY.done[st.id]).length, 0);
+  return `<main class="pp-modes pd-st${HUBST === 'open' ? ' unroll' : ''}">` +
+      `<section class="pd-stmap"><span class="pd-rod" aria-hidden="true"></span><div class="pd-mapscroll"><div class="smap pd-smap">${maps}</div></div>` +
+        `<button type="button" class="iconbtn pd-x" data-hubst="close" aria-label="Karte schließen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button></section>` +
+      `<section class="pd-stinfo"><div class="panel st-sidein"><span class="st-world">${wLabel(cw)}</span><b class="st-name">${esc(cw.name)}</b>` +
+        `<div class="st-sstats"><span>${starSvg(true)}<b>${worldStars(cw)}</b> / ${worldMaxStars(cw)} Sterne</span><span><b>${done}</b> / ${all} Stationen</span><span>${coinImg}<b>${STORY.coins}</b> Münzen</span></div>` +
+        `<p class="hint">Klick auf der Karte auf eine Station, dann erscheint sie hier.</p><button type="button" class="btn small" data-worldrules="${cw.id}">Sonderregeln dieser Welt</button></div></section>` +
+    `</main>`;
+}
+function openHubStory(stId) {
+  const hub = $('#t-hub'), tile = $('#t-hub .pd-solo-row .pd-tile'), main = $('#t-hub .pd');
+  if (tile && main) { const a = main.getBoundingClientRect(), b = tile.getBoundingClientRect(); hub.style.setProperty('--from', Math.round(b.top - a.top) + 'px'); }
+  closeAllSheets(); HUBST = 'open';
+  if (CUR !== 'title') setScreen('title'); else renderHub();
+  HUBST = true;
+  const id = stId || (storyNext() || {}).id;
+  if (id) setTimeout(() => { if (HUBST) openStation(id); }, UI.reduce ? 0 : 620);
+  requestAnimationFrame(() => { const n = id && $(`#t-hub .snode[data-station="${id}"]`), sc = $('#t-hub .pd-mapscroll'); if (n && sc) sc.scrollTop = Math.max(0, n.offsetTop + n.closest('.smap-in').offsetTop - sc.clientHeight / 2); });
+}
+function closeHubStory() {
+  if (!HUBST) return;
+  closeAllSheets();
+  const m = $('#t-hub .pd-st'); if (m && !UI.reduce) { m.classList.remove('unroll'); m.classList.add('rollup'); }
+  setTimeout(() => { HUBST = false; renderHub(); }, UI.reduce ? 0 : 420);
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-hubst="close"]')) closeHubStory(); });
 document.addEventListener('click', e => { const b = e.target.closest('[data-soon]'); if (b) toast(b.dataset.soon); });
 function renderShopPage() {
   const el = $('#shop-page'); if (!el) return;

@@ -2187,3 +2187,30 @@ div.pd-tile{cursor:default}
 /* Handy: alle vier Karten in einer Reihe, leicht überlappend */
 #app:not(.lay-pc):not(.lay-tab) .lootar.draft .loot-cards .mc{width:24vw;max-width:104px}
 #app:not(.lay-pc):not(.lay-tab) .lootar.draft .dcard+.dcard{margin-left:-12px}
+/* Gegen Bots: Knopf wie beim Storymodus */
+div.pd-tile .pd-go{white-space:nowrap}
+/* Entwurf: Storymodus auf der Seite „Spielen“ */
+.hub.pc .pd-st{display:grid;grid-template-columns:1fr 1fr;gap:16px;min-height:0;height:100%}
+.pd-stmap{position:relative;min-height:0;border-radius:18px;overflow:hidden;border:2px solid rgba(255,214,160,.35);background:#24160c url(../art/tisch-breit.webp) center/cover;box-shadow:0 16px 30px -12px rgba(0,0,0,.8)}
+.pd-mapscroll{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;container-type:size;scroll-snap-type:y proximity}
+.pd-mapscroll::-webkit-scrollbar{display:none}
+.pd-smap{margin:0;display:flex;flex-direction:column;align-items:center}
+.pd-smap .smap-in.pic{height:100cqh;width:auto;max-width:100%;border:0;border-radius:0;scroll-snap-align:start;flex:none}
+.pd-smap .st-fog{width:calc(100cqh * .558);max-width:100%;flex:none}
+.pd-smap .st-link{display:none}
+.pd-x{position:absolute;top:12px;right:12px;z-index:3;background:rgba(20,12,6,.75);color:#fbefd6;border:1px solid rgba(243,200,115,.5)}
+.pd-x svg{stroke:currentColor;stroke-width:2.4;fill:none}
+.pd-stinfo{min-height:0;display:flex;flex-direction:column}
+.pd-stinfo .st-sidein{margin:0}
+.pd-rod{position:absolute;left:0;right:0;top:0;height:16px;z-index:4;border-radius:8px;background:linear-gradient(#b07a3e,#6b3f19 60%,#3d220c);box-shadow:0 4px 8px rgba(0,0,0,.6);opacity:0;pointer-events:none}
+@keyframes pdUnroll{from{clip-path:inset(var(--from,60%) 0 0 0 round 18px)}to{clip-path:inset(0 0 0 0 round 18px)}}
+@keyframes pdRod{0%{transform:translateY(var(--from,60%));opacity:1}85%{opacity:1}100%{transform:none;opacity:0}}
+@keyframes pdFade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pdRollup{from{clip-path:inset(0 0 0 0 round 18px)}to{clip-path:inset(var(--from,60%) 0 0 0 round 18px)}}
+.pd-st.unroll .pd-stmap{animation:pdUnroll .6s cubic-bezier(.3,.7,.2,1) both}
+.pd-st.unroll .pd-rod{animation:pdRod .6s cubic-bezier(.3,.7,.2,1) both}
+.pd-st.unroll .pd-stinfo{animation:pdFade .35s .45s ease both}
+.pd-st.rollup .pd-stmap{animation:pdRollup .42s ease-in both}
+.pd-st.rollup .pd-stinfo{animation:pdFade .25s ease reverse both}
+html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
+#sheetwrap.dock.hubdock .sheet{animation:pdFade .3s ease both}
