@@ -2532,23 +2532,35 @@ function pcNavHTML() {
     `</div>`;
 }
 // Seite „Spielen“ am PC: links die Spielarten, rechts Hildes Aufträge und die Serie
+// PC „Spielen“: Online im Mittelpunkt (bis zum Start als „Bald“), darunter Allein spielen
 function pcPlayHTML(cw, nx, st, sk, dn, wait, ay, fg) {
-  return `<main class="pp-modes">` +
-      `<header class="pp-head"><h1>Spielen</h1><p>Wähle, wie du heute spielen willst.</p></header>` +
-      `<section class="hub-story pp-story"><img src="art/karte-welt${cw.id.replace('w', '')}.webp" alt="" style="object-position:50% ${ay}%" onerror="this.style.visibility='hidden'">` +
-        `<div class="hs-txt"><span class="pp-mode">Storymodus</span><div class="t-chips"><span class="t-world">${wLabel(cw)}</span><span class="t-stars"><img src="icons/stern-voll.png" alt=""><b>${worldStars(cw)} / ${worldMaxStars(cw)}</b></span></div>` +
-        `<button type="button" class="hs-name" data-go="story">${esc(cw.name)}</button><span class="hs-next">${esc($('#story-info').textContent)}</span>` +
-        `<div class="pp-acts"><button type="button" class="t-cta" data-go="storygo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" /></svg><span>${esc($('#t-cta').textContent)}</span></button><button type="button" class="btn pp-map" data-go="story">Zur Weltkarte</button></div></div></section>` +
-      `<div class="hub-modes pp-row">` +
-        `<button type="button" class="hub-mode" data-go="setup"><img src="art/kachel-frei.webp" alt=""><span><b>Freies Spiel</b><small>${fg ? `${fg.live ? 'Läuft' : 'Gespeichert'} · Runde ${fg.turn}` : 'Gegen 2 oder 3 Bots, deine Regeln'}</small></span></button>` +
-        `<button type="button" class="hub-mode" data-go="online"><img src="art/kachel-online.webp" alt=""><span class="tc-badge">Bald</span><span><b>Online</b><small>Mit Freunden und gegen andere</small></span></button>` +
+  const play = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" /></svg>';
+  const soon = (ic, kind, title, txt, msg) => `<button type="button" class="pd-card" data-soon="${esc(msg)}"><img class="pd-ic" src="${ic}" alt=""><span><small>${kind}</small><b>${title}</b><em>${txt}</em></span><span class="pd-bald">Bald</span></button>`;
+  return `<main class="pp-modes pd">` +
+      `<section class="pd-online"><img src="art/kachel-online.webp" alt=""><span class="tc-badge pd-badge">Bald</span>` +
+        `<div class="pd-on-txt"><span class="pp-mode">Online</span>` +
+          `<div class="pd-league"><span class="pd-crest"><b>?</b></span><div class="pd-lg"><b>Ligen und Saisons</b><small>Spiel gegen andere, steig in höhere Ligen auf und gewinne Rahmen, Titel und Hintergründe, die es nur hier gibt.</small></div></div>` +
+          `<div class="pd-modesel"><button type="button" class="on" data-go="online"><b>Klassisch</b><small>3 bis 4 Spieler</small></button><button type="button" data-go="online"><b>Draft</b><small>Starthand wählen</small></button><button type="button" data-go="online"><b>2 gegen 2</b><small>Im Team</small></button></div>` +
+          `<div class="pp-acts"><button type="button" class="t-cta pd-off" data-go="online">${play}<span>Spiel suchen</span></button><button type="button" class="btn pp-map" data-go="online">Mit Freunden spielen</button></div>` +
+        `</div></section>` +
+      `<div class="pd-row3">` +
+        soon('icons/truhe-gold-zu.png', 'Turnier', 'Jeden 2. Sonntag', 'Mit besonderen Preisen', 'Das Sonntagsturnier startet zusammen mit dem Online-Modus.') +
+        soon('icons/nav-freunde.png', 'Gilde', 'Gemeinsam stärker', 'Mit anderen um Gildenpunkte spielen', 'Gilden kommen, sobald der Online-Modus läuft.') +
+        soon('icons/muenze-sieg.png', 'Rangliste', 'Wer ist ganz oben?', 'Auf- und Abstieg am Saisonende', 'Die Rangliste startet mit der ersten Online-Saison.') +
       `</div>` +
+      `<div class="pd-solo"><span class="pd-h">Allein spielen</span><div class="pd-solo-row">` +
+        `<div class="pd-tile"><img src="art/karte-welt${cw.id.replace('w', '')}.webp" alt="" style="object-position:50% ${ay}%"><button type="button" class="pd-hit" data-go="story" aria-label="Zur Weltkarte"></button>` +
+          `<span><b>Storymodus</b><small>${wLabel(cw)} · ${worldStars(cw)} / ${worldMaxStars(cw)} Sterne · schaltet Decks frei</small></span>` +
+          `<button type="button" class="t-cta pd-go" data-go="storygo" title="${esc($('#t-cta').textContent)}">${play}<span>Weiter</span></button></div>` +
+        `<button type="button" class="pd-tile" data-go="setup"><img src="art/kachel-frei.webp" alt=""><span><b>Gegen Bots</b><small>${fg ? `${fg.live ? 'Läuft' : 'Gespeichert'} · Runde ${fg.turn}` : 'Freies Spiel mit deinen Regeln'}</small></span></button>` +
+      `</div></div>` +
     `</main>` +
     `<aside class="pp-side">` +
       `<section class="hub-daily"><header><img src="icons/portrait-hilde.png" alt=""><div><h3>Hildes Aufträge</h3><span>${dn} von 3 erledigt · neue in ${untilMidnight()}</span></div></header><div class="notes">${hubNotes(st)}</div></section>` +
       `<button type="button" class="t-daily hub-streak${sk ? '' : ' dark'}" data-go="${wait ? 'chest' : 'daily'}">${candleHtml(sk > 0)}<span class="td-main">${streakTrack(sk).track}</span></button>` +
     `</aside>`;
 }
+document.addEventListener('click', e => { const b = e.target.closest('[data-soon]'); if (b) toast(b.dataset.soon); });
 function renderShopPage() {
   const el = $('#shop-page'); if (!el) return;
   patch(el, `<div class="panel shop-panel">${SHEET_VIEWS.shop().body}</div>`); watchBoards(el); fitNames(el);
