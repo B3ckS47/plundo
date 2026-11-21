@@ -1,5 +1,5 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-5fc874bdd7';
+const CACHE = 'loota-b7c6914dc2';
 const FILES = [
 "./",
 "index.html",
