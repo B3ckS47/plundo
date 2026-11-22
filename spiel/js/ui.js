@@ -693,7 +693,7 @@ function paintHud(hud, C) {
 function renderTable() {
   const el = $('#table');
   const C = S.combat, R = S.reveal;
-  const L = UI.prompt && UI.prompt.ctx === 'loot' ? UI.prompt.data : UI.dview || null;
+  const L = tablePick() || UI.dview || null;
   if (L && L.draft) { renderDraft(el, L); return; }
   if (L) { if (W.tableKey !== 'loot') { W.tableKey = 'loot'; W.fightRef = null; el.__h = null; el.innerHTML = ''; } patch(el, lootHTML(L)); return; }
   const key = C ? 'fight' : R ? 'reveal:' + R.uid : 'idle';
@@ -732,15 +732,17 @@ const stripTags = h => String(h).replace(/<[^>]+>/g, '');
 const sellBtnHTML = p => { const b = sellBlock(p); return `<div class="acts"><button type="button" class="btn${UI.adv && UI.adv.sell ? ' rec' : ''}" data-go="sell"${b ? ' disabled' : ''}>Gegenstände verkaufen${b ? ` <small>(ab Stufe ${WINLVL() - 1} nicht mehr)</small>` : ''}</button>${b ? `<p>${esc(b)}</p>` : ''}</div>`; };
 // Beute mit Helfer: Die offenen Schätze liegen auf dem Tisch und werden dort angetippt
 // Draft: eigenes Tischbild, damit die Flug- und Dreh-Animation nicht bei jedem Neuzeichnen neu startet
+// Auswahl auf dem Tisch: Beute nach dem Kampf, Draft und die Elfen-Fähigkeit
+function tablePick() { const q = UI.prompt; return q && q.data && (q.ctx === 'loot' || q.data.draft) ? q.data : null; }
 function renderDraft(el, L) {
   const key = 'draft:' + L.kind + ':' + L.pick, anim = !UI.reduce;
   if (W.tableKey !== key) {
     W.tableKey = key; W.fightRef = null; el.__h = null;
-    const sub = L.pool.length === 1 ? 'Die letzte Karte gehört dir' : `Wahl ${L.pick} von 3 · der Rest geht an ${esc(L.to.name)}`;
-    el.innerHTML = `<div class="arena lootar draft from-${L.side} to-${L.exit}"><div class="loot-h">Draft · ${esc(L.kind)}</div><div class="loot-sub">${sub}</div>` +
+    const sub = L.sub || (L.pool.length === 1 ? 'Die letzte Karte gehört dir' : `Wahl ${L.pick} von 3 · der Rest geht an ${esc(L.to.name)}`);
+    el.innerHTML = `<div class="arena lootar draft from-${L.side} to-${L.exit}"><div class="loot-h">${esc(L.title || 'Draft · ' + L.kind)}</div><div class="loot-sub">${sub}</div>` +
       `<div class="loot-cards" data-n="${L.pool.length}">${L.pool.map((c, i) => `<div class="dcard${anim ? ' in' : ''}" style="--i:${i}" data-duid="${c.uid}"><div class="dflip">${cardMini(c, {where: 'loot', extra: 'lootc'})}<span class="back ${L.deck === 'door' ? 'door' : 'treas'} dback"></span></div></div>`).join('')}</div></div>`;
   }
-  const rec = L.phase === 'pick' && UI.adv && UI.adv.opt !== undefined ? UI.adv.opt : -1;
+  const rec = L.phase === 'pick' && UI.adv && UI.adv.opt !== undefined ? (L.vals ? L.vals.indexOf(UI.adv.opt) : UI.adv.opt) : -1;
   el.querySelectorAll('.dcard').forEach((d, i) => {
     const mc = d.querySelector('.mc'); if (mc) mc.classList.toggle('rec', i === rec);
     if (L.phase === 'out' && !d.classList.contains('gone')) {
@@ -777,6 +779,7 @@ function promptCaption(q, ctx, data) {
     case 'kick': return q.text || q.title;
     case 'trouble': return 'Kein Monster hinter der Tür';
     case 'loot': return data && data.draft ? 'Tipp auf dem Tisch auf eine Karte' : 'Tipp auf dem Tisch auf einen Schatz';
+    case 'elfpick': return 'Tipp auf dem Tisch auf die Karte, die du behältst';
     case 'charity': { const over = p.hand.length - handLimit(p); return over > 0 ? `Abgabe: ${over} ${pl(over, 'Karte', 'Karten')} zu viel` : 'Fertig? Dann Zug beenden'; }
     case 'helpWho': return 'Wen bittest du um Hilfe?';
     case 'helpOffer': return data && data.b ? `Wie viele Schätze bekommt ${data.b.name}?` : q.title;
@@ -790,7 +793,7 @@ function promptCaption(q, ctx, data) {
   }
 }
 function dockButtons(q, ctx) {
-  if (ctx === 'loot') return [];   // gewählt wird auf dem Tisch
+  if (ctx === 'loot' || tablePick()) return [];   // gewählt wird auf dem Tisch
   const items = [];
   const mons = ctx === 'trouble' ? q.opts.map((o, i) => [o, i]).filter(([o]) => /^m\d+$/.test(String(o.v))) : [];
   q.opts.forEach((o, i) => { if (!mons.some(([, j]) => j === i)) items.push({type: 'opt', i, o}); });
@@ -1767,8 +1770,12 @@ document.addEventListener('click', e => {
   if ((el = t.closest('[data-ptip]'))) { UI.ptip = UI.ptip === el.dataset.ptip ? null : el.dataset.ptip; renderSheet(false); buzz(6); return; }
   if ((el = t.closest('[data-human]'))) { openSheet({id: 'card', human: true}); return; }
   if ((el = t.closest('[data-where="loot"]'))) {
-    const L = UI.prompt && UI.prompt.ctx === 'loot' ? UI.prompt.data : null, i = L ? L.pool.findIndex(c => c.uid === +el.dataset.uid) : -1;
-    if (i >= 0 && UI.resolve) { Snd.sfx('deal'); W.hoverUid = null; UI.resolve(i); }
+    const L = tablePick(), i = L ? L.pool.findIndex(c => c.uid === +el.dataset.uid) : -1;
+    if (i >= 0 && UI.resolve) {
+      const v = L.vals ? L.vals[i] : i, les = SCN && SCN.tut && !SCN.tutFree && tutLesson();
+      if (les && les.only && !les.only({v})) { buzz(30); return; }   // Einführung: nur die vorgesehene Karte
+      Snd.sfx('deal'); W.hoverUid = null; UI.resolve(v);
+    }
     return;
   }
   if ((el = t.closest('[data-uid]'))) {
@@ -2139,7 +2146,7 @@ const TUT_LESSONS = [
     text: 'Stufe 3, und das ganz ohne Kampf! Jetzt öffnest du die Tür.'},
   {id: 'raum', st: S2, when: () => tCtx() === 'trouble' && S.turn === 1, done: () => tCtx() !== 'trouble', only: o => o.v === 'loot', hl: tOpt(o => o.v === 'loot'),
     text: 'Kein Monster hinter der Tür. Dann durchsuchst du den Raum: Du ziehst eine Türkarte verdeckt auf die Hand.'},
-  {id: 'elfwahl', st: S2, when: () => tCtx() === 'elfpick', done: () => tCtx() !== 'elfpick', only: o => o.v === 'a', hl: tOpt(o => o.v === 'a'),
+  {id: 'elfwahl', st: S2, when: () => tCtx() === 'elfpick', done: () => tCtx() !== 'elfpick', only: o => o.v === 'a', hl: () => UI.prompt && UI.prompt.data && UI.prompt.data.a ? `#table [data-duid="${UI.prompt.data.a.uid}"]` : null,
     text: 'Als Elf hast du scharfe Augen: Du ziehst beim Durchsuchen 2 Karten und behältst die bessere. Nimm den Zauberer.'},
   {id: 'almosen', st: S2, cards: true, act: /Rucksack/, when: () => tCtx() === 'charity' && me().hand.length > handLimit(me()), done: () => tCtx() !== 'charity' || me().hand.length <= handLimit(me()), hl: () => '#act .btn.primary',
     text: 'Am Ende deines Zuges darfst du höchstens 5 Karten behalten. Was zu viel ist, bekommt der Spieler mit der niedrigsten Stufe, also Berta. Gegenstände kannst du vorher auch in den Rucksack legen, die zählen dann nicht mehr als Handkarten. Sonst gib 1 Karte ab.'},

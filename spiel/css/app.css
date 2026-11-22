@@ -2186,7 +2186,7 @@ div.pd-tile{cursor:default}
 .dcard.hide{visibility:hidden}
 /* Handy: alle vier Karten in einer Reihe, leicht überlappend */
 #app:not(.lay-pc):not(.lay-tab) .lootar.draft .loot-cards .mc{width:24vw;max-width:104px}
-#app:not(.lay-pc):not(.lay-tab) .lootar.draft .dcard+.dcard{margin-left:-12px}
+#app:not(.lay-pc):not(.lay-tab) .lootar.draft .loot-cards[data-n="4"] .dcard+.dcard{margin-left:-12px}
 /* Gegen Bots: Knopf wie beim Storymodus */
 div.pd-tile .pd-go{white-space:nowrap}
 /* Entwurf: Storymodus auf der Seite „Spielen“ */

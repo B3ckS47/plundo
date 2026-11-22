@@ -1024,7 +1024,13 @@ async function humanTurn(p){
       S.phase=3;
       const watt=isEbbe(); let d=watt ? luckyTr() : drawDoor();
       if(d && hasRace(p,'elf')){ const d2=watt ? drawTr() : drawDoor();
-        if(d2){ const keep=await ask(()=>({title:'Elf: Scharfe Augen', text:'Du ziehst 2 Karten. Welche behältst du?', hint:['Die andere kommt auf den Ablagestapel.'], opts:[{l:cardLabel(d),v:'a',kind:'primary'},{l:cardLabel(d2),v:'b',kind:'primary'}]}), 'elfpick', {a:d, b:d2});
+        if(d2){
+          // Wie beim Draft: beide Karten fliegen verdeckt von rechts ein, drehen sich um; nach der Wahl geht eine auf die Hand, die andere fliegt nach links weg
+          const view={pool:[d,d2], draft:true, kind:'elf', title:'Elf · Scharfe Augen', sub:'Behalte eine Karte, die andere kommt auf den Ablagestapel', deck:watt?'tr':'door', pick:`${S.turn}-${d.uid}`, side:'right', exit:'left', vals:['a','b'], a:d, b:d2, phase:'in'};
+          UI.dview=view; render(); await sleep(UI.reduce ? 0 : 800);
+          view.phase='pick';
+          const keep=await ask(()=>({title:'Elf: Scharfe Augen', text:'Du ziehst 2 Karten. Welche behältst du?', hint:['Die andere kommt auf den Ablagestapel.'], opts:[{l:cardLabel(d),v:'a',kind:'primary'},{l:cardLabel(d2),v:'b',kind:'primary'}]}), 'elfpick', view);
+          view.phase='out'; view.picked=(keep==='b' ? d2 : d).uid; render(); await sleep(UI.reduce ? 0 : 820); UI.dview=null;
           if(keep==='b'){ discard(d); d=d2; } else discard(d2);
           ruleOnce('elfloot','Elfen ziehen beim Durchsuchen 2 Karten und behalten 1.'); } }
       if(d && watt){ p.hand.push(d); log(`Ebbe: Du suchst im Watt und findest <b>${cardLabel(d)}</b>.`,'good'); }
