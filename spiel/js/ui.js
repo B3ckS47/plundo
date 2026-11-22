@@ -2140,8 +2140,11 @@ const TUT_LESSONS = [
     text: 'Jetzt die Klasse. Krieger sind allein stark: Kämpfen sie ohne Helfer, haben sie +3. Probier diesmal den schnellen Weg: Halt den Krieger fest und zieh ihn nach oben aufs Spielfeld. So spielst du jede Karte aus, ohne sie erst anzutippen.'},
   {id: 'breitschwert', st: S2, act: /^Ausrüsten/, when: () => tCtx() === 'kick' && me().cls && tHand('Breitschwert der Angeberei'), done: () => tEq('Breitschwert der Angeberei'), only: () => false, hl: () => tCard('Breitschwert der Angeberei'),
     text: 'Manche Gegenstände darf nur eine bestimmte Klasse oder ein bestimmtes Volk benutzen. Das Breitschwert der Angeberei ist nur für Krieger, braucht beide Hände und gibt +4. Rüste es aus.'},
-  {id: 'verkaufen', st: S2, act: /^Verkaufen/, sell: ['Protzige Goldkette', 'Hörnerhelm'], when: () => tCtx() === 'kick' && tEq('Breitschwert der Angeberei') && tHand('Protzige Goldkette') && me().lvl < 3, done: () => me().lvl >= 3, only: () => false, hl: () => [tCard('Protzige Goldkette'), tCard('Hörnerhelm')],
-    text: 'Goldkette und Hörnerhelm brauchst du gerade nicht. Gegenstände kannst du verkaufen: Je 1000 Gold bringen dir eine Stufe, der Rest kommt in deinen Goldbeutel. Tipp die Goldkette an, wähle „Verkaufen“ und markiere auch den Hörnerhelm.'},
+  {id: 'verkaufen', st: S2, act: /^Verkaufen/, sell: ['Protzige Goldkette', 'Hörnerhelm'], when: () => tCtx() === 'kick' && tEq('Breitschwert der Angeberei') && (tHand('Protzige Goldkette') || tHand('Hörnerhelm')) && me().lvl < 3, done: () => me().lvl >= 3, only: () => false, hl: () => [tCard('Protzige Goldkette'), tCard('Hörnerhelm')].filter(Boolean),
+    // Wer nur eins von beiden verkauft hat, verkauft das andere hinterher (das Gold bleibt im Goldbeutel)
+    text: () => !tHand('Protzige Goldkette') ? `Das Gold der Goldkette liegt jetzt in deinem Goldbeutel. Für die nächste Stufe fehlt noch etwas: Tipp den Hörnerhelm an und verkauf ihn auch.`
+      : !tHand('Hörnerhelm') ? `Das Gold des Hörnerhelms liegt jetzt in deinem Goldbeutel. Für die nächste Stufe fehlt noch etwas: Tipp die Goldkette an und verkauf sie auch.`
+      : 'Goldkette und Hörnerhelm brauchst du gerade nicht. Gegenstände kannst du verkaufen: Je 1000 Gold bringen dir eine Stufe, der Rest kommt in deinen Goldbeutel. Tipp die Goldkette an, wähle „Verkaufen“ und markiere auch den Hörnerhelm.'},
   {id: 'tuer3', st: S2, when: () => tCtx() === 'kick' && S.turn === 1 && me().lvl >= 3, done: () => tCtx() !== 'kick', hl: () => '#act .btn.primary',
     text: 'Stufe 3, und das ganz ohne Kampf! Jetzt öffnest du die Tür.'},
   {id: 'raum', st: S2, when: () => tCtx() === 'trouble' && S.turn === 1, done: () => tCtx() !== 'trouble', only: o => o.v === 'loot', hl: tOpt(o => o.v === 'loot'),
