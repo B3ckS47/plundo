@@ -6,7 +6,7 @@ const $$ = s => [...document.querySelectorAll(s)];
 
 const ICON = {
   phase: ['icons/phase-tuer.png', 'icons/phase-aerger.png', 'icons/phase-pluendern.png', 'icons/phase-gabe.png'],
-  kampf: 'icons/wert-kampf.png', run: 'icons/wert-weglaufen.png', hand: 'icons/wert-hand.png',
+  kampf: 'icons/wert-kampf.png', run: 'icons/wert-weglaufen.png', hand: 'icons/wert-hand.png', gold: 'icons/wert-gold.png',
   slot: {kopf: 'icons/icon-kopf.png', ruestung: 'icons/icon-ruestung.png', schuhe: 'icons/icon-schuhe.png', hand: 'icons/icon-haende.png',
     none: 'icons/icon-sonstiges.png', pack: 'icons/icon-rucksack.png', race: 'icons/icon-rasse.png', cls: 'icons/icon-klasse.png'},
   portrait: {Du: 'icons/portrait-du.png', Berta: 'icons/portrait-berta.png', Kalle: 'icons/portrait-kalle.png', Uschi: 'icons/portrait-uschi.png',
@@ -1130,10 +1130,12 @@ function heroHead(p) {
 function heroStats(p) {
   const pw = power(p), eqb = pw - p.lvl, rb = runBonus(p), need = Math.max(1, 5 - rb), over = p.hand.length > handLimit(p), open = UI.ptip;
   const tile = (k, icon, val, lbl, sub, cls = '') => `<button type="button" class="hs${cls}${open === k ? ' on' : ''}" data-ptip="${k}" aria-expanded="${open === k}"><img src="${icon}" alt=""><b>${val}</b><span>${lbl}</span><small>${sub}</small></button>`;
-  const tip = open === 'power' ? powerTip(p) : open === 'run' ? runTip(p) : open === 'hand' ? handTip(p) : '';
+  const tip = open === 'power' ? powerTip(p) : open === 'run' ? runTip(p) : open === 'hand' ? handTip(p) : open === 'gold' ? goldTip(p) : '';
+  const g = p.gold || 0;
   return `<div class="hstats">${tile('power', ICON.kampf, pw, 'Kampfstärke', `Stufe ${p.lvl}${eqb ? ` ${eqb > 0 ? '+' : '−'} ${Math.abs(eqb)}` : ''}`, ' main')}` +
     tile('run', ICON.run, need <= 1 ? 'immer' : `ab ${need}`, 'Weglaufen', `Bonus ${sign(rb)}`) +
-    tile('hand', ICON.hand, `${p.hand.length}/${handLimit(p)}`, 'Handkarten', over ? 'zu viele' : 'Platz frei', over ? ' warn' : '') + `</div>` +
+    tile('hand', ICON.hand, `${p.hand.length}/${handLimit(p)}`, 'Handkarten', over ? 'zu viele' : 'Platz frei', over ? ' warn' : '') +
+    tile('gold', ICON.gold, fmt(g), 'Goldbeutel', g < 1000 ? `${fmt(1000 - g)} bis Stufe` : 'reicht für Stufe', g ? ' gold' : '') + `</div>` +
     (tip ? `<div class="tipbox hs-tip">${tip}</div>` : '');
 }
 function heroAbil(p) {
@@ -1928,6 +1930,10 @@ function runTip(p){
   n.push('Manche Monster ändern den Wurf noch, etwa das Vampir-Kaninchen (−1).');
   return `<b class="tip-h">Weglaufen: ohne Bonus ab einer 5</b>${rows.length?tipRows(rows,sign(b)):'<span class="tip-n">Keine Boni.</span>'}<b>${need<=1?'Entkommt immer.':`Entkommt ab einer ${need}: ${pc} %.`}</b><span class="tip-n">${n.join(' ')}</span>`;
 }
+function goldTip(p){
+  const g=p.gold||0, kob=p.race&&p.race.r==='halbling';
+  return `<b class="tip-h">Goldbeutel: ${fmt(g)} Gold</b><span class="tip-n">Beim Verkaufen gibt es je 1000 Gold eine Stufe. Was übrig bleibt, landet im Goldbeutel und zählt beim nächsten Verkauf mit${g&&g<1000?`: Mit Gegenständen für ${fmt(1000-g)} Gold steigst du auf`:''}. Die Siegstufe gibt es dafür nie.${kob?' Als Kobold bringt dir einmal pro Zug ein Verkauf 200 Gold extra.':''}</span>`;
+}
 function handTip(p){
   return `<b class="tip-h">Handkarten: höchstens ${handLimit(p)}</b><span class="tip-n">Gilt am Ende des eigenen Zugs. Den Überschuss bekommt als Abgabe, wer die niedrigste Stufe hat. Rucksack: ${p.pack.length} von ${packLimit(p)} Gegenständen${(p.gold||0)?`, Goldbeutel: ${fmt(p.gold)} Gold`:''}.${p.human?'':' Welche Karten das sind, ist geheim.'}</span>`;
 }
@@ -2587,7 +2593,7 @@ function seatHTML(p) {
     `<span class="gs-pt">${bigPortrait(p)}<i>${p.lvl}</i></span>` +
     `<span class="gs-t"><span class="gs-n"><b>${p.human ? 'Du' : esc(p.name)}</b>${tag}</span>` +
     `<span class="gs-st"><span title="Kampfstärke"><img src="${ICON.kampf}" alt="">${power(p)}</span><span title="Weglaufen"><img src="${ICON.run}" alt="">${sign(runBonus(p))}</span>` +
-    `<span title="Handkarten"${p.human && p.hand.length > handLimit(p) ? ' class="warn"' : ''}><img src="${ICON.hand}" alt="">${p.hand.length}${p.human ? '/' + handLimit(p) : ''}</span>${p.gold ? `<span class="gold" title="Goldbeutel">${fmt(p.gold)} G</span>` : ''}</span>` +
+    `<span title="Handkarten"${p.human && p.hand.length > handLimit(p) ? ' class="warn"' : ''}><img src="${ICON.hand}" alt="">${p.hand.length}${p.human ? '/' + handLimit(p) : ''}</span><span title="Goldbeutel: ${fmt(p.gold || 0)} Gold"${p.gold ? ' class="gold"' : ''}><img src="${ICON.gold}" alt="">${fmt(p.gold || 0)}</span></span>` +
     `<span class="gs-dots" aria-hidden="true">${Array.from({length: WINLVL()}, (_, i) => `<em class="${i < p.lvl ? 'on' : ''}"></em>`).join('')}</span>` +
     `</span></button>`;
 }

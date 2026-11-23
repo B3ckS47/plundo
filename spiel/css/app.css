@@ -2892,3 +2892,14 @@ html.pcnav .rp-toc{display:flex;flex-direction:column;gap:2px;padding:10px;borde
 .rp-ph{width:78px}
 .rp-ph small{white-space:nowrap;font-size:9.5px}
 .rp-vis .rp-ph+.rp-back,.rp-vis .rp-ph+.mc{margin-left:4px}
+/* Goldbeutel als vierte Kachel im Profil */
+.hstats{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.hs.gold{border-color:#b8862f;background:linear-gradient(#fff6dc,#f3dca0)}
+.hs.gold b{color:#7a5208}
+.hs span{white-space:nowrap}
+/* PC-Sitz: vier Werte (mit Goldbeutel) in einer Zeile */
+.gs-st{flex-wrap:nowrap;gap:4px}
+.gs-st>span{gap:2px;padding:2px 7px 2px 3px;font-size:13.5px;white-space:nowrap}
+.gs-st>span.gold{padding-left:3px}
+.gs-st img{width:17px;height:17px}
+@media (max-width:1560px){.gs-st{gap:3px}.gs-st>span{padding:1px 5px 1px 2px;font-size:12.5px}.gs-st img{width:15px;height:15px}}
