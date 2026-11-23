@@ -2408,7 +2408,7 @@ const SET_ICON = {
   konto: '<circle cx="12" cy="8.5" r="3.5" /><path d="M5 19.5c1.2-3.6 4-5.5 7-5.5s5.8 1.9 7 5.5" />',
   stand: '<path d="M6 4h10l3 3v13H6z M9 4v5h6V4 M9 14h7 M9 17h5" />',
   test: '<path d="M10 3h4 M10.5 3v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2l-5.5-10V3 M7.5 15h9" />',
-  about: '<circle cx="12" cy="12" r="9" /><path d="M12 11v6 M12 7.5h.01" />'
+  about: '<path d="M6 9h9v10a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z M15 11h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2 M9 12v5 M12 12v5 M6 9c-.4-2 1-3.6 2.8-3.4.7-1.3 2.5-1.6 3.6-.6 1.4-.4 2.8.6 2.6 2.2" />'
 };
 function settingsPC() {
   const box = $('#scr-settings .content'); if (!box || box.__pc) return; box.__pc = true;
@@ -2416,7 +2416,15 @@ function settingsPC() {
     const h = box.querySelector(`.${c} > h3.lbl`); if (!h || h.querySelector('.set-ic')) return;
     h.insertAdjacentHTML('afterbegin', `<span class="set-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${SET_ICON[k]}</svg></span>`);
   });
-  const ab = box.querySelector('.about > h3.lbl'); if (ab) ab.lastChild.textContent = 'Über Plundo';
+  // Stammtisch statt „Über die App“: Gemeinschaft, Kanäle, Version und Rechtliches (Installieren läuft über den Play Store)
+  const abp = box.querySelector('.about'); if (abp) {
+    abp.querySelector('h3.lbl').lastChild.textContent = 'Stammtisch';
+    [...abp.children].forEach(x => { if (!x.matches('h3')) x.classList.add('set-old'); });
+    abp.insertAdjacentHTML('beforeend', `<div class="set-club"><p>Plundo ist ein Hobbyprojekt und wächst mit jeder Welt. Eine Idee für eine Karte, Lob oder einen Fehler gefunden? Dann setz dich zu uns an den Stammtisch.</p>` +
+      `<div class="set-links"><button type="button" class="set-link dc" data-soon="Der Stammtisch auf Discord öffnet bald."><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 7.5c2.4-.7 4.6-.7 7 0M7 17c3.2 1.3 6.8 1.3 10 0M7.2 6.6C5.4 9.2 4.6 12 4.8 15.6c1.4 1.2 3 1.9 4.6 2.2l1-1.7M16.8 6.6c1.8 2.6 2.6 5.4 2.4 9-1.4 1.2-3 1.9-4.6 2.2l-1-1.7" /><circle cx="9.5" cy="12.5" r="1.2" /><circle cx="14.5" cy="12.5" r="1.2" /></svg><span><b>Discord</b><small>Bald</small></span></button>` +
+      `<a class="set-link web" href="https://plundo.eu" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z" /></svg><span><b>plundo.eu</b><small>Neuigkeiten</small></span></a></div>` +
+      `<p class="set-foot">Version ${APP_VERSION} · <a href="../datenschutz.html">Datenschutz</a> · <a href="../impressum.html">Impressum</a></p></div>`);
+  }
   // Klang und Bild: „Effekte reduzieren“ wandert zum Klang, Spielstand in die Konto-Karte
   const kl = box.querySelector('.s-klang'), red = box.querySelector('[data-toggle="reduce"]');
   if (kl && red) { kl.querySelector('h3.lbl').lastChild.textContent = 'Klang und Bild'; kl.appendChild(red.closest('.trow')); }
