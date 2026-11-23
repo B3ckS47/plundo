@@ -2535,3 +2535,18 @@ html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
 #app.pcg .hud .side.me{justify-content:flex-end;padding-right:clamp(80px,7vw,130px)}
 #app.pcg .hud .side.mon{padding-left:clamp(80px,7vw,130px)}
 #app.pcg .wlog{margin:0}
+/* Notizen: hinter dem Zettel das Laden-Brett der jeweiligen Welt (wie beim Händler im Storymodus) */
+#app.pcg .wlog>.wpanel{background:#2a1a10;padding:0;border-radius:16px;overflow:hidden;border:solid transparent;border-width:24px;border-image:url(../art/ladenregal.webp) 95 fill / 24px stretch;box-shadow:0 10px 22px -10px rgba(0,0,0,.7)}
+#app.pcg.tbl-keller .wlog>.wpanel{border-width:40px 38px 38px;border-image:url(../art/regal-w2.webp) 200 190 190 fill / 40px 38px 38px stretch}
+#app.pcg.tbl-wald .wlog>.wpanel{border-width:42px 30px 24px;border-image:url(../art/regal-w3.webp) 215 150 110 fill / 42px 30px 24px stretch}
+#app.pcg.tbl-strand .wlog>.wpanel{border-width:24px;border-image:url(../art/regal-w4.webp) 105 fill / 24px stretch}
+#app.pcg.tbl-schiff .wlog>.wpanel{border-width:38px;border-image:url(../art/regal-w5.webp) 185 fill / 38px stretch}
+#app.pcg .wlog>.wpanel>.wp-h{position:static;align-self:flex-start;margin:0 0 2px;padding:3px 10px;border-radius:999px;background:rgba(18,10,5,.78);color:#f3c873;text-shadow:none}
+#app.pcg .wlog .loglist{margin:16px 0 0}
+#app.pcg .wlog>.wpanel::before{top:auto;margin-top:0;position:relative;display:block;left:auto;align-self:center;order:1;height:0;width:0}
+#app.pcg .wlog>.wpanel>.wp-h{order:0}
+#app.pcg .wlog .loglist{order:2}
+.wpin{position:absolute;left:50%;width:30px;height:24px;margin:-12px 0 0 -15px;background:url(../icons/reisszwecke.webp) center/contain no-repeat;z-index:3;pointer-events:none}
+#app.pcg .wlog>.wpanel::before{display:none}
+#app.pcg .wlog>.wpanel{position:relative}
+#app.pcg .wlog .wpin{top:44px}
