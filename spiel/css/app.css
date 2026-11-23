@@ -2491,3 +2491,28 @@ html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
 #app.pcg .hand{gap:0;overflow:visible}
 #app.pcg .hand>.mc+.mc{margin-left:var(--hg,8px)}
 #app.pcg .hand>.mc:hover{z-index:2}
+/* Partie am PC: je Welt eigenes Spielbrett, eigener Raum und eigene Türrückseite */
+#app.pcg.tbl-keller{background-image:linear-gradient(rgba(18,10,5,.42),rgba(18,10,5,.58)),url(../art/raum-keller.webp)!important}
+#app.pcg.tbl-wald{background-image:linear-gradient(rgba(18,10,5,.42),rgba(18,10,5,.58)),url(../art/raum-wald.webp)!important}
+#app.pcg.tbl-strand{background-image:linear-gradient(rgba(18,10,5,.38),rgba(18,10,5,.55)),url(../art/raum-strand.webp)!important}
+#app.pcg.tbl-schiff{background-image:linear-gradient(rgba(18,10,5,.42),rgba(18,10,5,.58)),url(../art/raum-schiff.webp)!important}
+#app.pcg.tbl-keller .table{background-image:url(../art/brett-keller.webp)}
+#app.pcg.tbl-wald .table{background-image:url(../art/brett-wald.webp)}
+#app.pcg.tbl-strand .table{background-image:url(../art/brett-strand.webp)}
+#app.pcg.tbl-schiff .table{background-image:url(../art/brett-schiff.webp)}
+#app.pcg.tbl-keller .back.door{background-image:url(../art/ruecken-tuer-keller.webp)}
+#app.pcg.tbl-wald .back.door{background-image:url(../art/ruecken-tuer-wald.webp)}
+#app.pcg.tbl-strand .back.door{background-image:url(../art/ruecken-tuer-strand.webp)}
+#app.pcg.tbl-schiff .back.door{background-image:url(../art/ruecken-tuer-schiff.webp)}
+/* Notizen als großer Zettel mit Reißzwecke auf dem Holzbrett, wie bei Hildes Aufträgen */
+#app.pcg .wlog>.wpanel{position:relative;padding:28px 14px 16px;border-radius:16px;background:#2a1a10 url(../art/brett-auftraege.webp) center top/cover;border:2px solid #5e3f23;box-shadow:inset 0 0 22px rgba(0,0,0,.55)}
+#app.pcg .wlog>.wpanel>.wp-h{position:absolute;top:8px;left:18px;margin:0;color:#f3c873;text-shadow:0 1px 2px #000}
+#app.pcg .wlog .loglist{position:relative;margin:14px 0 0;padding:6px 8px 8px 6px;border:solid transparent;border-width:14px 22px 14px 14px;border-image:url(../art/zettel-auftrag.webp) 60 90 60 50 fill / 14px 22px 14px 14px stretch;filter:drop-shadow(0 5px 4px rgba(0,0,0,.5));color:#3b2a1c;scrollbar-width:thin;scrollbar-color:rgba(120,85,40,.5) transparent}
+#app.pcg .wlog .loglist li{color:#3b2a1c;border-color:rgba(120,85,40,.25)}
+#app.pcg .wlog .loglist li.l-sys{color:#7a5a2c}
+#app.pcg .wlog .loglist li.l-good{color:#2f6b2a}
+#app.pcg .wlog .loglist li.l-bad{color:#9e2a22}
+#app.pcg .wlog .loglist a,#app.pcg .wlog .loglist .kw,#app.pcg .wlog .loglist u{color:#5a3214}
+#app.pcg .wlog>.wpanel::before{content:"";position:absolute;top:30px;left:50%;width:28px;height:22px;margin-left:-14px;background:url(../icons/reisszwecke.webp) center/contain no-repeat;z-index:2}
+#app.pcg .wlog .loglist li.l-rule{color:#6b4a14}
+#app.pcg .idle-txt{padding:6px 16px;border-radius:999px;background:rgba(18,10,5,.62)}

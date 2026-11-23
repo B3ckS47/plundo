@@ -1,5 +1,5 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-1ea556c1c8';
+const CACHE = 'loota-0fcc8ba610';
 const FILES = [
 "./",
 "index.html",
@@ -24,6 +24,10 @@ const FILES = [
 "art/besonders-schatzkarte-rechts.webp",
 "art/brett-auftraege.webp",
 "art/brett-hub.webp",
+"art/brett-keller.webp",
+"art/brett-schiff.webp",
+"art/brett-strand.webp",
+"art/brett-wald.webp",
 "art/einmal-champignon.webp",
 "art/einmal-fischbroetchen.webp",
 "art/einmal-flasche-drachenschnaps.webp",
@@ -219,6 +223,10 @@ const FILES = [
 "art/rasse-kobold.webp",
 "art/rasse-mensch.webp",
 "art/rasse-zwerg.webp",
+"art/raum-keller.webp",
+"art/raum-schiff.webp",
+"art/raum-strand.webp",
+"art/raum-wald.webp",
 "art/regal-w1.webp",
 "art/regal-w2.webp",
 "art/regal-w3.webp",
@@ -231,6 +239,10 @@ const FILES = [
 "art/regalbrett-w5.webp",
 "art/regalbrett.webp",
 "art/ruecken-schatz.webp",
+"art/ruecken-tuer-keller.webp",
+"art/ruecken-tuer-schiff.webp",
+"art/ruecken-tuer-strand.webp",
+"art/ruecken-tuer-wald.webp",
 "art/ruecken-tuer.webp",
 "art/schriftrolle.webp",
 "art/serie-brett-aus.webp",
