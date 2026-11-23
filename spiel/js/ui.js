@@ -405,6 +405,7 @@ function renderTitle() {
   $('#t-daily').dataset.go = wait ? 'chest' : 'daily';
   $('#tn-daily').hidden = dn > 0 && !wait;
   renderHub();
+  if (CUR === 'setup') renderSetupPC();
 }
 // Weiter im Storymodus: angefangene Station fortsetzen, sonst die nächste Station auf der Karte öffnen
 function storyGo() {
@@ -458,6 +459,36 @@ function renderControls() {
   $('#row-vibrate').hidden = !('vibrate' in navigator);
 }
 // Freies Spiel: die Gegner der nächsten Partie (zufällig oder der Stammtisch)
+// PC: „Gegen Bots“ im selben Aufbau wie die Storykarte. Die Einstellungen werden nur umgehängt (gleiche Knöpfe, gleiche IDs).
+function hubSideArgs() {
+  const st = dailyState(), sk = streakNow();
+  const dn = st.list.filter(e => { const m = missionById(e.id); return m && e.p >= m.n; }).length;
+  return [st, sk, dn, chestsWaiting().length];
+}
+function renderSetupPC() {
+  const c = $('#scr-setup .content'); if (!c) return;
+  const pc = mq().pc.matches; let mid = c.querySelector(':scope > .su-mid');
+  if (!pc) {
+    if (mid) { [...mid.querySelectorAll(':scope > .panel')].forEach(p => c.appendChild(p)); c.querySelectorAll(':scope > .su-table, :scope > .su-mid, :scope > .su-side').forEach(x => x.remove()); c.classList.remove('su-pc'); }
+    return;
+  }
+  if (!mid) {
+    const t = document.createElement('div'); t.className = 'su-table';
+    mid = document.createElement('div'); mid.className = 'su-mid';
+    [...c.querySelectorAll(':scope > .panel')].forEach(p => mid.appendChild(p));
+    mid.insertAdjacentHTML('beforeend', '<button type="button" class="btn primary su-start" data-go="start">Los geht’s!</button>');
+    const sd = document.createElement('div'); sd.className = 'su-side';
+    c.append(t, mid, sd); c.classList.add('su-pc');
+  }
+  const list = SET.foes === 'stammtisch' ? ['Berta', 'Kalle', 'Uschi'].map(n => ({name: n, face: ICON.portrait[n], style: STYLES[n]})) : (ROSTER || []);
+  const pos = SET.bots === 2 ? ['l2', 'r2'] : ['l', 't', 'r'];
+  patch(c.querySelector(':scope > .su-table'),
+    list.slice(0, SET.bots).map((f, i) => `<div class="su-seat s-${pos[i]}"><span class="su-face"><img src="${f.face}" alt=""></span><b>${esc(f.name)}</b><small>${esc((f.style && f.style.l) || '')}</small></div>`).join('') +
+    `<div class="su-deck" aria-hidden="true"><span class="back door"></span><span class="back treas"></span></div>` +
+    (SET.foes === 'stammtisch' ? '' : `<button type="button" class="btn small su-reroll" data-go="reroll"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 4v4h4M4 13a8 8 0 0 0 14.6 4.5M20 20v-4h-4" /></svg>Neue Gegner</button>`) +
+    `<div class="su-seat s-me me"><span class="su-face"><img src="${myPortrait()}" alt=""></span><b>Du</b><small>fängst an</small></div>`);
+  patch(c.querySelector(':scope > .su-side'), pcSideHTML(...hubSideArgs()));
+}
 function renderFoes() {
   if (SET.foes !== 'stammtisch' && !ROSTER) ROSTER = rollRoster();
   const list = SET.foes === 'stammtisch' ? ['Berta', 'Kalle', 'Uschi'].map(n => ({name: n, face: ICON.portrait[n], style: STYLES[n]})) : ROSTER;
@@ -465,6 +496,7 @@ function renderFoes() {
   const el = $('#setup-foes'); if (!el) return;
   patch(el, list.slice(0, SET.bots).map(f => `<div class="foe"><img src="${f.face}" alt=""><span><b>${esc(f.name)}</b><small>${esc(f.style.l || '')}</small></span></div>`).join('') +
     (SET.foes === 'stammtisch' ? '' : '<button type="button" class="btn small" data-go="reroll">Neu würfeln</button>'));
+  renderSetupPC();
 }
 function renderSaveInfo() {
   const s = load(K_SAVE);
@@ -1623,6 +1655,12 @@ async function buyOffer(id) {
   renderStory(); renderTitle();
 }
 // Sonderregeln einer Welt, über das i an der Weltüberschrift der Storykarte
+// Sonderregeln einer Welt direkt auf der Seite (PC). In der Station nur, wenn es welche gibt.
+function worldRulesHTML(w, compact) {
+  if (!w) return '';
+  if (!(w.rules && w.rules.length)) return compact ? '' : `<div class="hs-rules"><span class="hs-lbl">Sonderregeln</span><p class="wr-none">In dieser Welt gelten nur die Grundregeln.</p></div>`;
+  return `<div class="hs-rules"><span class="hs-lbl">Sonderregeln in ${esc(wLabel(w))}</span><dl class="wr-list">${w.rules.map(([t, d]) => `<dt>${esc(t)}</dt><dd>${linkify(esc(d))}</dd>`).join('')}</dl></div>`;
+}
 SHEET_VIEWS.worldrules = s => {
   const w = worldById(s.w); if (!w) return null;
   const list = w.rules && w.rules.length ? `<dl class="wr-list">${w.rules.map(([t, d]) => `<dt>${esc(t)}</dt><dd>${linkify(esc(d))}</dd>`).join('')}</dl>`
@@ -1661,7 +1699,10 @@ SHEET_VIEWS.station = s => {
     body += mine ? `<p class="st-saved">${done ? 'Schon geschafft, neuer Versuch läuft' : 'Angefangen'}: Runde ${sv.S.turn}, du bist auf Stufe ${sv.S.players[0].lvl}.</p><div class="acts"><button type="button" class="btn primary" data-story-resume>Fortsetzen</button><button type="button" class="btn" data-story-start="${st.id}">Neu starten</button>${testBtn}</div>`
       : `<div class="acts"><button type="button" class="btn primary" data-story-start="${st.id}">${done ? 'Nochmal spielen' : 'Los geht’s'}</button>${testBtn}</div>`;
   }
-  if (HUBST && CUR === 'title' && SHEETS.length === 1) return {head: '', hero: true, body: hubStationHead(st) + `<div class="hs-main">${sayHTML(st.face, st.text)}<div class="st-goal"><b>Ziel</b><p>${esc(st.goal)}</p></div>${hubCast(st)}${body.slice(pre)}</div>`};
+  if (HUBST && CUR === 'title' && SHEETS.length === 1) {
+    const rest = body.slice(pre), cut = rest.lastIndexOf('<div class="acts">');
+    return {head: '', hero: true, body: hubStationHead(st) + `<div class="hs-main">${sayHTML(st.face, st.text)}<div class="st-goal"><b>Ziel</b><p>${esc(st.goal)}</p></div>${hubCast(st)}${cut >= 0 ? rest.slice(0, cut) : rest}${worldRulesHTML(worldById(st.world), true)}${cut >= 0 ? rest.slice(cut) : ''}</div>`};
+  }
   return {head: h3(`${esc(st.no)} · ${esc(st.name)}`), body};
 };
 // Mitte der Storykarte am PC: Kopfbild aus der Weltkarte rund um die Station, darunter wer mitspielt
@@ -2359,6 +2400,7 @@ function applyLayout() {
   document.documentElement.classList.toggle('wide-menu', wide && CUR !== 'game');
   if (wasMenu !== document.documentElement.classList.contains('wide-menu') && CUR === 'title' && typeof renderTitle === 'function') renderTitle();
   if (typeof renderWnav === 'function') renderWnav();
+  if (CUR === 'setup' && typeof renderSetupPC === 'function') renderSetupPC();
   dockSheet();
   if (mode === LAYOUT) return;
   LAYOUT = mode; app.classList.toggle('lay-pc', mode === 'pc'); app.classList.toggle('lay-tab', mode === 'tab');
@@ -2639,7 +2681,7 @@ function hubStoryHTML(cw) {
         `<button type="button" class="iconbtn pd-x" data-hubst="close" aria-label="Karte schließen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button></section>` +
       `<section class="pd-stinfo"><div class="panel st-sidein"><span class="st-world">${wLabel(w)}</span><b class="st-name">${esc(w.name)}</b>` +
         `<div class="st-sstats"><span>${starSvg(true)}<b>${worldStars(w)}</b> / ${worldMaxStars(w)} Sterne</span><span><b>${done}</b> / ${all} Stationen</span><span>${coinImg}<b>${STORY.coins}</b> Münzen</span></div>` +
-        `<p class="hint">Klick auf der Karte auf eine Station, dann erscheint sie hier.</p><button type="button" class="btn small" data-worldrules="${w.id}">Sonderregeln dieser Welt</button></div></section>` +
+        `${worldRulesHTML(w)}<p class="hint">Klick auf der Karte auf eine Station, dann erscheint sie hier.</p></div></section>` +
     `</main>`;
 }
 function openHubStory(stId, noAuto) {

@@ -2270,3 +2270,66 @@ html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
 .hs-main>.acts{margin-top:auto;position:sticky;bottom:0;padding-top:10px;background:linear-gradient(transparent,var(--paper,#f7ecd4) 30%)}
 .hs-main>.acts .btn.primary{min-height:52px;font-size:18px}
 #sheetwrap.hubdock .sh-head .iconbtn svg{stroke:#fbefd6;stroke-width:2.4;fill:none;width:20px;height:20px}
+/* Story: Sonderregeln direkt auf der Seite */
+.hs-rules{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:12px;background:rgba(158,42,34,.06);border:1px solid rgba(158,42,34,.2)}
+.hs-rules .wr-list{margin:0}
+.hs-rules .wr-list dt{font:700 15px var(--display);color:#7a2a1a;margin-top:6px}
+.hs-rules .wr-list dt:first-child{margin-top:0}
+.hs-rules .wr-list dd{margin:2px 0 0;font-size:13.5px;line-height:1.4}
+.hs-rules .wr-none{margin:0;font-size:14px}
+.pd-stinfo .st-sidein{display:flex;flex-direction:column;gap:12px;height:100%;overflow-y:auto}
+/* Gegen Bots am PC: Tisch | Einstellungen | Hildes Aufträge */
+html.pcnav #scr-setup .content.su-pc{position:absolute;inset:0;display:grid;grid-template-columns:auto minmax(0,1fr) 380px;gap:16px 16px;align-items:stretch;align-content:stretch;padding:calc(var(--sat) + var(--nav) + 40px) var(--cr) 24px var(--cl);overflow:hidden;max-width:none}
+html.pcnav #scr-setup .footbtn{display:none}
+html.pcnav #scr-setup .su-side>.pp-side{display:flex;flex-direction:column;gap:18px;height:100%;min-height:0}
+.su-table{position:relative;height:100%;aspect-ratio:768/1376;border-radius:18px;overflow:hidden;border:2px solid rgba(255,214,160,.35);background:#1a120c url(../art/hintergrund-tisch.webp) center/cover;box-shadow:0 16px 30px -12px rgba(0,0,0,.8)}
+.su-seat{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;width:130px;text-align:center}
+.su-seat.s-l{left:22%;top:46%}.su-seat.s-t{left:50%;top:17%}.su-seat.s-r{left:78%;top:46%}
+.su-seat.s-l2{left:27%;top:24%}.su-seat.s-r2{left:73%;top:24%}
+.su-seat.s-me{left:50%;top:82%}
+.su-face img{display:block;width:clamp(70px,6vw,92px);height:clamp(70px,6vw,92px);border-radius:50%;object-fit:cover;object-position:50% 20%;border:3px solid #d9bf8c;background:#3a2414;box-shadow:0 8px 16px -4px rgba(0,0,0,.8)}
+.su-seat.me .su-face img{border-color:#f3c873;box-shadow:0 0 0 3px rgba(243,200,115,.35),0 8px 16px -4px rgba(0,0,0,.8)}
+.su-seat b{font:700 19px/1.05 var(--display);color:#fbefd6;text-shadow:0 2px 3px #000}
+.su-seat small{font-size:12.5px;line-height:1.2;color:#ecd9b4;text-shadow:0 1px 3px #000}
+@keyframes suPop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.su-face{animation:suPop .35s cubic-bezier(.3,1.4,.5,1) both}
+.su-deck{position:absolute;left:50%;top:51%;transform:translate(-50%,-50%);display:flex;gap:12px;pointer-events:none}
+.su-deck .back{position:relative;width:clamp(52px,4.4vw,68px);height:auto;aspect-ratio:5/7;border-radius:8px;box-shadow:0 8px 14px -4px rgba(0,0,0,.8)}
+.su-deck .back.door{transform:rotate(-6deg)}.su-deck .back.treas{transform:rotate(5deg)}
+.su-reroll{position:absolute;left:50%;top:66%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.su-reroll svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.4;fill:none}
+.su-mid{display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto;scrollbar-width:none}
+.su-mid::-webkit-scrollbar{display:none}
+.su-mid>.panel{margin:0!important;padding:12px 16px;display:grid;grid-template-columns:128px minmax(0,1fr);gap:6px 14px;align-items:center}
+.su-mid>.panel>.lbl{margin:0;grid-column:1}
+.su-mid>.panel>.seg,.su-mid>.panel>.slider,.su-mid>.panel>.deckbtn,.su-mid>.panel>.hint{grid-column:2;margin:0}
+.su-mid>.panel>.hint{font-size:12.5px;line-height:1.35;margin-top:-2px}
+.su-mid>.panel>.trow{grid-column:1/-1;margin:0}
+.su-mid>.panel>.trow:not(:has(.switch)){grid-column:1;font:800 12px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:0;padding:0}
+.su-mid>.panel>.trow:not(:has(.switch))+.seg{grid-column:2}
+.su-mid .seg.big .pts,.su-mid #setup-foes{display:none}
+.su-mid .seg.big button{min-height:0;padding-top:9px;padding-bottom:9px}
+.su-mid .seg button{min-height:40px}
+.su-mid .deckbtn{min-height:44px}
+.su-mid .slider.goal{display:flex;flex-direction:column;gap:6px}
+.su-start{margin-top:auto;min-height:58px;font-size:20px;flex:none}
+.su-deck .back{width:46px!important;height:64px!important;min-height:0!important;aspect-ratio:auto;background-size:cover}
+.su-deck{top:50%}
+.su-table .su-reroll{width:auto!important;min-width:0;padding:6px 14px;min-height:34px}
+.su-mid{gap:8px}
+.su-mid>.panel{padding:9px 14px;gap:4px 14px}
+.su-mid .seg button{min-height:36px;padding-top:6px;padding-bottom:6px}
+.su-mid .seg.big button{padding-top:6px;padding-bottom:6px}
+.su-mid .slider.goal{gap:2px}
+.su-mid .slider.goal input{margin:4px 0}
+.su-mid .deckbtn{min-height:40px;padding:4px 12px}
+.su-mid>.panel>.trow{padding:4px 0;min-height:0}
+.su-mid>.panel>.trow small{font-size:12px;line-height:1.3}
+.su-mid>.panel>.trow+.trow{border-top:1px dashed rgba(120,80,40,.25);padding-top:6px}
+.su-mid>.panel>.lbl{font-size:12px}
+.su-seat{transform:translateX(-50%)}
+.su-seat.s-l{top:38%}.su-seat.s-r{top:38%}.su-seat.s-t{top:10%}.su-seat.s-l2{top:17%}.su-seat.s-r2{top:17%}.su-seat.s-me{top:73%}
+.su-table .su-reroll{flex-direction:row;top:62%}
+.hs-rules .hs-lbl{color:#8a5a2a}
+.hs-rules .wr-none,.hs-rules .wr-list dd{color:#4a3220}
+.hs-rules .wr-list dd a,.hs-rules .wr-list dd .kw{color:#7a2a1a}
