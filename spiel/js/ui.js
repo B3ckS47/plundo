@@ -2863,7 +2863,7 @@ function renderShopPage() {
   el.classList.add('two');
   const st = dailyState();
   const items = st.shop.map(id => { const it = shopItem(id); if (!it) return ''; const deal = shopDeal(id); return shelfItem(id, it.price, shopPrice(id), deal ? deal.pct : 0, 'data-shopbuy'); }).join('');
-  const kl = `<section class="kl-panel"><header class="kl-head"><div><small>Für Münzen</small><h2>Krämerladen</h2></div><span class="kl-coins">${coinImg}<b>${STORY.coins}</b> Münzen</span></header>` +
+  const kl = `<section class="kl-panel"><header class="kl-head"><div><h2>Krämerladen</h2></div><span class="kl-coins">${coinImg}<b>${STORY.coins}</b> Münzen</span></header>` +
     `<div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Frisch reingekommen, nur heute! Na ja, fast nur heute.“</p></div>` +
     `<div class="kl-shelf"><div class="sitems">${items || Array.from({length: 4}, () => '<div class="sitem empty"><span class="si-ware"></span><span class="si-t"><b>&nbsp;</b><small>&nbsp;</small></span></div>').join('')}</div>${items ? '' : '<p class="kl-empty">Du hast schon alles aus dem Laden. Hut ab!<small>Morgen räumt Kuno neue Ware ins Regal.</small></p>'}</div>` +
     `<p class="kl-hint">Neues Angebot in ${untilMidnight()}. Münzen gibt es für Aufträge und im Storymodus. Gekauftes wählst du im Charakter-Bildschirm aus.</p></section>`;
@@ -2883,7 +2883,7 @@ function premiumHTML() {
   };
   const soon = (ic, kind, title, txt) => `<button type="button" class="pr-item soon" data-soon="${esc(title)} kommt bald in den Shop."><span class="pr-pic ic">${ic}</span><span class="pr-t"><small>${kind}</small><b>${title}</b><em>${txt}</em></span><span class="pr-price">Bald</span></button>`;
   const g = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
-  return `<section class="pr-panel"><header class="pr-head"><img src="${new URL('art/shop-kissen.webp', document.baseURI).href}" alt=""><div><small>Für Echtgeld</small><h2>Shop</h2><p>Unterstütze Plundo und hol dir mehr Abenteuer.</p></div></header>` +
+  return `<section class="pr-panel"><header class="pr-head"><img src="${new URL('art/shop-kissen-mini.webp', document.baseURI).href}" alt=""><div><h2>Shop</h2><p>Unterstütze Plundo und hol dir mehr Abenteuer.</p></div></header>` +
     `<div class="pr-list"><span class="pr-lbl">Welten</span>${offer(OFFERS[2], {best: true})}${offer(OFFERS[0])}${offer(OFFERS[1])}` +
     `<span class="pr-lbl">Extras</span>` +
     soon(g('<path d="M4 4l16 16 M9.5 5H19v9.5 M5 9v10h10" />'), 'Komfort', 'Werbefrei', 'Spielen ohne Werbung, einmal kaufen, für immer') +
