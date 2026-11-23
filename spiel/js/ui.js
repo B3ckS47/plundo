@@ -2436,11 +2436,11 @@ function seatHTML(p) {
   const bgu = bx && bx[2] ? new URL(bgSrc(bx), document.baseURI).href : p.human ? new URL('art/kulisse-staedtchen.webp', document.baseURI).href : '';
   const style = `--fc:${frameOf(p)[2]}${bgu ? `;--bg:url('${bgu}');--bgp:${(bx && bx[2] && bx[4]) || '50% 50%'}` : ''}`;
   return `<button type="button" class="gseat${turn ? ' turn' : ''}${p.dead ? ' dead' : ''}${p.human ? ' me' : ''}" ${p.human ? 'data-go="equip"' : `data-opp="${p.id}"`} style="${style}" aria-label="${p.human ? 'Du' : esc(p.name)}, Stufe ${p.lvl}">` +
-    `<span class="gs-pt"><img src="${p.human ? myPortrait() : portrait(p)}" alt=""><i>${p.lvl}</i></span>` +
+    `<span class="gs-pt">${bigPortrait(p)}<i>${p.lvl}</i></span>` +
     `<span class="gs-t"><span class="gs-n"><b>${p.human ? 'Du' : esc(p.name)}</b>${tag}</span>` +
     `<span class="gs-st"><span title="Kampfstärke"><img src="${ICON.kampf}" alt="">${power(p)}</span><span title="Weglaufen"><img src="${ICON.run}" alt="">${sign(runBonus(p))}</span>` +
     `<span title="Handkarten"${p.human && p.hand.length > handLimit(p) ? ' class="warn"' : ''}><img src="${ICON.hand}" alt="">${p.hand.length}${p.human ? '/' + handLimit(p) : ''}</span>${p.gold ? `<span class="gold" title="Goldbeutel">${fmt(p.gold)} G</span>` : ''}</span>` +
-    (p.human ? `<span class="gs-dots" aria-hidden="true">${Array.from({length: WINLVL()}, (_, i) => `<em class="${i < p.lvl ? 'on' : ''}"></em>`).join('')}</span>` : '') +
+    `<span class="gs-dots" aria-hidden="true">${Array.from({length: WINLVL()}, (_, i) => `<em class="${i < p.lvl ? 'on' : ''}"></em>`).join('')}</span>` +
     `</span></button>`;
 }
 function renderPCG() {
@@ -2451,11 +2451,9 @@ function renderPCG() {
   const who = S.winner != null ? 'Spiel vorbei' : mine ? 'Dein Zug' : `${esc(P(S.cur).name)} ist am Zug`;
   patch($('#gphase'), `<span class="gp-h">${who} · Runde ${S.turn}</span><ol>${ICON.phase.map((src, i) => `<li class="${S.phase === i + 1 ? 'on' : S.phase > i + 1 ? 'done' : ''}"><img src="${src}" alt=""><span>${PHASES[i]}</span></li>`).join('')}</ol>`);
   // Stapel, zuletzt abgelegt und Menü rechts am Tisch
-  const dD = S.doorDisc[S.doorDisc.length - 1], dT = S.trDisc[S.trDisc.length - 1];
   patch($('#gdeck'), `<div class="gd-tools"><button type="button" class="iconbtn" data-go="pause" aria-label="Menü"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></svg></button>${$('#btn-sound').outerHTML.replace('id="btn-sound"', '')}</div>` +
     `<div class="gd-pile"><span class="back door"></span><span class="back door"></span><span class="back door"></span><small>Tür · ${S.door.length}</small></div>` +
-    `<div class="gd-pile"><span class="back treas"></span><span class="back treas"></span><span class="back treas"></span><small>Schatz · ${S.tr.length}</small></div>` +
-    (dD || dT ? `<div class="gd-disc"><small>Ablage</small><span>${[dD, dT].filter(Boolean).map(c => cardMini(c, {inert: true, size: 'tiny'})).join('')}</span></div>` : ''));
+    `<div class="gd-pile"><span class="back treas"></span><span class="back treas"></span><span class="back treas"></span><small>Schatz · ${S.tr.length}</small></div>`);
   // Deine Ausrüstung am unteren Tischrand (Klick öffnet die Karte, leere Plätze deine Figur)
   const by = s => p.eq.filter(i => i.slot === s), hands = by('hand'), two = hands.find(h => (h.hands || 1) > 1), misc = by('none');
   const slot = (c, sl, l) => c ? eqTile(p, c, true, 'eq') : eqEmpty(sl, l);
@@ -2471,7 +2469,16 @@ function renderPCG() {
   patch($('#wfight'), fightWideHTML());
   const pv = W.hoverUid != null && mq().hover.matches ? findCard(W.hoverUid) : null;
   patch($('#wprev'), pv ? `<div class="wprev-in">${cardBig(pv)}</div>` : '');
+  requestAnimationFrame(pcgFitHand);
 }
+// Hand am PC: passt sie nicht in die Reihe, rücken die Karten zusammen (überlappen leicht) statt abgeschnitten zu werden
+function pcgFitHand() {
+  const h = $('#hand'); if (!h || !PCGX()) return;
+  const cs = [...h.querySelectorAll(':scope > .mc')], n = cs.length; if (n < 2) { h.style.removeProperty('--hg'); return; }
+  const w = cs[0].getBoundingClientRect().width, avail = h.clientWidth, g = Math.min(8, (avail - n * w) / (n - 1));
+  h.style.setProperty('--hg', Math.floor(g) + 'px');
+}
+window.addEventListener('resize', () => requestAnimationFrame(pcgFitHand));
 // Kartenvorschau beim Überfahren mit der Maus (nur PC-Ansicht)
 document.addEventListener('pointerover', e => {
   if (LAYOUT !== 'pc' || e.pointerType !== 'mouse') return;

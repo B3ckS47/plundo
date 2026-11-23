@@ -2463,3 +2463,31 @@ html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
 #app.pcg .arena.fight .art img,#app.pcg .arena.reveal .art img{width:100%;height:100%;object-fit:cover}
 #app.pcg .arena .hud{background:none;padding:0 0 6px}
 #app.pcg .arena .hud .snum{font-size:64px}
+/* Klassen überall in derselben Farbe wie auf den Karten */
+.et.id.k-cls{border-color:var(--k-class)}
+.k-cls .et-kind{background:var(--k-class)}
+/* Partie am PC: Feinschliff */
+#app.pcg #scr-game{--cw:clamp(96px,6.9vw,132px);--chh:calc(var(--cw) * 132 / 104);grid-template-columns:calc(var(--chh) * 3) minmax(0,1fr) 340px}
+#app.pcg #scr-game:not(.fighting){grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"wopps wopps wlog" "table table wlog" "table table act" "gme hand hand"}
+#app.pcg #scr-game:not(.fighting) .wside{display:none}
+#app.pcg .hand .mc{width:var(--cw);height:var(--chh);aspect-ratio:auto}
+#app.pcg .gme .gseat{width:calc(var(--chh) * 3);height:var(--chh);aspect-ratio:auto}
+/* Porträt mit Rahmen */
+.gs-pt .pfw img.pt{display:block;width:clamp(56px,4.2vw,78px);height:clamp(56px,4.2vw,78px);border-radius:50%;object-fit:cover;object-position:50% 20%;border:3px solid var(--fc,#c9a46a);background:#3a2414;box-shadow:0 6px 12px -4px #000}
+.gs-pt .pfw.fa img.pt{width:clamp(48px,3.6vw,68px);height:clamp(48px,3.6vw,68px);border:0;margin:10px}
+.gs-pt .pfw::after{inset:-21.5%}
+.gs-pt>i{z-index:2}
+.gs-pt .pfw.fa+i{right:4px;bottom:6px}
+.gs-dots{flex-wrap:wrap;max-width:150px}
+/* Notizen: gleiche Fläche wie Tisch und Knöpfe, Kartenvorschau füllt das ganze Fenster */
+#app.pcg .wlog>.wpanel{margin:0;padding:14px 16px}
+#app.pcg .act{box-shadow:none}
+#app.pcg .wprev{grid-area:wlog;align-self:stretch;justify-self:stretch;width:auto;margin:0;display:flex;align-items:center;justify-content:center;border-radius:16px;background:linear-gradient(rgba(34,21,12,.97),rgba(24,15,9,.97));border:2px solid #5e3f23;padding:14px}
+#app.pcg .wprev:empty{display:none}
+#app.pcg .wprev-in{transform-origin:center;max-height:100%;display:flex;justify-content:center}
+#app.pcg .wprev-in .bc{width:min(300px,100%);max-height:100%}
+/* Sonstiges rund */
+#app.pcg .geq .et.misc{width:68px;height:68px;border-radius:50%;align-self:center}
+#app.pcg .hand{gap:0;overflow:visible}
+#app.pcg .hand>.mc+.mc{margin-left:var(--hg,8px)}
+#app.pcg .hand>.mc:hover{z-index:2}
