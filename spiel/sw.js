@@ -1,5 +1,5 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-6bc5051a25';
+const CACHE = 'loota-89af38e6b0';
 const FILES = [
 "./",
 "index.html",
@@ -45,6 +45,8 @@ const FILES = [
 "art/einmal-steinpilz.webp",
 "art/einmal-stinkbombe.webp",
 "art/einmal-trank-der-tapferkeit.webp",
+"art/flaeche-kraemer.webp",
+"art/flaeche-shop.webp",
 "art/fluch-ahnenforschung.webp",
 "art/fluch-ameisen-in-der-hose.webp",
 "art/fluch-identitaetskrise.webp",
@@ -103,6 +105,7 @@ const FILES = [
 "art/gegenstand-zauberstab-der-ausreden.webp",
 "art/gegenstand-zwergenaxt.webp",
 "art/hg-karten.webp",
+"art/hg-laden.webp",
 "art/hintergrund-keller.webp",
 "art/hintergrund-schiff.webp",
 "art/hintergrund-strand.webp",
