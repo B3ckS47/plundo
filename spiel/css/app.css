@@ -2903,3 +2903,6 @@ html.pcnav .rp-toc{display:flex;flex-direction:column;gap:2px;padding:10px;borde
 .gs-st>span.gold{padding-left:3px}
 .gs-st img{width:17px;height:17px}
 @media (max-width:1560px){.gs-st{gap:3px}.gs-st>span{padding:1px 5px 1px 2px;font-size:12.5px}.gs-st img{width:15px;height:15px}}
+/* Storymodus am PC: Stationen und Weltinfo ohne sichtbare Scrollleiste (Mausrad scrollt weiter) */
+html.pcnav #sheetwrap.hubdock .sh-body,html.pcnav #sheetwrap.hubdock .sh-body *,html.pcnav .pd-stinfo .st-sidein,html.pcnav #scr-story .st-sidein,html.pcnav #scr-story .sh-body{scrollbar-width:none}
+html.pcnav #sheetwrap.hubdock .sh-body::-webkit-scrollbar,html.pcnav #sheetwrap.hubdock .sh-body *::-webkit-scrollbar,html.pcnav .pd-stinfo .st-sidein::-webkit-scrollbar,html.pcnav #scr-story .st-sidein::-webkit-scrollbar,html.pcnav #scr-story .sh-body::-webkit-scrollbar{display:none}
