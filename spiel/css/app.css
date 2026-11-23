@@ -2553,3 +2553,21 @@ html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
 /* Hildes Aufträge: nie Scrollbalken zeigen (Stempel ragen leicht über den Rand); Scrollen bleibt möglich */
 .hub-daily .notes{overflow-x:hidden;scrollbar-width:none}
 .hub-daily .notes::-webkit-scrollbar{display:none}
+/* PC-Partie Feinschliff: Kampfwerte bündig neben der Karte, auf jedem Brett lesbar */
+#app.pcg .table .arena{container-type:size}
+#app.pcg .arena .hud{grid-template-columns:1fr calc((100cqh - 6px) * .75) 1fr;column-gap:0}
+#app.pcg .hud .side.me{justify-content:flex-end;padding:0 18px 0 0}
+#app.pcg .hud .side.mon{justify-content:flex-end;padding:0 0 0 18px}
+#app.pcg .hud .side .sv{padding:4px 12px 6px;border-radius:14px;background:rgba(18,10,5,.72);box-shadow:0 4px 10px rgba(0,0,0,.35)}
+#app.pcg .hud .side .slbl{color:#e3cfa6}
+#app.pcg .hud .side .pts img{box-shadow:0 4px 10px rgba(0,0,0,.6)}
+#app.pcg .arena .hud .snum{font-size:52px}
+/* Sonstiges wieder rechteckig wie alle Plätze */
+#app.pcg .geq .et.misc{width:64px;height:88px;border-radius:10px;align-self:auto}
+/* Kartendetails: Rahmen in der Farbe der Kartenart */
+html.pcg-on .bc{border:3px solid var(--kc);border-top-width:8px}
+html.pcg-on .bc-art{border-color:var(--kc)}
+html.pcg-on .bc.k-monster{--kc:var(--k-monster)}html.pcg-on .bc.k-curse{--kc:var(--k-curse)}html.pcg-on .bc.k-race{--kc:var(--k-race)}html.pcg-on .bc.k-class{--kc:var(--k-class)}
+html.pcg-on .bc.k-item{--kc:var(--k-item)}html.pcg-on .bc.k-oneshot{--kc:var(--k-oneshot,#2f8f8a)}html.pcg-on .bc.k-enh{--kc:var(--k-enh,#7a4a1a)}html.pcg-on .bc.k-levelup{--kc:var(--k-levelup,#2f5d7a)}
+#app.pcg .gd-pile small{left:50%;right:auto;transform:translateX(-50%);white-space:nowrap;padding:2px 8px;border-radius:999px;background:rgba(18,10,5,.75);bottom:-4px}
+html.pcg-on .bc.k-wander{--kc:var(--k-wander)}html.pcg-on .bc.k-amulet{--kc:var(--k-amulet)}
