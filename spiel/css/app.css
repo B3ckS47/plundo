@@ -2776,3 +2776,16 @@ html.pcnav #scr-shop .content{padding-bottom:20px}
 .kl-panel .say{padding:6px 12px}
 .kl-hint{padding:6px 12px;font-size:13px}
 .kl-acts .btn{min-height:42px}
+/* Laden: leeres Regal mit Hinweis, runde Ecken */
+.kl-shelf{position:relative}
+.sitem.empty .si-ware{opacity:1}
+.sitem.empty .si-t{visibility:hidden}
+.kl-empty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;width:min(78%,420px);padding:14px 20px;border-radius:14px;text-align:center;
+  background:rgba(255,244,214,.92);border:2px solid #b8862f;box-shadow:0 10px 24px rgba(0,0,0,.45);font:700 18px/1.25 var(--display);color:#3a1e04}
+.kl-empty small{display:block;margin-top:4px;font:500 13.5px var(--body);color:#6b4a24}
+.kl-panel,.pr-panel{clip-path:inset(0 round 20px)}
+html.pcnav .shoppage.two>section{filter:none}
+/* Runde Ecken wie überall: Bildrahmen ausblenden, eigener Rand mit Rundung */
+.kl-panel,.pr-panel{clip-path:none;border-image:none;border-radius:20px}
+.kl-panel{border:3px solid #b8862f;background:url(../art/flaeche-kraemer.webp) center/106% 106% no-repeat #b98a3e;padding:24px 26px 24px;box-shadow:inset 0 0 0 2px rgba(255,230,160,.35),0 18px 34px -14px #000}
+.pr-panel{border:2px solid #d6a84a;background:url(../art/flaeche-shop.webp) center/120% 120% no-repeat #2a0c3e;padding:24px 26px 20px;box-shadow:inset 0 0 0 1px rgba(255,220,150,.3),inset 0 0 0 7px rgba(42,12,62,.6),inset 0 0 0 8px rgba(214,168,74,.45),0 18px 34px -14px #000}

@@ -2865,9 +2865,8 @@ function renderShopPage() {
   const items = st.shop.map(id => { const it = shopItem(id); if (!it) return ''; const deal = shopDeal(id); return shelfItem(id, it.price, shopPrice(id), deal ? deal.pct : 0, 'data-shopbuy'); }).join('');
   const kl = `<section class="kl-panel"><header class="kl-head"><div><small>Für Münzen</small><h2>Krämerladen</h2></div><span class="kl-coins">${coinImg}<b>${STORY.coins}</b> Münzen</span></header>` +
     `<div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Frisch reingekommen, nur heute! Na ja, fast nur heute.“</p></div>` +
-    `<div class="sitems">${items || '<p class="hint">Du hast schon alles aus dem Laden. Hut ab!</p>'}</div>` +
-    `<p class="kl-hint">Neues Angebot in ${untilMidnight()}. Münzen gibt es für Aufträge und im Storymodus. Gekauftes wählst du im Charakter-Bildschirm aus.</p>` +
-    `<div class="kl-acts"><button type="button" class="btn" data-go="daily">Zu den Aufträgen</button><button type="button" class="btn" data-go="profile">Zum Charakter</button></div></section>`;
+    `<div class="kl-shelf"><div class="sitems">${items || Array.from({length: 4}, () => '<div class="sitem empty"><span class="si-ware"></span><span class="si-t"><b>&nbsp;</b><small>&nbsp;</small></span></div>').join('')}</div>${items ? '' : '<p class="kl-empty">Du hast schon alles aus dem Laden. Hut ab!<small>Morgen räumt Kuno neue Ware ins Regal.</small></p>'}</div>` +
+    `<p class="kl-hint">Neues Angebot in ${untilMidnight()}. Münzen gibt es für Aufträge und im Storymodus. Gekauftes wählst du im Charakter-Bildschirm aus.</p></section>`;
   patch(el, kl + premiumHTML()); watchBoards(el); fitNames(el);
   if (UI.shopFocus) { UI.shopFocus = false; const pr = el.querySelector('.pr-panel'); if (pr) { pr.classList.remove('flash'); void pr.offsetWidth; pr.classList.add('flash'); } }
 }
