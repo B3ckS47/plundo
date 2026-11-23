@@ -2516,3 +2516,8 @@ html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
 #app.pcg .wlog>.wpanel::before{content:"";position:absolute;top:30px;left:50%;width:28px;height:22px;margin-left:-14px;background:url(../icons/reisszwecke.webp) center/contain no-repeat;z-index:2}
 #app.pcg .wlog .loglist li.l-rule{color:#6b4a14}
 #app.pcg .idle-txt{padding:6px 16px;border-radius:999px;background:rgba(18,10,5,.62)}
+/* Türrückseite je Welt, auf allen Geräten */
+#app.tbl-keller .back.door{background-image:url(../art/ruecken-tuer-keller.webp)}
+#app.tbl-wald .back.door{background-image:url(../art/ruecken-tuer-wald.webp)}
+#app.tbl-strand .back.door{background-image:url(../art/ruecken-tuer-strand.webp)}
+#app.tbl-schiff .back.door{background-image:url(../art/ruecken-tuer-schiff.webp)}
