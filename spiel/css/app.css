@@ -2671,3 +2671,9 @@ html.pcnav #scr-cards .chip[data-kf="rc"][aria-pressed="true"]{background:linear
 html.pcnav #scr-cards .chip[data-kf="item"]{--cc:var(--k-item)}
 html.pcnav #scr-cards .chip[data-kf="misc"]{--cc:var(--k-oneshot)}
 html.pcnav #scr-cards{background:linear-gradient(rgba(18,10,5,.45),rgba(18,10,5,.58)),url(../art/hg-karten.webp) center/cover no-repeat #1a100a}
+/* Karten und Deck am PC: Deck und Kartenbereich scrollen getrennt, die Filterleiste klebt sauber am oberen Rand des Kartenbereichs */
+html.pcnav #scr-cards .content{overflow:hidden;grid-template-rows:minmax(0,1fr);align-items:stretch;padding-bottom:24px}
+html.pcnav #scr-cards .cd-side{position:static;max-height:none;height:100%;min-height:0;overflow-y:auto}
+html.pcnav #scr-cards .cd-main{height:100%;min-height:0;overflow-y:auto;scrollbar-width:none}
+html.pcnav #scr-cards .cd-main::-webkit-scrollbar{display:none}
+html.pcnav #scr-cards .cfilter{top:0;border-radius:0}
