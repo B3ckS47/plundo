@@ -194,7 +194,7 @@ let GAME_ON = false;
 let GAME_TABLE = 'taverne', GAME_THEME = 'taverne';
 // Tischflächen und Musik der Welten werden mit dem Abschluss der Welt freigeschaltet
 const MOOD_WORLD = {keller: 'w2', wald: 'w3', strand: 'w4', schiff: 'w5'};
-const moodOk = v => !MOOD_WORLD[v] || !!STORY.worlds[MOOD_WORLD[v]];
+const moodOk = v => !MOOD_WORLD[v] || worldReady(MOOD_WORLD[v]);
 // Freies Spiel: Tischfläche und Musik kommen vom gewählten Deck (auch bei einem eigenen Deck, das ja auf einem Deck aufbaut)
 function freeMood(saved, savedTable) {
   const d = deckById(DECK.deck), m = saved || (d.unlocked() ? d.mood : 'taverne'); GAME_TABLE = GAME_THEME = moodOk(m) ? m : 'taverne';
@@ -224,9 +224,9 @@ const DECKS = [
   {id: 'wald', name: 'Pilzwald-Deck', icon: 'Pilzkönigin Morchella', desc: 'Bovisten, Hexenringe und die Pilzkönigin: 20 Waldkarten plus alles aus dem Grunddeck, was in einen Wald passt. Mit Waldboden und Waldmusik.', mood: 'wald',
     base: waldCount, unlocked: () => !!STORY.worlds.w3, lockTxt: 'Das Pilzwald-Deck schaltest du frei, wenn du im Storymodus Welt 3 abschließt.'},
   {id: 'strand', name: 'Strand-Deck', icon: 'Krabbenbaron Kneifer', desc: 'Quallen, Haie und der Krabbenbaron, dazu Ebbe und Flut: 19 Strandkarten plus alles aus dem Grunddeck, was an einen Strand passt. Mit Sandstrand und Strandmusik.', mood: 'strand',
-    base: strandCount, unlocked: () => !!STORY.worlds.w4, lockTxt: 'Das Strand-Deck schaltest du frei, wenn du im Storymodus Welt 4 abschließt.'},
+    base: strandCount, unlocked: () => worldReady('w4'), lockTxt: 'Das Strand-Deck schaltest du frei, wenn du im Storymodus Welt 4 abschließt.'},
   {id: 'meer', name: 'Meeres-Deck', icon: 'Käpt’n Achtarm', desc: 'Wale, Kraken, Piraten und Seegang, dazu die Schatzkarte: 31 Meereskarten plus alles aus dem Grunddeck, was aufs Meer passt. Mit Schiffsdeck und Piratenmusik.', mood: 'schiff',
-    base: meerCount, unlocked: () => !!STORY.worlds.w5, lockTxt: 'Das Meeres-Deck schaltest du frei, wenn du im Storymodus Welt 5 abschließt.'}
+    base: meerCount, unlocked: () => worldReady('w5'), lockTxt: 'Das Meeres-Deck schaltest du frei, wenn du im Storymodus Welt 5 abschließt.'}
 ];
 // Karten einer Welt tauchen in der Kartenliste erst auf, wenn ihr Deck freigeschaltet ist
 const cardOpen = c => !c.w || deckById({2: 'keller', 3: 'wald', 4: 'strand', 5: 'meer'}[c.w]).unlocked();
@@ -1410,7 +1410,7 @@ function fogHTML(f, open) {
 }
 function openStation(id) {
   const st = stationById(id); if (!st) return;
-  if (!worldOwned(worldById(st.world)) && !STORY.done[st.id]) { openSheet({id: 'buyworld', w: st.world}); return; }
+  if (!worldOwned(worldById(st.world))) { openSheet({id: 'buyworld', w: st.world}); return; }
   if (!stationUnlocked(st) && !SET.test) { toast('Erst die Station davor schaffen.'); buzz(30); return; }
   if (st.type === 'shop') visitShop(st);
   if ((CUR === 'story' || HUBST) && SHEETS.length === 1 && topSheet().id === 'station') SHEETS.pop();   // breite Ansicht: Karte bleibt bedienbar, die neue Station ersetzt die alte
@@ -1636,16 +1636,16 @@ SHEET_VIEWS.buyworld = s => {
   const w = worldById(s.w); if (!w) return null;
   const faces = [...new Set(w.stations.filter(st => st.scn && typeof st.scn === 'object' && st.scn.bots).flatMap(st => st.scn.bots))].filter(n => ICON.portrait[n]);
   const owned = worldOwned(w), rest = w.stations.filter(st => st.type !== 'shop').length;
-  const offers = OFFERS.filter(o => o.worlds.includes(w.id) && (o.worlds.length === 1 || o.worlds.some(x => x !== w.id && !worldOwned(worldById(x))))).map(o => `<button type="button" class="btn${o.worlds.length > 1 ? ' primary' : ''} bw-offer" data-offer="${o.id}"><b>${esc(o.n)}</b><span>${SET.test && !BILL.ready ? 'Gratis (Testphase)' : esc(offerPrice(o))}</span>${o.note ? `<small>${esc(o.note)}</small>` : ''}</button>`).join('');
+  const offers = OFFERS.filter(o => o.worlds.includes(w.id) && offerOk(o) && (o.worlds.length === 1 || o.worlds.some(x => x !== w.id && !worldOwned(worldById(x))))).map(o => `<button type="button" class="btn${o.worlds.length > 1 ? ' primary' : ''} bw-offer" data-offer="${o.id}"><b>${esc(o.n)}</b><span>${SET.test && !BILL.ready ? 'Gratis (Testphase)' : esc(offerPrice(o))}</span>${o.note ? `<small>${esc(o.note)}</small>` : ''}</button>`).join('');
   return {head: h3(`${wLabel(w)} · ${esc(w.name)}`), body: `<div class="bw-map" style="background-image:url(${w.map})"><span class="bw-faces">${faces.map(n => `<img src="${ICON.portrait[n]}" alt="${esc(n)}">`).join('')}</span></div>` +
     `<p class="bw-lead">${esc(w.intro.split('. ').slice(0, 3).join('. '))}.</p>` +
     `<ul class="bw-list"><li><b>${rest} Stationen</b> mit Rätseln, Duellen und ${esc(w.sell.boss)} als Boss</li><li><b>${esc(w.sell.rule.split(':')[0])}:</b>${esc(w.sell.rule.split(':').slice(1).join(':'))}</li><li><b>${w.sell.cards} neue Karten</b> und neue Optik: ${esc(w.sell.loot)} zum Sammeln</li><li><b>Danach fürs freie Spiel:</b> ${esc(w.unlocks.join(', '))}</li></ul>` +
     (owned ? `<p class="bw-own">Gehört dir. Viel Spaß!</p><div class="acts"><button type="button" class="btn primary" data-storyclose>Los geht’s</button></div>`
-      : `<div class="bw-offers">${offers}</div><p class="hint">${BILL.ready ? 'Einmal kaufen, für immer spielen. Bezahlt wird über Google Play.' : SET.test ? 'Testphase: Du kannst die Welt hier gratis freischalten. Echte Käufe gibt es in der Plundo-App aus dem Play Store.' : 'Einmal kaufen, für immer spielen. Kaufen kannst du in der Plundo-App aus dem Play Store. Bist du dort angemeldet, hast du deine Welten auch hier.'}</p>` +
+      : `<div class="bw-offers">${offers}</div>${needPrev(w) ? `<p class="hint">Einzeln gibt es ${wLabel(w)}, sobald dir ${wLabel(needPrev(w))} gehört.</p>` : ''}<p class="hint">${BILL.ready ? 'Einmal kaufen, für immer spielen. Bezahlt wird über Google Play.' : SET.test ? 'Testphase: Du kannst die Welt hier gratis freischalten. Echte Käufe gibt es in der Plundo-App aus dem Play Store.' : 'Einmal kaufen, für immer spielen. Kaufen kannst du in der Plundo-App aus dem Play Store. Bist du dort angemeldet, hast du deine Welten auch hier.'}</p>` +
         (BILL.ready ? `<button type="button" class="acc-link" data-billrestore>Schon gekauft? Käufe wiederherstellen</button>` : ''))};
 };
 async function buyOffer(id) {
-  const o = OFFERS.find(x => x.id === id); if (!o) return;
+  const o = OFFERS.find(x => x.id === id); if (!o || !offerOk(o)) return;
   if (BILL.ready) { if (!(await billBuy(id))) return; }
   else if (SET.test) unlockOffer(id);
   else { toast('Kaufen kannst du in der Plundo-App aus dem Play Store. Bist du dort angemeldet, hast du deine Welten auch hier.'); buzz(30); return; }
@@ -2868,18 +2868,19 @@ function renderShopPage() {
     `<div class="kl-shelf"><div class="sitems">${items || Array.from({length: 4}, () => '<div class="sitem empty"><span class="si-ware"></span><span class="si-t"><b>&nbsp;</b><small>&nbsp;</small></span></div>').join('')}</div>${items ? '' : '<p class="kl-empty">Du hast schon alles aus dem Laden. Hut ab!<small>Morgen räumt Kuno neue Ware ins Regal.</small></p>'}</div>` +
     `<p class="kl-hint">Neues Angebot in ${untilMidnight()}. Münzen gibt es für Aufträge und im Storymodus. Gekauftes wählst du im Charakter-Bildschirm aus.</p></section>`;
   patch(el, kl + premiumHTML()); watchBoards(el); fitNames(el);
-  if (UI.shopFocus) { UI.shopFocus = false; const pr = el.querySelector('.pr-panel'); if (pr) { pr.classList.remove('flash'); void pr.offsetWidth; pr.classList.add('flash'); } }
 }
 // Shop für Echtgeld: Kaufwelten sind echt (über Google Play), der Rest sind Platzhalter für später
 function premiumHTML() {
   const wimg = id => new URL(`art/karte-welt${id.slice(1)}.webp`, document.baseURI).href;
   const own = id => !!PURCHASE.worlds[id];
   const offer = (o, extra) => {
-    const done = o.worlds.every(own), wname = o.worlds.map(id => worldById(id).name).join(' und ');
-    return `<button type="button" class="pr-item${done ? ' owned' : ''}${extra && extra.best ? ' best' : ''}" ${done ? 'disabled' : `data-buyworld="${o.worlds[0]}"`}>` +
+    const done = o.worlds.every(own), part = !done && o.worlds.length > 1 && o.worlds.some(own), wait = !done && !offerOk(o), off = done || part || wait;
+    const wname = o.worlds.map(id => worldById(id).name).join(' und '), prev = wait && needPrev(worldById(o.worlds[0]));
+    const txt = part ? 'Ein Teil gehört dir schon, hol dir einfach die andere Welt einzeln' : wait ? `Erst nach ${prev ? wLabel(prev) : 'der Welt davor'} erhältlich, oder im Paket` : o.worlds.length > 1 ? 'Beide Kaufwelten mit allen Stationen, Karten und Belohnungen' : 'Neue Stationen, Karten, Sonderregeln und Belohnungen';
+    return `<button type="button" class="pr-item${done ? ' owned' : ''}${off && !done ? ' wait' : ''}${extra && extra.best && !off ? ' best' : ''}" ${off ? 'disabled' : `data-buyworld="${o.worlds[0]}"`}>` +
       `<span class="pr-pic${o.worlds.length > 1 ? ' duo' : ''}">${o.worlds.map(id => `<img src="${wimg(id)}" alt="">`).join('')}</span>` +
-      `<span class="pr-t"><small>${o.worlds.length > 1 ? 'Paket' : 'Welt ' + o.worlds[0].slice(1)}</small><b>${esc(wname)}</b><em>${o.worlds.length > 1 ? 'Beide Kaufwelten mit allen Stationen, Karten und Belohnungen' : 'Neue Stationen, Karten, Sonderregeln und Belohnungen'}</em></span>` +
-      `${extra && extra.best ? '<i class="pr-badge">Spare 20 %</i>' : ''}<span class="pr-price">${done ? 'Gekauft' : esc(offerPrice(o))}</span></button>`;
+      `<span class="pr-t"><small>${o.worlds.length > 1 ? 'Paket' : 'Welt ' + o.worlds[0].slice(1)}</small><b>${esc(wname)}</b><em>${txt}</em></span>` +
+      `${extra && extra.best && !off ? '<i class="pr-badge">Spare 20 %</i>' : ''}<span class="pr-price">${done ? 'Gekauft' : part ? '–' : wait ? LOCK_SVG : esc(offerPrice(o))}</span></button>`;
   };
   const soon = (ic, kind, title, txt) => `<button type="button" class="pr-item soon" data-soon="${esc(title)} kommt bald in den Shop."><span class="pr-pic ic">${ic}</span><span class="pr-t"><small>${kind}</small><b>${title}</b><em>${txt}</em></span><span class="pr-price">Bald</span></button>`;
   const g = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
@@ -2891,7 +2892,7 @@ function premiumHTML() {
     `</div><footer class="pr-foot"><span>${g('<rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />')}Sichere Bezahlung über Google Play</span><span>Käufe gelten für dein Konto auf allen Geräten</span></footer></section>`;
 }
 
-document.addEventListener('click', e => { if (e.target.closest('[data-pnshop]')) { UI.shopFocus = true; if (CUR === 'shop') renderShopPage(); else go('shop'); } });
+document.addEventListener('click', e => { if (e.target.closest('[data-pnshop]')) { if (CUR !== 'shop') go('shop'); } });
 
 // Inhaltsbreite am PC: von der linken Kante von „Spielen“ bis zur rechten Kante des Profils, live gemessen
 function pcEdgesNow() {

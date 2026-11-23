@@ -33,6 +33,13 @@ function billGrant(offerId, token) {
   PURCHASE.tokens[PLAY_SKU[offerId]] = token;
   return unlockOffer(offerId);   // speichert PURCHASE, das geht über den Cloud-Spielstand auch auf andere Geräte
 }
+// Welten eines erstatteten Kaufs wieder zumachen, außer ein anderer gültiger Kauf deckt sie ab (etwa Welt 4 einzeln und das Paket)
+function billRevoke(skus) {
+  const worldsOf = sku => (OFFERS.find(x => x.id === offerOfSku(sku)) || {worlds: []}).worlds;
+  const keep = new Set(Object.keys(PURCHASE.tokens || {}).flatMap(worldsOf));
+  skus.flatMap(worldsOf).forEach(w => { if (!keep.has(w)) delete PURCHASE.worlds[w]; });
+  savePurchase();
+}
 async function billBuy(offerId) {
   const sku = PLAY_SKU[offerId]; if (!sku || BILL.busy) return false;
   BILL.busy = true;
@@ -64,6 +71,15 @@ async function billRestore(silent) {
       const oid = offerOfSku(p.itemId); if (!oid) continue;
       try { const v = await billVerify(p.purchaseToken, p.itemId); if (v.ok && billGrant(oid, p.purchaseToken)) n++; } catch (e) {}
     }
+    // Erstattete Käufe zurücknehmen: Ein gespeicherter Kauf, den Google nicht mehr listet, wird beim Prüf-Server nachgefragt.
+    // Nur wenn der ihn sicher als storniert meldet (erstattet oder Rückbuchung), ist die Welt wieder zu.
+    const seen = new Set(list.map(p => p.purchaseToken)), toks = PURCHASE.tokens || {};
+    const gone = [];
+    for (const sku of Object.keys(toks)) {
+      if (seen.has(toks[sku])) continue;
+      try { const v = await billVerify(toks[sku], sku); if (v.state === 'cancelled') { delete toks[sku]; gone.push(sku); } } catch (e) {}
+    }
+    if (gone.length) { billRevoke(gone); toast('Ein erstatteter Kauf wurde zurückgenommen.'); if (typeof renderStory === 'function') { renderStory(); renderTitle(); } }
   } catch (e) { if (!silent) toast('Käufe konnten gerade nicht abgerufen werden.'); return 0; }
   if (n) { if (typeof renderStory === 'function') { renderStory(); renderTitle(); } }
   if (!silent) toast(n ? 'Deine Käufe sind wiederhergestellt.' : 'Keine Käufe gefunden.');

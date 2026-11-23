@@ -545,6 +545,12 @@ const K_BUY = 'loota.kauf';
 const PURCHASE = (() => { let b = null; try { if (typeof localStorage !== 'undefined') b = JSON.parse(localStorage.getItem(K_BUY)); } catch (e) {} return Object.assign({worlds: {}}, b || {}); })();
 function savePurchase() { try { localStorage.setItem(K_BUY, JSON.stringify(PURCHASE)); } catch (e) {} }
 const worldOwned = w => !w || !w.paid || !!PURCHASE.worlds[w.id];
+// Welt abgeschlossen und (bei Kaufwelten) gekauft: erst dann gibt es Tisch, Musik, Deck und Karten fürs freie Spiel.
+// Wird ein Kauf erstattet, ist das wieder zu, auch wenn die Welt schon gespielt ist.
+const worldReady = id => !!STORY.worlds[id] && worldOwned(worldById(id));
+// Kaufreihenfolge: eine Kaufwelt gibt es einzeln erst, wenn die Kaufwelt davor dir gehört (im Paket geht beides zusammen)
+const needPrev = w => { const i = WORLDS.indexOf(w), p = WORLDS[i - 1]; return p && p.paid && !worldOwned(p) ? p : null; };
+const offerOk = o => o.worlds.every(id => { const p = needPrev(worldById(id)); return !p || o.worlds.includes(p.id); });
 // Angebote: einzelne Welt oder das Paket mit der nächsten Kaufwelt (Preise vorläufig)
 const OFFERS = [
   {id: 'w4', worlds: ['w4'], n: 'Welt 4', price: '2,49 €'},
@@ -556,8 +562,8 @@ const allStations = () => WORLDS.flatMap(w => w.stations.map(st => Object.assign
 function stationById(id) { return allStations().find(st => st.id === id); }
 function worldById(id) { return WORLDS.find(w => w.id === id); }
 function stationUnlocked(st) {
+  if (!worldOwned(worldById(st.world))) return false;   // ohne Kauf zu, auch schon gespielte Stationen (etwa nach einer Erstattung)
   if (STORY.done[st.id]) return true;   // einmal geschafft, bleibt offen (auch wenn später eine Station davor dazukommt)
-  if (!worldOwned(worldById(st.world))) return false;
   if (st.req && !st.req.every(r => STORY.done[r])) return false;
   if (st.reqAny && !st.reqAny.some(r => STORY.done[r])) return false;
   return true;
@@ -567,8 +573,11 @@ const starsOf = id => STORY.stars[id] || [];
 const starNum = id => starsOf(id).filter(Boolean).length;
 function worldStars(w) { return w.stations.reduce((n, st) => n + starNum(st.id), 0); }
 function worldMaxStars(w) { return w.stations.reduce((n, st) => n + maxStars(st), 0); }
-const owns = id => STORY.owned.includes(id);
-function grant(id) { if (id && !owns(id)) { STORY.owned.push(id); return true; } return false; }
+// Belohnungen aus Kaufwelten (Stationen und Sterne) gelten nur, solange die Welt gekauft ist
+let PAID_LOOT = null;
+const paidLoot = () => PAID_LOOT || (PAID_LOOT = Object.fromEntries(WORLDS.filter(w => w.paid).flatMap(w => [...w.stations.map(st => st.reward), w.starReward && w.starReward.id].filter(Boolean).map(id => [id, w]))));
+const owns = id => STORY.owned.includes(id) && (!paidLoot()[id] || worldOwned(paidLoot()[id]));
+function grant(id) { if (id && !STORY.owned.includes(id)) { STORY.owned.push(id); return true; } return false; }
 
 // Szenario für die Engine; variant wird von der Oberfläche in Stückzahlen übersetzt
 function scenarioFor(st) {
