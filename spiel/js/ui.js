@@ -339,7 +339,7 @@ function setScreen(name) {
   if (name === 'quiz') renderQuiz();
   if (name === 'profile') renderProfile();
   if (name === 'story') renderStory();
-  if (name === 'rules') buildRulesToc();
+  if (name === 'rules') { buildRulesToc(); if (mq().pc.matches) renderRulesPC(); }
   if (name === 'shop') renderShopPage();
   if (name === 'game') { W.renderedOnce = false; render(); }
   Motes.toggle(name === 'title');
@@ -2393,7 +2393,124 @@ function rulesFilter(q) {
   items.forEach(d => { const txt = ((d.dataset.k || '') + ' ' + d.textContent).toLowerCase(), hit = words.every(w => txt.includes(w)); d.hidden = !hit; if (words.length) d.open = hit; any = any || hit; });
   const none = $('#scr-rules .rs-none'); if (none) none.hidden = any || !words.length;
 }
-document.addEventListener('input', e => { if (e.target && e.target.id === 'rules-q') rulesFilter(e.target.value); });
+document.addEventListener('input', e => { if (e.target && e.target.id === 'rules-q') { if (mq().pc.matches) renderRulesPC(); else rulesFilter(e.target.value); } });
+
+/* ================= Regeln am PC: ein Kapitel pro Seite, zu jeder Regel ein Bild =================
+   Der Text kommt weiter aus rules.html (dieselben Regeln wie am Handy), hier stehen nur die Bilder dazu.
+   Bild-Kürzel: c:Karte (echte Karte, anklickbar), tuer/schatz (Kartenrücken), i:Bild, wide:breites Bild,
+   p:Porträt, me (dein Porträt), d:Würfelzahl, ph:Phase, vs:a:b (Stärkevergleich), x:Text (kleines Schild) */
+const RULES_PC = [
+  {ic: 'i:icons/muenze-sieg.png', hero: ['tuer', 'c:Drache des Montagmorgens', 'schatz'],
+    v: [['i:icons/muenze-sieg.png', 'x:Stufe 10'], ['tuer', 'c:Wütender Gartenzwerg'], ['c:Rostiges Schwert', 'c:Elf'], ['tuer', 'schatz', 'x:je 4']]},
+  {ic: 'ph:tuer', hero: ['tuer'],
+    v: [['ph:tuer', 'tuer'], ['ph:aerger', 'c:Vampir-Kaninchen'], ['ph:pluendern', 'tuer'], ['ph:gabe', 'x:max. 5'], ['sl:rucksack']]},
+  {ic: 'i:icons/wert-kampf.png', hero: ['c:Rostiges Schwert', 'c:Troll unter der Autobahnbrücke'],
+    v: [['c:Topfhelm mit Delle', 'c:Trank der Tapferkeit'], ['c:Schwarm Stechmücken', 'c:Stinksauer'], ['vs:7:7'], ['i:icons/truhe-gold-auf.png', 'schatz'], ['c:Schleimige Socke', 'c:Übellaunige Möwe']]},
+  {ic: 'p:zwerg', hero: ['me', 'p:zwerg'],
+    v: [['me', 'p:zwerg'], ['me', 'i:icons/muenze-voll.png'], ['c:Gusseiserne Bratpfanne', 'c:Nebelpulver'], ['c:Elf', 'c:Schwarm Stechmücken'], ['i:icons/wert-weglaufen.png']]},
+  {ic: 'c:Stinksauer', hero: ['c:Riesenhaft', 'c:Hinterhalt', 'c:Stinkbombe'],
+    v: [['p:kriegerin', 'p:zauberer', 'p:koboldin'], ['c:Stinksauer', 'c:Winzig'], ['c:Trank der Tapferkeit', 'c:Riesenböller'], ['c:Hinterhalt', 'c:Vampir-Kaninchen'], ['c:Pechsträhne'], ['c:Flasche Drachenschnaps']]},
+  {ic: 'i:icons/wert-weglaufen.png', hero: ['d:5', 'c:Nebelpulver'],
+    v: [['d:5', 'd:6'], ['c:Schnelle Latschen'], ['c:Hydra mit Migräne'], ['c:Nebelpulver'], ['c:Drache des Montagmorgens'], ['d:1', 'x:Stufe 1']]},
+  {ic: 'i:icons/icon-rucksack.png', hero: ['c:Hörnerhelm', 'c:Glitzer-Plattenrüstung', 'c:Schnelle Latschen'],
+    v: [['slots'], ['c:Riesenhammer', 'c:Zwerg'], ['sl:rucksack'], ['c:Topfhelm mit Delle', 'c:Hörnerhelm'], ['c:Elfendolch', 'c:Elf'], ['c:Glitzer-Plattenrüstung']]},
+  {ic: 'i:icons/truhe-gold-zu.png', hero: ['c:Protzige Goldkette', 'i:icons/truhe-gold-auf.png'],
+    v: [['c:Protzige Goldkette'], ['i:icons/truhe-gold-zu.png', 'x:1.000 Gold = 1 Stufe'], ['i:icons/truhe-gold-klein.png'], ['i:icons/muenze-sieg.png'], ['c:Kobold', 'c:Hehler']]},
+  {ic: 'c:Regelheft gelesen', hero: ['c:Würfel angehaucht', 'c:Snacks mitgebracht'],
+    v: [['c:Regelheft gelesen'], ['c:Pizza für alle bestellt', 'x:bis Stufe 9'], ['i:icons/st-boss.png', 'i:icons/muenze-sieg.png']]},
+  {ic: 'c:Pechsträhne', hero: ['c:Rost', 'c:Taschendieb-Gnom'],
+    v: [['tuer', 'c:Pechsträhne'], ['c:Windböe'], ['c:Rost'], ['c:Glücksamulett']]},
+  {ic: 'c:Lich mit Rückenschmerzen', split: true, hero: ['c:Lich mit Rückenschmerzen'],
+    v: [['c:Zwerg', 'c:Krieger'], ['tuer', 'schatz', 'x:ablegen'], ['p:kriegerin', 'p:zauberer'], ['tuer', 'schatz', 'x:je 4']]},
+  {ic: 'c:Elf', hero: ['c:Elf', 'c:Zwerg', 'c:Kobold'],
+    v: [['wide:art/rasse-mensch.webp'], ['c:Elf'], ['c:Zwerg'], ['c:Kobold'], ['c:Krieger'], ['c:Zauberer'], ['c:Hehler'], ['c:Exorzist'], ['c:Pirat']]},
+  {ic: 'p:hilde', hero: ['p:hilde'],
+    v: [['c:Glitzer-Plattenrüstung'], ['c:Hydra mit Migräne'], ['c:Stinksauer', 'c:Trank der Tapferkeit'], ['sl:rucksack'], ['me', 'p:zwerg', 'x:Beute?']]}
+];
+const RP_PHASE = {tuer: ['phase-tuer', 'Tür öffnen'], aerger: ['phase-aerger', 'Ärger suchen'], pluendern: ['phase-pluendern', 'Raum durchsuchen'], gabe: ['phase-gabe', 'Abgabe']};
+let RP_CH = 0, RP_DATA = null;
+// Kapitel aus rules.html lesen: jeder Absatz, jeder Listenpunkt und jede Tabellenzeile wird eine Regel
+function rulesPCData() {
+  if (RP_DATA) return RP_DATA;
+  RP_DATA = $$('#scr-rules details.rule').map((d, i) => {
+    const conf = RULES_PC[i] || {v: []}, pts = [];
+    d.querySelectorAll('.rule-body > *').forEach(el => {
+      if (el.matches('p')) {
+        if (conf.split && !el.classList.contains('hint')) el.innerHTML.split(/(?<=[.;])\s+(?=[A-ZÄÖÜ])/).forEach(h => pts.push({h}));
+        else pts.push({h: el.innerHTML, hint: el.classList.contains('hint')});
+      } else if (el.matches('ol,ul')) el.querySelectorAll(':scope > li').forEach(li => pts.push({h: li.innerHTML.replace(/^<div>|<\/div>$/g, '')}));
+      else if (el.matches('table')) el.querySelectorAll('tbody tr').forEach(tr => pts.push({h: `<b>${tr.cells[0].innerHTML}:</b> ${tr.cells[1].innerHTML}`}));
+    });
+    pts.forEach((p, j) => { p.v = conf.v[j] || []; p.t = p.h.replace(/<[^>]+>/g, '').toLowerCase(); });
+    return {title: d.querySelector('summary').textContent, k: (d.dataset.k || '').toLowerCase(), ic: conf.ic, hero: conf.hero || [], pts};
+  });
+  return RP_DATA;
+}
+function rpTok(t) {
+  const i = t.indexOf(':'), k = i < 0 ? t : t.slice(0, i), v = i < 0 ? '' : t.slice(i + 1);
+  switch (k) {
+    case 'c': { const p = POOL.find(x => x.tpl.n === v); return p ? cardMini(p.tpl, {cname: true}) : ''; }
+    case 'tuer': return '<span class="rp-back"><img src="art/ruecken-tuer.webp" alt="Türkarte"></span>';
+    case 'schatz': return '<span class="rp-back"><img src="art/ruecken-schatz.webp" alt="Schatzkarte"></span>';
+    case 'i': return `<img class="rp-ic" src="${v}" alt="">`;
+    case 'wide': return `<img class="rp-wide" src="${v}" alt="">`;
+    case 'p': return `<img class="rp-face" src="icons/portrait-${v}.png" alt="">`;
+    case 'me': return `<img class="rp-face" src="${myPortrait()}" alt="Du">`;
+    case 'd': return `<img class="rp-die" src="icons/wuerfel-${v}.png" alt="Würfel ${v}">`;
+    case 'ph': { const [f, l] = RP_PHASE[v]; return `<span class="rp-ph"><img src="icons/${f}.png" alt=""><small>${l}</small></span>`; }
+    case 'vs': { const [a, b] = v.split(':'); return `<span class="rp-vs"><span><img src="icons/wert-kampf.png" alt=""><b>${a}</b></span><i>=</i><span class="m"><b>${b}</b><small>Monster</small></span></span>`; }
+    case 'x': return `<span class="rp-x">${esc(v)}</span>`;
+    case 'slots': return `<span class="rp-slots">${['kopf', 'ruestung', 'schuhe', 'haende'].map(s => `<img src="icons/icon-${s}.png" alt="">`).join('')}</span>`;
+    case 'sl': return `<span class="rp-sl"><img src="icons/icon-${v}.png" alt=""></span>`;
+  }
+  return '';
+}
+function rpIcon(t) {
+  const i = t.indexOf(':'), k = t.slice(0, i), v = t.slice(i + 1);
+  const src = k === 'c' ? ART[v] : k === 'p' ? `icons/portrait-${v}.png` : k === 'ph' ? `icons/${RP_PHASE[v][0]}.png` : v;
+  return `<img class="rt-ic${k === 'c' || k === 'p' ? ' art' : ''}" src="${src}" alt="">`;
+}
+const rpMark = (h, words) => !words.length ? h : h.replace(/(<[^>]+>)|([^<]+)/g, (m, tag, txt) => tag || txt.replace(new RegExp(`(${words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi'), '<mark>$1</mark>'));
+const rpRow = (p, words) => `<article class="rp-pt${p.hint ? ' hint' : ''}"><div class="rp-vis n${p.v.length}">${p.v.map(rpTok).join('')}</div><div class="rp-txt">${rpMark(p.h, words)}</div></article>`;
+function renderRulesPC() {
+  const scr = $('#scr-rules'), box = scr && scr.querySelector('.content.rules'); if (!box) return;
+  let main = box.querySelector('.rules-pc'), side = box.querySelector('.rp-side');
+  if (!main) { main = document.createElement('div'); main.className = 'rules-pc'; box.appendChild(main); }
+  if (!side) {
+    side = document.createElement('div'); side.className = 'rp-side';
+    side.innerHTML = `<div class="rp-tiles"><button type="button" class="rp-tile" data-go="tutorial"><img src="icons/portrait-hilde.png" alt=""><b>Probespiel</b><span>Hilde erklärt jeden Schritt</span></button>` +
+      `<button type="button" class="rp-tile quiz" data-go="quiz"><img src="${ART['Regelheft gelesen']}" alt=""><b>Regel-Quiz</b><span>Zehn Fragen zum Testen</span></button></div>`;
+    box.querySelector('.rules-side').prepend(side);
+    const toc = document.createElement('nav'); toc.className = 'rp-toc'; toc.setAttribute('aria-label', 'Kapitel'); box.querySelector('.rules-side').appendChild(toc);
+  }
+  const data = rulesPCData(), q = ($('#rules-q') || {}).value || '', words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const hitCh = ch => words.every(w => ch.k.includes(w) || ch.title.toLowerCase().includes(w) || ch.pts.some(p => p.t.includes(w)));
+  patch(box.querySelector('.rp-toc'), data.map((ch, i) => `<button type="button" class="${i === RP_CH && !words.length ? 'on' : ''}${words.length && !hitCh(ch) ? ' dim' : ''}" data-rch="${i}"><span class="rt-n">${i + 1}</span>${rpIcon(ch.ic)}<span class="rt-t">${esc(ch.title)}</span></button>`).join(''));
+  let html;
+  if (words.length) {
+    const groups = data.map((ch, i) => {
+      if (!hitCh(ch)) return '';
+      let pts = ch.pts.filter(p => words.every(w => p.t.includes(w)));
+      if (!pts.length) pts = ch.pts.filter(p => words.some(w => p.t.includes(w)));
+      if (!pts.length) pts = ch.pts.slice(0, 2);
+      return `<section class="rp-hit"><button type="button" class="rp-hit-h" data-rch="${i}">${rpIcon(ch.ic)}<b>${esc(ch.title)}</b><span>Ganzes Kapitel lesen ›</span></button>${pts.map(p => rpRow(p, words)).join('')}</section>`;
+    }).join('');
+    html = `<div class="rp-page rp-search"><header class="rp-head"><div><small>Suche</small><h2>„${esc(q.trim())}“</h2></div></header>` +
+      (groups || `<p class="rp-none"><img src="icons/portrait-hilde.png" alt="">Dazu steht hier nichts. Versuch ein anderes Wort, zum Beispiel Rucksack, Gleichstand oder Kobold.</p>`) + '</div>';
+  } else {
+    const ch = data[RP_CH], prev = data[RP_CH - 1], next = data[RP_CH + 1];
+    html = `<div class="rp-page"><header class="rp-head"><div><small>Kapitel ${RP_CH + 1} von ${data.length}</small><h2>${esc(ch.title)}</h2></div><div class="rp-hero n${ch.hero.length}">${ch.hero.map(rpTok).join('')}</div></header>` +
+      ch.pts.map(p => rpRow(p, [])).join('') +
+      `<nav class="rp-nav">${prev ? `<button type="button" class="rp-go" data-rch="${RP_CH - 1}"><small>‹ Zurück</small><b>${esc(prev.title)}</b></button>` : '<span></span>'}` +
+      (next ? `<button type="button" class="rp-go nx" data-rch="${RP_CH + 1}"><small>Weiter ›</small><b>${esc(next.title)}</b></button>` : `<button type="button" class="rp-go nx" data-go="quiz"><small>Alles gelesen?</small><b>Zum Regel-Quiz ›</b></button>`) + '</nav></div>';
+  }
+  if (patch(main, html)) main.scrollTop = 0;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-rch]'); if (!b || !mq().pc.matches) return;
+  RP_CH = +b.dataset.rch; const q = $('#rules-q'); if (q) q.value = '';
+  renderRulesPC();
+});
 
 /* ================= Breite Ansicht (Tablet quer, PC) ================= */
 // var statt let/const: applyLayout läuft schon beim Start, bevor dieser Teil der Datei ausgeführt ist
