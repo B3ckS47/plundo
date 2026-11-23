@@ -2961,3 +2961,4 @@ html.pcnav #scr-settings .about .set-old{display:none!important}
 .set-link small{font:700 12px var(--body);color:var(--muted)}
 .set-foot{margin:0!important;font-size:13px!important;color:var(--muted)!important}
 .set-foot a{color:var(--red)}
+.set-img{flex:none;width:54px;height:54px;margin:-8px 0 -8px -4px;filter:drop-shadow(0 3px 3px rgba(60,30,10,.35))}

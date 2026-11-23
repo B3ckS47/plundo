@@ -2414,7 +2414,8 @@ function settingsPC() {
   const box = $('#scr-settings .content'); if (!box || box.__pc) return; box.__pc = true;
   [['s-klang', 'klang'], ['s-spiel', 'spiel'], ['s-stand', 'stand'], ['s-test', 'test'], ['about', 'about'], ['s-konto', 'konto']].forEach(([c, k]) => {
     const h = box.querySelector(`.${c} > h3.lbl`); if (!h || h.querySelector('.set-ic')) return;
-    h.insertAdjacentHTML('afterbegin', `<span class="set-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${SET_ICON[k]}</svg></span>`);
+    const img = {klang: 'set-klang', spiel: 'set-spiel', konto: 'set-konto', about: 'set-stammtisch'}[k];
+    h.insertAdjacentHTML('afterbegin', img ? `<img class="set-img" src="icons/${img}.png" alt="">` : `<span class="set-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${SET_ICON[k]}</svg></span>`);
   });
   // Stammtisch statt „Über die App“: Gemeinschaft, Kanäle, Version und Rechtliches (Installieren läuft über den Play Store)
   const abp = box.querySelector('.about'); if (abp) {
