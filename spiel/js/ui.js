@@ -615,8 +615,8 @@ function doRender() {
   renderDice();
 }
 function renderSoundBtn() {
-  const on = SET.music || SET.sfx, b = $('#btn-sound'); if (!b) return;
-  patch(b, on ? '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z M16 9a4 4 0 0 1 0 6 M18.5 6.5a8 8 0 0 1 0 11" /></svg>' : '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z M17 9l5 6 M22 9l-5 6" /></svg>');
+  const on = SET.music || SET.sfx, svg = on ? '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z M16 9a4 4 0 0 1 0 6 M18.5 6.5a8 8 0 0 1 0 11" /></svg>' : '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z M17 9l5 6 M22 9l-5 6" /></svg>';
+  $$('[data-go="sound"]').forEach(b => patch(b, svg));
 }
 function renderTop() {
   const who = S.winner != null ? 'Spiel vorbei' : S.cur === 0 ? 'Dein Zug' : `${P(S.cur).name} ist am Zug`;
@@ -700,6 +700,8 @@ function paintHud(hud, C) {
     W.nums[k] = v;
   });
 }
+function pcgArenaH() { const a = PCGX() && $('#table .arena'); if (a) a.style.setProperty('--ah', a.clientHeight + 'px'); }
+window.addEventListener('resize', () => requestAnimationFrame(pcgArenaH));
 function renderTable() {
   const el = $('#table');
   const C = S.combat, R = S.reveal;
@@ -734,6 +736,7 @@ function renderTable() {
     have.forEach(n => n.remove());
     arts.dataset.n = C.mons.length;
     paintHud(el.querySelector('.hud'), C);
+    pcgArenaH();
   } else if (!R) {
     if ($('#app').classList.contains('pcg')) patch(el.querySelector('.idle'), `<div class="gdoor${S.cur === 0 && S.winner == null ? ' mine' : ''}"><span class="back door"></span></div><div class="idle-txt">${S.winner != null ? 'Das Spiel ist vorbei.' : S.cur === 0 ? 'Die Tür ist noch zu. Was wohl dahinter lauert?' : esc(P(S.cur).name) + ' ist am Zug.'}</div>`); else
     patch(el.querySelector('.idle'), `<div class="decks"><div class="deck"><div class="back door" role="img" aria-label="Türstapel"></div>Tür ${S.door.length} · Ablage ${S.doorDisc.length}</div><div class="deck"><div class="back treas" role="img" aria-label="Schatzstapel"></div>Schatz ${S.tr.length} · Ablage ${S.trDisc.length}</div></div><div class="idle-txt">${S.winner != null ? 'Das Spiel ist vorbei.' : S.cur === 0 ? 'Die Tür ist noch zu. Was wohl dahinter lauert?' : esc(P(S.cur).name) + ' ist am Zug.'}</div>`);
@@ -1047,11 +1050,13 @@ const SHEET_VIEWS = {
   opp(s) {
     const p = S && S.players[s.pid]; if (!p) return null;
     const hand = UI.open && p.hand.length ? `<div class="hsec"><span class="hsec-h"><img src="${ICON.hand}" alt="">Handkarten</span><span class="hsec-x">sichtbar, weil eingeschaltet</span></div><div class="pack-row">${p.hand.map(c => cardMini(c, {where: 'opp', size: 'tiny'})).join('')}</div>` : '';
+    if (PCGX()) return {hero: true, head: heroHead(p), body: `<div class="hbody hb2"><div class="hb-l">${heroStats(p)}${heroAbil(p)}${hand}</div><div class="hb-r">${heroDoll(p, false)}${heroPack(p, false)}</div></div>`};
     return {hero: true, head: heroHead(p), body: `<div class="hbody">${heroStats(p)}${heroAbil(p)}${heroDoll(p, false)}${heroPack(p, false)}${hand}</div>`};
   },
   equip() {
     if (!S) return null;
     const p = me(), free = isFree();
+    if (PCGX()) return {hero: true, head: heroHead(p), body: `<div class="hbody hb2"><div class="hb-l">${heroStats(p)}${heroAbil(p)}<p class="hint hb-hint">Karte anklicken für Aktionen. Im Kampf zählen Stufe, Volk, Klasse und die Ausrüstung, der Rucksack nicht.</p>${free ? sellBtnHTML(p) : ''}</div><div class="hb-r">${heroDoll(p, true)}${heroPack(p, true)}</div></div>`};
     return {hero: true, head: heroHead(p), body: `<div class="hbody">${heroStats(p)}${heroAbil(p)}${heroDoll(p, true)}${heroPack(p, true)}` +
       `<p class="hint hb-hint">Karte antippen für Aktionen. Im Kampf zählen Stufe, Volk, Klasse und die Ausrüstung, der Rucksack nicht.</p>` +
       (free ? sellBtnHTML(p) : '') + `</div>`};
@@ -1787,7 +1792,7 @@ function go(a) {
     case 'equip': openSheet({id: 'equip'}); break;
     case 'parts': openSheet({id: 'parts'}); break;
     case 'sell': startSell(); render(); break;
-    case 'sound': { const on = SET.music || SET.sfx; SET.music = !on; SET.sfx = !on; saveSettings(); if (SET.music) { Snd.unlock(); Snd.startMusic(); } toast(on ? 'Ton aus' : 'Ton an'); break; }
+    case 'sound': { const on = SET.music || SET.sfx; SET.music = !on; SET.sfx = !on; saveSettings(); if (SET.music) { Snd.unlock(); Snd.startMusic(); } toast(on ? 'Ton aus' : 'Ton an'); renderSoundBtn(); if (CUR === 'game') render(); break; }
     case 'delsave': confirmDialog('Spielstand löschen?', 'Das gespeicherte Spiel ist danach weg.', 'Löschen', 'Behalten').then(ok => { if (ok) { clearSave(); if (GAME_ON) { GAME_ON = false; TOKEN++; } renderSaveInfo(); toast('Spielstand gelöscht'); } }); break;
   }
 }

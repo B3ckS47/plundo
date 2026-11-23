@@ -2635,3 +2635,12 @@ html.pcg-on #sheet[data-sid="card"] .grab{display:none}
 html.pcg-on #sheet[data-sid="card"] .sh-body{padding-top:22px}
 html.pcg-on #sheet[data-sid="card"] .cdx-side{padding-right:52px}
 .cdx-main .btn{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px}
+/* Flut: Karte darf halb im Wasser stehen, die Kampfwerte liegen über dem Wasser */
+#app.pcg .table .arena{perspective:none;container-type:normal}
+#app.pcg .table .arena .arts{perspective:1000px}
+#app.pcg .table .arena .hud{z-index:3;grid-template-columns:1fr calc((var(--ah,400px) - 6px) * .75) 1fr}
+/* Profile am PC: zweispaltig, ohne Scrollen */
+html.pcg-on #sheet[data-sid="opp"],html.pcg-on #sheet[data-sid="equip"]{width:min(940px,calc(100vw - 48px))}
+.hb2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:6px 22px;align-items:start}
+.hb2>.hb-l,.hb2>.hb-r{min-width:0}
+.hb2 .hb-hint{margin-top:10px}
