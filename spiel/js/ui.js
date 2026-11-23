@@ -410,7 +410,7 @@ function renderTitle() {
 function storyGo() {
   if (storySave()) { resumeStation(); return; }
   const cw = currentWorld();
-  if (!worldOwned(cw)) { show('story'); openSheet({id: 'buyworld', w: cw.id}); return; }
+  if (!worldOwned(cw)) { if (HUBST_ON()) { openHubStory(null, true); setTimeout(() => openSheet({id: 'buyworld', w: cw.id}), UI.reduce ? 0 : 620); return; } show('story'); openSheet({id: 'buyworld', w: cw.id}); return; }
   const nx = nextStation(cw);
   if (HUBST_ON()) { openHubStory(nx && nx.id); return; }
   show('story');
@@ -1726,7 +1726,7 @@ function go(a) {
     case 'reroll': ROSTER = rollRoster(); renderFoes(); Snd.sfx('deal'); break;
     case 'home': if (HUBST) { closeHubStory(); break; } closeAllSheets(); STACK.length = 0; setScreen('title'); break;
     case 'story': if (HUBST_ON()) openHubStory(); else show('story'); break;
-    case 'storymap': $$('.endov').forEach(x => x.remove()); closeAllSheets(); if (GAME_ON && S && S.scn && S.winner == null) { TOKEN++; } if (S && S.scn) GAME_ON = false; STACK.length = 0; STACK.push('title'); setScreen('story'); break;
+    case 'storymap': $$('.endov').forEach(x => x.remove()); closeAllSheets(); if (GAME_ON && S && S.scn && S.winner == null) { TOKEN++; } if (S && S.scn) GAME_ON = false; STACK.length = 0; if (HUBST_ON()) { openHubStory(); break; } STACK.push('title'); setScreen('story'); break;
     case 'start': startNewGame(); break;
     case 'rules': closeAllSheets(); show('rules'); break;
     case 'cards': closeAllSheets(); show('cards'); break;
@@ -2423,6 +2423,7 @@ window.addEventListener('hashchange', hashEntry);
 // Storymodus am PC oder Tablet: Die Station steht rechts neben der Karte statt als Fenster darüber
 function dockSheet() {
   const wrap = $('#sheetwrap'); if (!wrap) return;
+  if (HUBST && !mq().pc.matches) HUBST = false;   // Fenster kleiner gezogen: zurück zur normalen Ansicht
   const hd = !!HUBST && CUR === 'title' && SHEETS.length === 1 && topSheet().id === 'station';
   const on = hd || (document.documentElement.classList.contains('wide-menu') && CUR === 'story' && SHEETS.length === 1 && topSheet().id === 'station');
   wrap.classList.toggle('dock', on); wrap.classList.toggle('hubdock', hd);
@@ -2618,8 +2619,8 @@ function pcSideHTML(st, sk, dn, wait) {
 }
 
 /* Entwurf: Storymodus direkt auf der Seite „Spielen“ (PC). Die Karte rollt aus der Kachel nach oben aus,
-   daneben stehen die Infos zur Station. Zum Ausprobieren mit ?entwurf in der Adresse. */
-const HUBST_ON = () => /entwurf/.test(location.search) && mq().pc.matches;
+   daneben stehen die Infos zur Station. */
+const HUBST_ON = () => mq().pc.matches;   // PC: Storykarte rollt auf der Seite „Spielen“ aus
 function storyNext() { let next = null; const cw = currentWorld(); openWorlds().forEach(w => { const n = w.stations.find(st => stationUnlocked(st) && !STORY.done[st.id]); if (n && (!next || w === cw)) next = n; }); return next; }
 function hubPages() { const f = fogWorld(); return [...openWorlds().map(w => ({w})), ...(f ? [{f}] : [])]; }
 function hubStoryHTML(cw) {
@@ -2641,14 +2642,14 @@ function hubStoryHTML(cw) {
         `<p class="hint">Klick auf der Karte auf eine Station, dann erscheint sie hier.</p><button type="button" class="btn small" data-worldrules="${w.id}">Sonderregeln dieser Welt</button></div></section>` +
     `</main>`;
 }
-function openHubStory(stId) {
+function openHubStory(stId, noAuto) {
   const hub = $('#t-hub'), tile = $('#t-hub .pd-solo-row .pd-tile'), main = $('#t-hub .pd');
-  if (tile && main) { const a = main.getBoundingClientRect(), b = tile.getBoundingClientRect(); hub.style.setProperty('--from', Math.round(b.top - a.top) + 'px'); }
+  if (tile && main) { const a = main.getBoundingClientRect(), b = tile.getBoundingClientRect(); hub.style.setProperty('--from', b.height ? Math.round(b.top - a.top) + 'px' : '100%'); }
   closeAllSheets(); HUBST = 'open'; HUBPG = ''; HUBSEL = null;
   { const sid = stId || (storyNext() || {}).id, stw = sid && stationById(sid), k = stw ? hubPages().findIndex(q => q.w && q.w.id === stw.world) : -1; HUBW = k >= 0 ? k : hubPages().findIndex(q => q.w === currentWorld()); }
   if (CUR !== 'title') setScreen('title'); else renderHub();
   HUBST = true;
-  const id = stId || (storyNext() || {}).id;
+  const id = noAuto ? null : stId || (storyNext() || {}).id;
   if (id) setTimeout(() => { if (HUBST) openStation(id); }, UI.reduce ? 0 : 620);
 }
 function closeHubStory() {
