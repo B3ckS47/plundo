@@ -2521,3 +2521,6 @@ html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
 #app.tbl-wald .back.door{background-image:url(../art/ruecken-tuer-wald.webp)}
 #app.tbl-strand .back.door{background-image:url(../art/ruecken-tuer-strand.webp)}
 #app.tbl-schiff .back.door{background-image:url(../art/ruecken-tuer-schiff.webp)}
+/* Notizzettel (eigene Grafik, ohne Reißzwecke; die Zwecke sitzt darüber) */
+#app.pcg .wlog .loglist{border-width:30px 22px 28px 22px;border-image:url(../art/notizzettel.webp) 90 70 90 70 fill / 30px 22px 28px 22px stretch;padding:0 4px 4px}
+#app.pcg .wlog>.wpanel::before{top:34px;width:30px;height:24px;margin-left:-15px}

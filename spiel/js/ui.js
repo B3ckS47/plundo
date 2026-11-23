@@ -2463,8 +2463,8 @@ function renderPCG() {
     `<button type="button" class="ge-pack" data-go="equip" aria-label="Rucksack, ${p.pack.length} von ${packLimit(p)}"><img src="${ICON.slot.pack}" alt=""><b>${p.pack.length}/${packLimit(p)}</b><small>Rucksack</small></button>` +
     (isFree() && mine && !sellBlock(p) && p.eq.concat(p.pack, p.hand).some(c => c.g) ? `<button type="button" class="ge-pack ge-sell${UI.adv && UI.adv.sell ? ' rec' : ''}" data-go="sell"><img src="icons/muenze-voll.png" alt=""><b>Verkaufen</b><small>Gegenstände</small></button>` : '') + `</div>`);
   // Notizen und Kampfrechnung rechts
-  const items = S.log.filter(e => UI.coach || e.kind !== 'rule').slice(0, 80);
-  patch($('#wlog'), `<div class="wpanel"><h4 class="wp-h">Notizen</h4><ul class="loglist">${items.map(e => `<li class="l-${e.kind}">${e.kind === 'rule' ? '<b>Regel:</b> ' : ''}${linkify(e.t)}</li>`).join('')}</ul></div>`);
+  const items = S.log.filter(e => UI.coach || e.kind !== 'rule').slice(-80);
+if (  patch($('#wlog'), `<div class="wpanel"><h4 class="wp-h">Notizen</h4><ul class="loglist">${items.map(e => `<li class="l-${e.kind}">${e.kind === 'rule' ? '<b>Regel:</b> ' : ''}${linkify(e.t)}</li>`).join('')}</ul></div>`) || W.pcgFight !== !!S.combat) { W.pcgFight = !!S.combat; requestAnimationFrame(() => { const ll = $('#wlog .loglist'); if (ll) ll.scrollTop = ll.scrollHeight; }); }
   W.logSeen = S.log.length;
   patch($('#wfight'), fightWideHTML());
   const pv = W.hoverUid != null && mq().hover.matches ? findCard(W.hoverUid) : null;
