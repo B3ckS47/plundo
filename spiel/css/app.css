@@ -2670,3 +2670,4 @@ html.pcnav #scr-cards .chip[data-kf="rc"]{--cc:var(--k-race)}
 html.pcnav #scr-cards .chip[data-kf="rc"][aria-pressed="true"]{background:linear-gradient(90deg,var(--k-race),var(--k-class))}
 html.pcnav #scr-cards .chip[data-kf="item"]{--cc:var(--k-item)}
 html.pcnav #scr-cards .chip[data-kf="misc"]{--cc:var(--k-oneshot)}
+html.pcnav #scr-cards{background:linear-gradient(rgba(18,10,5,.45),rgba(18,10,5,.58)),url(../art/hg-karten.webp) center/cover no-repeat #1a100a}
