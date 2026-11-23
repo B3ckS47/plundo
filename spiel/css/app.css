@@ -2279,9 +2279,6 @@ html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
 .hs-rules .wr-none{margin:0;font-size:14px}
 .pd-stinfo .st-sidein{display:flex;flex-direction:column;gap:12px;height:100%;overflow-y:auto}
 /* Gegen Bots am PC: Tisch | Einstellungen | Hildes Aufträge */
-html.pcnav #scr-setup .content.su-pc{position:absolute;inset:0;display:grid;grid-template-columns:auto minmax(0,1fr) 380px;gap:16px 16px;align-items:stretch;align-content:stretch;padding:calc(var(--sat) + var(--nav) + 40px) var(--cr) 24px var(--cl);overflow:hidden;max-width:none}
-html.pcnav #scr-setup .footbtn{display:none}
-html.pcnav #scr-setup .su-side>.pp-side{display:flex;flex-direction:column;gap:18px;height:100%;min-height:0}
 .su-table{position:relative;height:100%;aspect-ratio:768/1376;border-radius:18px;overflow:hidden;border:2px solid rgba(255,214,160,.35);background:#1a120c url(../art/hintergrund-tisch.webp) center/cover;box-shadow:0 16px 30px -12px rgba(0,0,0,.8)}
 .su-seat{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;width:130px;text-align:center}
 .su-seat.s-l{left:22%;top:46%}.su-seat.s-t{left:50%;top:17%}.su-seat.s-r{left:78%;top:46%}
@@ -2333,3 +2330,14 @@ html.pcnav #scr-setup .su-side>.pp-side{display:flex;flex-direction:column;gap:1
 .hs-rules .hs-lbl{color:#8a5a2a}
 .hs-rules .wr-none,.hs-rules .wr-list dd{color:#4a3220}
 .hs-rules .wr-list dd a,.hs-rules .wr-list dd .kw{color:#7a2a1a}
+.hub-ms,.hub-ss{display:contents}
+/* Gegen Bots im Hub: Einstellungen links, Tisch rechts (über der Kachel) */
+.hub.pc .pd-bot{grid-template-columns:minmax(0,1fr) auto}
+.pd-bot .su-table{border-radius:18px}
+.pd-bot .su-mid{display:flex;flex-direction:column;gap:8px;min-height:0;overflow-y:auto}
+.pd-bot.unroll .su-table{animation:pdUnroll .6s cubic-bezier(.3,.7,.2,1) both}
+.pd-bot.unroll .su-mid{animation:pdFade .35s .45s ease both}
+.pd-bot.rollup .su-table{animation:pdRollup .42s ease-in both}
+.pd-bot.rollup .su-mid{animation:pdFade .25s ease reverse both}
+.pd-bot .pd-x{z-index:5}
+.hub.pc .su-mid{font:16px/1.4 var(--body);color:var(--ink)}

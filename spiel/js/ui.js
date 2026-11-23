@@ -162,7 +162,7 @@ document.addEventListener('input', e => {
 });
 
 /* ================= Einstellungen und Speicher ================= */
-let HUBST = false, HUBW = 0, HUBPG = '', HUBSEL = null;   // Entwurf: Storykarte auf der Seite „Spielen“ (PC): offen, Weltseite, Blätterrichtung, gewählte Station
+let HUBBOT = false, HUBST = false, HUBW = 0, HUBPG = '', HUBSEL = null;   // Entwurf: Storykarte auf der Seite „Spielen“ (PC): offen, Weltseite, Blätterrichtung, gewählte Station
 const K_SET = 'loota.settings', K_SAVE = 'loota.save';
 function load(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
 function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
@@ -326,7 +326,8 @@ function setScreen(name) {
   ['keller', 'wald', 'strand', 'schiff'].forEach(t => $('#app').classList.toggle('tbl-' + t, name === 'game' && GAME_TABLE === t));
   if (name !== 'game') $('#app').classList.remove('flut');
   if (name === 'title') renderTitle();
-  if (name === 'setup') { renderFoes(); renderControls(); const sd = $('#setup-deck'); if (sd) { const st = deckStats(DECK.counts); sd.innerHTML = `${esc(deckLabel())} <small>${st.door + st.tr} Karten${st.ok ? '' : ' · nicht spielbereit'}</small>`; } }
+  if (name === 'setup') setupPrep();
+  if (name === 'game' && HUBBOT) hubBotsOff();
   if (name === 'settings') { renderControls(); renderSaveInfo(); }
   if (name === 'cards') renderCards();
   if (name === 'quiz') renderQuiz();
@@ -405,7 +406,6 @@ function renderTitle() {
   $('#t-daily').dataset.go = wait ? 'chest' : 'daily';
   $('#tn-daily').hidden = dn > 0 && !wait;
   renderHub();
-  if (CUR === 'setup') renderSetupPC();
 }
 // Weiter im Storymodus: angefangene Station fortsetzen, sonst die nächste Station auf der Karte öffnen
 function storyGo() {
@@ -423,13 +423,15 @@ function playNow() {
   freePlay();
 }
 // Freies Spiel: offene Partie weiterspielen oder eine neue einrichten
+function setupPrep() { renderFoes(); renderControls(); const sd = $('#setup-deck'); if (sd) { const st = deckStats(DECK.counts); sd.innerHTML = `${esc(deckLabel())} <small>${st.door + st.tr} Karten${st.ok ? '' : ' · nicht spielbereit'}</small>`; } }
 async function freePlay() {
   const fg = freeGame();
-  if (!fg) { show('setup'); return; }
+  const toSetup = () => HUBST_ON() ? openHubBots() : show('setup');
+  if (!fg) { toSetup(); return; }
   const ok = await confirmDialog('Freies Spiel', 'Deine Partie wartet noch auf dich. Spielst du weiter oder fängst du neu an?', 'Weiterspielen', 'Neue Partie', 'Abbrechen',
     {ribbon: true, img: 'art/szene-offene-partie.webp', stat: `Runde ${fg.turn} · Stufe ${fg.lvl}`});
   if (ok === null) return;
-  if (ok) continueGame(); else show('setup');
+  if (ok) continueGame(); else toSetup();
 }
 const Motes = (() => {
   const cv = $('#motes'), cx = cv.getContext('2d'); let on = false, parts = [];
@@ -459,36 +461,6 @@ function renderControls() {
   $('#row-vibrate').hidden = !('vibrate' in navigator);
 }
 // Freies Spiel: die Gegner der nächsten Partie (zufällig oder der Stammtisch)
-// PC: „Gegen Bots“ im selben Aufbau wie die Storykarte. Die Einstellungen werden nur umgehängt (gleiche Knöpfe, gleiche IDs).
-function hubSideArgs() {
-  const st = dailyState(), sk = streakNow();
-  const dn = st.list.filter(e => { const m = missionById(e.id); return m && e.p >= m.n; }).length;
-  return [st, sk, dn, chestsWaiting().length];
-}
-function renderSetupPC() {
-  const c = $('#scr-setup .content'); if (!c) return;
-  const pc = mq().pc.matches; let mid = c.querySelector(':scope > .su-mid');
-  if (!pc) {
-    if (mid) { [...mid.querySelectorAll(':scope > .panel')].forEach(p => c.appendChild(p)); c.querySelectorAll(':scope > .su-table, :scope > .su-mid, :scope > .su-side').forEach(x => x.remove()); c.classList.remove('su-pc'); }
-    return;
-  }
-  if (!mid) {
-    const t = document.createElement('div'); t.className = 'su-table';
-    mid = document.createElement('div'); mid.className = 'su-mid';
-    [...c.querySelectorAll(':scope > .panel')].forEach(p => mid.appendChild(p));
-    mid.insertAdjacentHTML('beforeend', '<button type="button" class="btn primary su-start" data-go="start">Los geht’s!</button>');
-    const sd = document.createElement('div'); sd.className = 'su-side';
-    c.append(t, mid, sd); c.classList.add('su-pc');
-  }
-  const list = SET.foes === 'stammtisch' ? ['Berta', 'Kalle', 'Uschi'].map(n => ({name: n, face: ICON.portrait[n], style: STYLES[n]})) : (ROSTER || []);
-  const pos = SET.bots === 2 ? ['l2', 'r2'] : ['l', 't', 'r'];
-  patch(c.querySelector(':scope > .su-table'),
-    list.slice(0, SET.bots).map((f, i) => `<div class="su-seat s-${pos[i]}"><span class="su-face"><img src="${f.face}" alt=""></span><b>${esc(f.name)}</b><small>${esc((f.style && f.style.l) || '')}</small></div>`).join('') +
-    `<div class="su-deck" aria-hidden="true"><span class="back door"></span><span class="back treas"></span></div>` +
-    (SET.foes === 'stammtisch' ? '' : `<button type="button" class="btn small su-reroll" data-go="reroll"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 4v4h4M4 13a8 8 0 0 0 14.6 4.5M20 20v-4h-4" /></svg>Neue Gegner</button>`) +
-    `<div class="su-seat s-me me"><span class="su-face"><img src="${myPortrait()}" alt=""></span><b>Du</b><small>fängst an</small></div>`);
-  patch(c.querySelector(':scope > .su-side'), pcSideHTML(...hubSideArgs()));
-}
 function renderFoes() {
   if (SET.foes !== 'stammtisch' && !ROSTER) ROSTER = rollRoster();
   const list = SET.foes === 'stammtisch' ? ['Berta', 'Kalle', 'Uschi'].map(n => ({name: n, face: ICON.portrait[n], style: STYLES[n]})) : ROSTER;
@@ -496,7 +468,7 @@ function renderFoes() {
   const el = $('#setup-foes'); if (!el) return;
   patch(el, list.slice(0, SET.bots).map(f => `<div class="foe"><img src="${f.face}" alt=""><span><b>${esc(f.name)}</b><small>${esc(f.style.l || '')}</small></span></div>`).join('') +
     (SET.foes === 'stammtisch' ? '' : '<button type="button" class="btn small" data-go="reroll">Neu würfeln</button>'));
-  renderSetupPC();
+  if (HUBBOT) renderHub();
 }
 function renderSaveInfo() {
   const s = load(K_SAVE);
@@ -1765,7 +1737,7 @@ function go(a) {
     case 'tutorial': closeAllSheets(); startStation('w0s1'); break;
     case 'resetstory': confirmDialog('Storymodus zurücksetzen?', 'Alle Stationen, Sterne, Münzen und Belohnungen aus dem Storymodus gehen verloren.', 'Zurücksetzen', 'Abbrechen').then(ok => { if (ok) { resetStory(); clearStorySave(); toast('Storymodus zurückgesetzt'); } }); break;
     case 'reroll': ROSTER = rollRoster(); renderFoes(); Snd.sfx('deal'); break;
-    case 'home': if (HUBST) { closeHubStory(); break; } closeAllSheets(); STACK.length = 0; setScreen('title'); break;
+    case 'home': if (HUBBOT) { closeHubBots(); break; } if (HUBST) { closeHubStory(); break; } closeAllSheets(); STACK.length = 0; setScreen('title'); break;
     case 'story': if (HUBST_ON()) openHubStory(); else show('story'); break;
     case 'storymap': $$('.endov').forEach(x => x.remove()); closeAllSheets(); if (GAME_ON && S && S.scn && S.winner == null) { TOKEN++; } if (S && S.scn) GAME_ON = false; STACK.length = 0; if (HUBST_ON()) { openHubStory(); break; } STACK.push('title'); setScreen('story'); break;
     case 'start': startNewGame(); break;
@@ -1851,7 +1823,7 @@ document.addEventListener('click', e => {
   if ((el = t.closest('[data-back]'))) { back(); return; }
   if ((el = t.closest('[data-go]'))) { go(el.dataset.go); return; }
   if ((el = t.closest('.seg[data-set] button.locked'))) { toast(`Schaltest du frei, wenn du im Storymodus Welt ${worldById(MOOD_WORLD[el.dataset.v]).n} abschließt.`); buzz(30); return; }
-  if ((el = t.closest('.seg[data-set] button'))) { const k = el.parentElement.dataset.set; SET[k] = isNaN(+el.dataset.v) ? el.dataset.v : +el.dataset.v; saveSettings(); renderControls(); if (CUR === 'setup') renderFoes(); return; }
+  if ((el = t.closest('.seg[data-set] button'))) { const k = el.parentElement.dataset.set; SET[k] = isNaN(+el.dataset.v) ? el.dataset.v : +el.dataset.v; saveSettings(); renderControls(); if (CUR === 'setup' || HUBBOT) renderFoes(); return; }
   if ((el = t.closest('[data-toggle]'))) { const k = el.dataset.toggle; SET[k] = !SET[k]; saveSettings(); renderControls(); if (k === 'music' && SET.music) { Snd.unlock(); Snd.startMusic(); } if (CUR === 'game') render(); return; }
   if ((el = t.closest('[data-portrait]'))) { if (el.classList.contains('locked')) { toast(cosmeticSource('portrait:' + el.dataset.portrait)); return; } PROFILE.portrait = el.dataset.portrait; saveProfile(); renderProfile(); return; }
   if ((el = t.closest('[data-frame]'))) { if (el.classList.contains('locked')) { toast(cosmeticSource('frame:' + el.dataset.frame)); return; } PROFILE.frame = el.dataset.frame; saveProfile(); renderProfile(); return; }
@@ -2400,7 +2372,7 @@ function applyLayout() {
   document.documentElement.classList.toggle('wide-menu', wide && CUR !== 'game');
   if (wasMenu !== document.documentElement.classList.contains('wide-menu') && CUR === 'title' && typeof renderTitle === 'function') renderTitle();
   if (typeof renderWnav === 'function') renderWnav();
-  if (CUR === 'setup' && typeof renderSetupPC === 'function') renderSetupPC();
+  if (HUBBOT && !mq().pc.matches) hubBotsOff();
   dockSheet();
   if (mode === LAYOUT) return;
   LAYOUT = mode; app.classList.toggle('lay-pc', mode === 'pc'); app.classList.toggle('lay-tab', mode === 'tab');
@@ -2516,7 +2488,7 @@ function renderHub() {
   const fg = freeGame();
   if (hub.__tip == null) hub.__tip = Math.floor(Math.random() * plunkTips().length);
   // Kachel mit Bild: rechts das Motiv, links Text auf dunklem Verlauf. Ohne Bild: nur das Symbol.
-  if (mq().pc.matches) { hub.classList.add('pc'); patch(hub, pcPlayHTML(cw, nx, st, sk, dn, wait, ay, fg)); return; }
+  if (mq().pc.matches) { hub.classList.add('pc'); hubPatchPC(hub, pcPlayHTML(cw, nx, st, sk, dn, wait, ay, fg)); return; }
   hub.classList.remove('pc');
   const menu = (go, art, icon, b, small, cls = '') => `<button type="button" class="hub-btn${art ? ' hasart' : ''}${cls}" data-go="${go}"${art ? ` style="--art:url('${new URL(art, document.baseURI).href}')"` : ''}>${art ? '' : `<img src="${icon}" alt="">`}<span><b>${b}</b><small>${small}</small></span></button>`;
   const bx = myBg();
@@ -2630,6 +2602,7 @@ function pcNavHTML() {
 function pcPlayHTML(cw, nx, st, sk, dn, wait, ay, fg) {
   const play = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" /></svg>';
   const soon = (ic, kind, title, txt, msg) => `<button type="button" class="pd-card" data-soon="${esc(msg)}"><img class="pd-ic" src="${ic}" alt=""><span><small>${kind}</small><b>${title}</b><em>${txt}</em></span><span class="pd-bald">Bald</span></button>`;
+  if (HUBBOT) return hubBotsHTML() + pcSideHTML(st, sk, dn, wait);
   if (HUBST) return hubStoryHTML(cw) + pcSideHTML(st, sk, dn, wait);
   return `<main class="pp-modes pd">` +
       `<section class="pd-online"><img src="art/kachel-online.webp" alt=""><span class="tc-badge pd-badge">Bald</span>` +
@@ -2664,6 +2637,53 @@ function pcSideHTML(st, sk, dn, wait) {
    daneben stehen die Infos zur Station. */
 const HUBST_ON = () => mq().pc.matches;   // PC: Storykarte rollt auf der Seite „Spielen“ aus
 function storyNext() { let next = null; const cw = currentWorld(); openWorlds().forEach(w => { const n = w.stations.find(st => stationUnlocked(st) && !STORY.done[st.id]); if (n && (!next || w === cw)) next = n; }); return next; }
+// PC: Seite „Spielen“ in zwei Teilen aktualisieren. Die Seitenleiste (Hildes Aufträge, Serie) wird nur neu gebaut, wenn sich darin etwas ändert.
+function hubPatchPC(hub, html) {
+  const k = html.lastIndexOf('<aside class="pp-side">'), main = k >= 0 ? html.slice(0, k) : html, side = k >= 0 ? html.slice(k) : '';
+  let m = hub.querySelector(':scope > .hub-ms'), sd = hub.querySelector(':scope > .hub-ss');
+  if (!m || !sd) { hub.innerHTML = '<div class="hub-ms"></div><div class="hub-ss"></div>'; hub.__h = null; m = hub.firstChild; sd = hub.lastChild; }
+  if (patch(m, main) && HUBBOT) hubBotsMount();
+  patch(sd, side);
+}
+
+/* PC: „Gegen Bots“ direkt auf der Seite „Spielen“. Der Tisch rollt aus der Kachel nach oben aus (rechts, wo die Kachel liegt),
+   links stehen die Einstellungen. Das sind dieselben Knöpfe wie auf der Handy-Seite: Sie werden nur umgehängt. */
+let SETUP_PANELS = null;
+function hubBotsHTML() {
+  const list = SET.foes === 'stammtisch' ? ['Berta', 'Kalle', 'Uschi'].map(n => ({name: n, face: ICON.portrait[n], style: STYLES[n]})) : (ROSTER || []);
+  const pos = SET.bots === 2 ? ['l2', 'r2'] : ['l', 't', 'r'];
+  return `<main class="pp-modes pd-st pd-bot${HUBBOT === 'open' ? ' unroll' : ''}">` +
+      `<section class="pd-stinfo su-mid"></section>` +
+      `<section class="pd-stmap su-table"><span class="pd-rod" aria-hidden="true"></span>` +
+        list.slice(0, SET.bots).map((f, i) => `<div class="su-seat s-${pos[i]}"><span class="su-face"><img src="${f.face}" alt=""></span><b>${esc(f.name)}</b><small>${esc((f.style && f.style.l) || '')}</small></div>`).join('') +
+        `<div class="su-deck" aria-hidden="true"><span class="back door"></span><span class="back treas"></span></div>` +
+        (SET.foes === 'stammtisch' ? '' : `<button type="button" class="btn small su-reroll" data-go="reroll"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 4v4h4M4 13a8 8 0 0 0 14.6 4.5M20 20v-4h-4" /></svg>Neue Gegner</button>`) +
+        `<div class="su-seat s-me me"><span class="su-face"><img src="${myPortrait()}" alt=""></span><b>Du</b><small>fängst an</small></div>` +
+        `<button type="button" class="iconbtn pd-x" data-hubst="close" aria-label="Schließen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button></section>` +
+    `</main>`;
+}
+function hubBotsMount() {
+  const slot = $('#t-hub .su-mid'); if (!slot) return;
+  if (!SETUP_PANELS) SETUP_PANELS = [...$$('#scr-setup .content > .panel')];
+  slot.append(...SETUP_PANELS);
+  slot.insertAdjacentHTML('beforeend', '<button type="button" class="btn primary su-start" data-go="start">Los geht’s!</button>');
+}
+function hubBotsOff() {
+  if (SETUP_PANELS) $('#scr-setup .content').append(...SETUP_PANELS);
+  HUBBOT = false;
+}
+function openHubBots() {
+  const hub = $('#t-hub'), tile = $$('#t-hub .pd-solo-row .pd-tile')[1], main = $('#t-hub .pd');
+  if (tile && main) { const a = main.getBoundingClientRect(), b = tile.getBoundingClientRect(); hub.style.setProperty('--from', b.height ? Math.round(b.top - a.top) + 'px' : '100%'); }
+  closeAllSheets(); if (!ROSTER && SET.foes !== 'stammtisch') ROSTER = rollRoster();
+  HUBST = false; HUBSEL = null; HUBBOT = 'open';
+  if (CUR !== 'title') setScreen('title'); else renderHub();
+  HUBBOT = true; setupPrep();
+}
+function closeHubBots() {
+  const m = $('#t-hub .pd-bot'); if (m && !UI.reduce) { m.classList.remove('unroll'); m.classList.add('rollup'); }
+  setTimeout(() => { hubBotsOff(); renderHub(); }, UI.reduce ? 0 : 420);
+}
 function hubPages() { const f = fogWorld(); return [...openWorlds().map(w => ({w})), ...(f ? [{f}] : [])]; }
 function hubStoryHTML(cw) {
   SAVED_ST = (storySave() || {}).st || null;
@@ -2687,7 +2707,7 @@ function hubStoryHTML(cw) {
 function openHubStory(stId, noAuto) {
   const hub = $('#t-hub'), tile = $('#t-hub .pd-solo-row .pd-tile'), main = $('#t-hub .pd');
   if (tile && main) { const a = main.getBoundingClientRect(), b = tile.getBoundingClientRect(); hub.style.setProperty('--from', b.height ? Math.round(b.top - a.top) + 'px' : '100%'); }
-  closeAllSheets(); HUBST = 'open'; HUBPG = ''; HUBSEL = null;
+  closeAllSheets(); if (HUBBOT) hubBotsOff(); HUBST = 'open'; HUBPG = ''; HUBSEL = null;
   { const sid = stId || (storyNext() || {}).id, stw = sid && stationById(sid), k = stw ? hubPages().findIndex(q => q.w && q.w.id === stw.world) : -1; HUBW = k >= 0 ? k : hubPages().findIndex(q => q.w === currentWorld()); }
   if (CUR !== 'title') setScreen('title'); else renderHub();
   HUBST = true;
@@ -2700,7 +2720,7 @@ function closeHubStory() {
   const m = $('#t-hub .pd-st'); if (m && !UI.reduce) { m.classList.remove('unroll'); m.classList.add('rollup'); }
   setTimeout(() => { HUBST = false; HUBSEL = null; renderHub(); }, UI.reduce ? 0 : 420);
 }
-document.addEventListener('click', e => { if (e.target.closest('[data-hubst="close"]')) closeHubStory(); });
+document.addEventListener('click', e => { if (e.target.closest('[data-hubst="close"]')) { if (HUBBOT) closeHubBots(); else closeHubStory(); } });
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-hubw]'); if (!b || !HUBST) return;
   const d = +b.dataset.hubw, n = hubPages().length, k = Math.max(0, Math.min(n - 1, HUBW + d)); if (k === HUBW) return;
