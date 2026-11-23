@@ -1031,6 +1031,17 @@ const SHEET_VIEWS = {
     const swap = live && (s.where === 'hand' || s.where === 'pack') ? equipInfoHTML(me(), c) : '';
     const info = (meaning ? `<p class="meaning">${meaning}</p>` : '') + (wh.length ? `<ul class="wherenow">${wh.map(x => `<li>${x}</li>`).join('')}</ul>` : ''), actBox = actHTML ? `<div class="acts">${actHTML}</div>` : '';
     /* Beim Ausrüsten stehen Slot-Info und Knopf direkt unter der Karte, die Erklärung danach */
+    if (PCGX() && CUR === 'game') {
+      // PC: Karte links, rechts die Aktionen kompakt. Hauptaktionen groß, alles andere als kleine Knöpfe nebeneinander,
+      // Ziele („Auf Nyra spielen“) mit dem Porträt des Spielers.
+      const face = l => { const m = l.match(/^Auf (.+?) spielen$/); const q = m && S.players.find(x => (x.human ? 'dich' : x.name) === m[1]); return q ? `<img class="cdx-pt" src="${portrait(q)}" alt="">` : ''; };
+      const btn = (a, i) => `<button type="button" class="btn ${a.kind === 'primary' ? 'primary' : ''}${UI.adv && UI.adv.uid === c.uid && UI.adv.act && a.l.startsWith(UI.adv.act) ? ' rec' : ''}" data-cact="${i}" ${a.dis ? 'disabled' : ''}>${face(a.l)}<span>${esc(a.l)}</span></button>`;
+      const main = [], more = [], notes = [];
+      acts.forEach((a, i) => { if (a.info) notes.push(`<p class="cdx-note">${a.info}</p>`); else { (a.kind === 'primary' ? main : more).push(btn(a, i)); if (a.dis && a.dis !== true) notes.push(`<p class="err">${a.dis}</p>`); } });
+      if (!main.length && more.length) { const k = acts.findIndex(a => !a.info && !a.dis && !/^Auf /.test(a.l)); if (k >= 0) { const b0 = btn(Object.assign({}, acts[k], {kind: 'primary'}), k), j = more.indexOf(btn(acts[k], k)); if (j >= 0) { more.splice(j, 1); main.push(b0); } } }
+      const box = main.length || more.length ? `<div class="cdx-acts">${main.length ? `<div class="cdx-main">${main.join('')}</div>` : ''}${more.length ? `<div class="cdx-more">${more.join('')}</div>` : ''}</div>` : '';
+      return {head: h3(''), body: `<div class="cdx"><div class="cdx-card">${cardBig(c)}</div><div class="cdx-side">${notes.join('')}${swap}${box}${info}</div></div>`};
+    }
     return {head: h3(''), body: cardBig(c) + (swap ? swap + actBox + info : info + actBox)};
   },
   opp(s) {
@@ -1501,6 +1512,11 @@ function dailyNotes(st) {
       `<span class="nbar"><i style="width:${pct}%"></i></span><span class="np"><span class="npv">${prog}</span>${done ? '<em class="nstamp" role="img" aria-label="Erledigt"></em>' : ''}${!done && !st.rer ? `<button type="button" class="btn small" data-reroll="${i}">Tauschen</button>` : ''}</span></div>`;
   }).join('');
 }
+// PC: Optionen während der Partie als Fenster über dem Spielfeld (die Partie bleibt offen). Dieselben Schalter wie auf der Seite „Optionen“.
+SHEET_VIEWS.gsettings = () => {
+  const pan = i => { const el = $(`#scr-settings .content > .panel:nth-child(${i})`); if (!el) return ''; const c = el.cloneNode(true); c.querySelectorAll('[id]').forEach(x => x.removeAttribute('id')); c.querySelectorAll('.trow').forEach(r => { if (r.querySelector('[data-toggle="vibrate"]')) r.remove(); }); c.querySelectorAll('.hint').forEach(h => { if (/iPhone/.test(h.textContent)) h.remove(); }); return `<div class="panel">${c.innerHTML}</div>`; };
+  return {head: h3('Optionen'), body: `<div class="gset">${pan(1)}${pan(2)}</div><div class="acts gset-acts"><button type="button" class="btn primary" data-sheetclose>Weiterspielen</button><button type="button" class="btn" data-go="allsettings">Alle Optionen</button></div>`};
+};
 SHEET_VIEWS.daily = () => {
   const st = dailyState(), sk = streakNow();
   const notes = dailyNotes(st);
@@ -1754,7 +1770,8 @@ function go(a) {
     case 'profile': closeAllSheets(); show('profile'); break;
     case 'daily': closeAllSheets(); openSheet({id: 'daily'}); break;
     case 'shop': closeAllSheets(); if (mq().pc.matches) show('shop'); else openSheet({id: 'shop'}); break;
-    case 'settings': closeAllSheets(); show('settings'); break;
+    case 'settings': closeAllSheets(); if (CUR === 'game' && PCGX()) { openSheet({id: 'gsettings'}); renderControls(); break; } show('settings'); break;
+    case 'allsettings': closeAllSheets(); show('settings'); break;
     case 'pause': openSheet({id: 'pause'}); break;
     case 'resume': closeAllSheets(); break;
     case 'menu': $$('.endov').forEach(x => x.remove()); closeAllSheets(); STACK.length = 0; setScreen('title'); break;
@@ -2458,7 +2475,8 @@ function renderPCG() {
   patch($('#gme'), seatHTML(p));
   // Phasen deines Zugs links am Tisch
   const who = S.winner != null ? 'Spiel vorbei' : mine ? 'Dein Zug' : `${esc(P(S.cur).name)} ist am Zug`;
-  patch($('#gphase'), `<span class="gp-h">${who} · Runde ${S.turn}</span><ol>${ICON.phase.map((src, i) => `<li class="${S.phase === i + 1 ? 'on' : S.phase > i + 1 ? 'done' : ''}"><img src="${src}" alt=""><span>${PHASES[i]}</span></li>`).join('')}</ol>`);
+  const td = tideNow();
+  patch($('#gphase'), `<span class="gp-h">${who} · Runde ${S.turn}</span>${td ? `<span class="gp-tide ${td}" title="${td === 'flut' ? 'Flut: Meeresmonster +3, Weglaufen +1' : 'Ebbe: Raum durchsuchen bringt einen Schatz'}"><i class="tb-tide ${td}"></i>${td === 'flut' ? 'Flut' : 'Ebbe'}<small>${td === 'flut' ? 'Meeresmonster +3 · Weglaufen +1' : 'Durchsuchen bringt einen Schatz'}</small></span>` : ''}<ol>${ICON.phase.map((src, i) => `<li class="${S.phase === i + 1 ? 'on' : S.phase > i + 1 ? 'done' : ''}"><img src="${src}" alt=""><span>${PHASES[i]}</span></li>`).join('')}</ol>`);
   // Stapel, zuletzt abgelegt und Menü rechts am Tisch
   patch($('#gdeck'), `<div class="gd-tools"><button type="button" class="iconbtn" data-go="pause" aria-label="Menü"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></svg></button>${$('#btn-sound').outerHTML.replace('id="btn-sound"', '')}</div>` +
     `<div class="gd-pile"><span class="back door"></span><span class="back door"></span><span class="back door"></span><small>Tür · ${S.door.length}</small></div>` +
@@ -2470,7 +2488,9 @@ function renderPCG() {
     `${slot(two || hands[0], 'hand', 'Hand')}${two ? `<span class="et empty both"><img src="${ICON.slot.hand}" alt=""><span class="et-n">beide Hände</span></span>` : slot(hands[1], 'hand', 'Hand')}` +
     `${slot(by('schuhe')[0], 'schuhe', 'Schuhe')}${misc.length ? misc.map(c => eqTile(p, c, true, 'eq', ' misc')).join('') : eqEmpty('none', 'Sonstiges', ' misc')}` +
     `<button type="button" class="ge-pack" data-go="equip" aria-label="Rucksack, ${p.pack.length} von ${packLimit(p)}"><img src="${ICON.slot.pack}" alt=""><b>${p.pack.length}/${packLimit(p)}</b><small>Rucksack</small></button>` +
-    (isFree() && mine && !sellBlock(p) && p.eq.concat(p.pack, p.hand).some(c => c.g) ? `<button type="button" class="ge-pack ge-sell${UI.adv && UI.adv.sell ? ' rec' : ''}" data-go="sell"><img src="icons/muenze-voll.png" alt=""><b>Verkaufen</b><small>Gegenstände</small></button>` : '') + `</div>`);
+    (() => { const blk = sellBlock(p), any = p.eq.concat(p.pack, p.hand).some(c => c.g), ok = isFree() && mine && !blk && any;
+      const why = !mine ? 'Verkaufen geht nur in deinem Zug.' : blk ? blk : !any ? 'Du hast nichts, was sich verkaufen lässt.' : !isFree() ? 'Gerade nicht, erst diesen Schritt beenden.' : 'Gegenstände verkaufen';
+      return `<button type="button" class="ge-pack ge-sell${ok && UI.adv && UI.adv.sell ? ' rec' : ''}" data-go="sell"${ok ? '' : ' disabled'} title="${esc(why)}"><img src="icons/muenze-voll.png" alt=""><b>Verkaufen</b><small>${ok ? 'Gegenstände' : 'gerade nicht'}</small></button>`; })() + `</div>`);
   // Notizen und Kampfrechnung rechts
   const items = S.log.filter(e => UI.coach || e.kind !== 'rule').slice(-80);
 if (  patch($('#wlog'), `<div class="wpanel"><h4 class="wp-h">Notizen</h4><i class="wpin"></i><ul class="loglist">${items.map(e => `<li class="l-${e.kind}">${e.kind === 'rule' ? '<b>Regel:</b> ' : ''}${linkify(e.t)}</li>`).join('')}</ul></div>`) || W.pcgFight !== !!S.combat) { W.pcgFight = !!S.combat; requestAnimationFrame(() => { const ll = $('#wlog .loglist'); if (ll) ll.scrollTop = ll.scrollHeight; }); }

@@ -2579,3 +2579,59 @@ html.pcg-on .bc.k-wander{--kc:var(--k-wander)}html.pcg-on .bc.k-amulet{--kc:var(
 .bc-art{border-color:var(--kc)}
 .bc.k-monster{--kc:var(--k-monster)}.bc.k-curse{--kc:var(--k-curse)}.bc.k-race{--kc:var(--k-race)}.bc.k-class{--kc:var(--k-class)}.bc.k-item{--kc:var(--k-item)}
 .bc.k-oneshot{--kc:var(--k-oneshot)}.bc.k-enh{--kc:var(--k-enh)}.bc.k-levelup{--kc:var(--k-levelup)}.bc.k-wander{--kc:var(--k-wander)}.bc.k-amulet{--kc:var(--k-amulet)}
+/* Ebbe und Flut am PC: Wasser steigt im Spielfeld, Anzeige bei den Phasen */
+.gtide{display:none!important}
+#app.pcg.tbl-strand .gtide{display:block!important;grid-area:table;position:relative;inset:auto;z-index:2;border-radius:20px;pointer-events:none}
+#app.pcg>.tide{display:none!important}
+.gp-tide{display:grid;grid-template-columns:auto 1fr;column-gap:8px;align-items:center;margin:0 0 8px;padding:7px 10px;border-radius:10px;background:rgba(243,200,115,.12);font:700 15px var(--display);color:#fbefd6}
+.gp-tide.flut{background:rgba(44,158,172,.35);box-shadow:inset 0 0 0 1px rgba(110,206,210,.6)}
+.gp-tide .tb-tide{grid-row:span 2;margin:0}
+.gp-tide small{font:600 11.5px/1.2 var(--body);color:#e3cfa6}
+/* Optionen in der Partie (PC) */
+html.wide-any #sheet[data-sid="gsettings"]{width:min(820px,calc(100vw - 48px))}
+.gset{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.gset>.panel{margin:0}
+.gset-acts{display:flex;flex-direction:row-reverse;gap:10px;margin-top:14px}
+.gset-acts .btn{flex:1}
+/* PC-Partie: Auswahl auf dem Tisch so groß wie die Handkarten */
+#app.pcg .loot-cards .mc{width:var(--cw);height:var(--chh)}
+#app.pcg .lootar.draft .dback{border-radius:10px}
+/* Kurze Meldungen auf dem Tisch mittig */
+#app.pcg .hud.rhud{display:flex;justify-content:center;padding-bottom:8px}
+#app.pcg .rtxt{max-width:min(560px,100%);text-align:center;padding:8px 16px;border-radius:14px;background:rgba(18,10,5,.74);font-size:16px}
+#app.pcg .loot-h,#app.pcg .loot-sub{text-align:center}
+#app.pcg .loot-sub{padding:2px 12px;border-radius:999px;background:rgba(18,10,5,.62)}
+/* Kartenvorschau in den Notizen: passt immer ganz hinein (Bild schrumpft, Text enger) */
+#app.pcg .wprev-in{height:100%;width:100%;display:flex;align-items:center;justify-content:center}
+#app.pcg .wprev-in .bc{display:flex;flex-direction:column;max-height:100%;width:min(300px,100%);padding:8px 10px 10px}
+#app.pcg .wprev-in .bc-name{margin:4px 0 6px;font-size:19px}
+#app.pcg .wprev-in .bc-art{flex:0 1 auto;min-height:60px;height:auto;aspect-ratio:auto;max-height:280px}
+#app.pcg .wprev-in .bc-body{margin-top:6px;font-size:14px;line-height:1.25;flex:none}
+#app.pcg .wprev-in .bc-bad{margin-top:4px;padding-top:4px}
+#app.pcg .wprev-in .bc-foot{margin-top:6px;flex:none}
+/* Kartenfenster am PC: Karte links, Aktionen rechts */
+html.pcg-on #sheet[data-sid="card"]{width:min(780px,calc(100vw - 48px))}
+.cdx{display:grid;grid-template-columns:300px minmax(0,1fr);gap:22px;align-items:start}
+.cdx-card .bc{width:100%;margin:0}
+.cdx-side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.cdx-side .meaning{margin:0}
+.cdx-side .wherenow{margin:0}
+.cdx-acts{display:flex;flex-direction:column;gap:8px}
+.cdx-main{display:flex;flex-direction:column;gap:8px}
+.cdx-main .btn{min-height:52px;font-size:18px}
+.cdx-more{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cdx-more .btn{min-height:44px;font-size:14.5px;padding:6px 10px;display:flex;align-items:center;justify-content:center;gap:8px;text-align:left}
+.cdx-acts .btn{margin:0;width:100%}
+.cdx-pt{width:30px;height:30px;border-radius:50%;object-fit:cover;object-position:50% 20%;border:2px solid #e9cf9a;flex:none}
+.cdx-note{margin:0;padding:8px 12px;border-radius:10px;background:rgba(243,200,115,.18);font-size:14px}
+.cdx-side .err{margin:0;font-size:13px}
+.ge-sell:disabled{opacity:.5;filter:grayscale(.6);cursor:default}.ge-sell:disabled:hover{border-color:#5e3f23}
+.cdx-more .btn{flex-direction:row}
+.cdx-more .btn>span{display:inline}
+
+html.pcg-on #sheet[data-sid="card"] .sh-head{position:absolute;top:12px;right:12px;left:auto;z-index:2;min-height:0;padding:0;border:0;background:none}
+html.pcg-on #sheet[data-sid="card"] .sh-head h3{display:none}
+html.pcg-on #sheet[data-sid="card"] .grab{display:none}
+html.pcg-on #sheet[data-sid="card"] .sh-body{padding-top:22px}
+html.pcg-on #sheet[data-sid="card"] .cdx-side{padding-right:52px}
+.cdx-main .btn{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px}
