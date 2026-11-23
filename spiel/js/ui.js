@@ -1652,7 +1652,7 @@ async function buyOffer(id) {
   Snd.sfx('victory'); buzz([40, 60, 40]);
   closeAllSheets(); toast(`${o.n} freigeschaltet!`);
   burstAt('#st-map', 30);
-  renderStory(); renderTitle();
+  renderStory(); renderTitle(); if (CUR === 'shop') renderShopPage();
 }
 // Sonderregeln einer Welt, über das i an der Weltüberschrift der Storykarte
 // Sonderregeln einer Welt direkt auf der Seite (PC). In der Station nur, wenn es welche gibt.
@@ -2858,10 +2858,41 @@ document.addEventListener('click', e => {
 document.addEventListener('click', e => { const b = e.target.closest('[data-soon]'); if (b) toast(b.dataset.soon); });
 function renderShopPage() {
   const el = $('#shop-page'); if (!el) return;
-  patch(el, `<div class="panel shop-panel">${SHEET_VIEWS.shop().body}</div>`); watchBoards(el); fitNames(el);
+  if (!mq().pc.matches) { el.classList.remove('two'); patch(el, `<div class="panel shop-panel">${SHEET_VIEWS.shop().body}</div>`); watchBoards(el); fitNames(el); return; }
+  // PC: links der Krämerladen (Münzen), rechts der Shop (Echtgeld)
+  el.classList.add('two');
+  const st = dailyState();
+  const items = st.shop.map(id => { const it = shopItem(id); if (!it) return ''; const deal = shopDeal(id); return shelfItem(id, it.price, shopPrice(id), deal ? deal.pct : 0, 'data-shopbuy'); }).join('');
+  const kl = `<section class="kl-panel"><header class="kl-head"><div><small>Für Münzen</small><h2>Krämerladen</h2></div><span class="kl-coins">${coinImg}<b>${STORY.coins}</b> Münzen</span></header>` +
+    `<div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Frisch reingekommen, nur heute! Na ja, fast nur heute.“</p></div>` +
+    `<div class="sitems">${items || '<p class="hint">Du hast schon alles aus dem Laden. Hut ab!</p>'}</div>` +
+    `<p class="kl-hint">Neues Angebot in ${untilMidnight()}. Münzen gibt es für Aufträge und im Storymodus. Gekauftes wählst du im Charakter-Bildschirm aus.</p>` +
+    `<div class="kl-acts"><button type="button" class="btn" data-go="daily">Zu den Aufträgen</button><button type="button" class="btn" data-go="profile">Zum Charakter</button></div></section>`;
+  patch(el, kl + premiumHTML()); watchBoards(el); fitNames(el);
+  if (UI.shopFocus) { UI.shopFocus = false; const pr = el.querySelector('.pr-panel'); if (pr) { pr.classList.remove('flash'); void pr.offsetWidth; pr.classList.add('flash'); } }
+}
+// Shop für Echtgeld: Kaufwelten sind echt (über Google Play), der Rest sind Platzhalter für später
+function premiumHTML() {
+  const wimg = id => new URL(`art/karte-welt${id.slice(1)}.webp`, document.baseURI).href;
+  const own = id => !!PURCHASE.worlds[id];
+  const offer = (o, extra) => {
+    const done = o.worlds.every(own), wname = o.worlds.map(id => worldById(id).name).join(' und ');
+    return `<button type="button" class="pr-item${done ? ' owned' : ''}${extra && extra.best ? ' best' : ''}" ${done ? 'disabled' : `data-buyworld="${o.worlds[0]}"`}>` +
+      `<span class="pr-pic${o.worlds.length > 1 ? ' duo' : ''}">${o.worlds.map(id => `<img src="${wimg(id)}" alt="">`).join('')}</span>` +
+      `<span class="pr-t"><small>${o.worlds.length > 1 ? 'Paket' : 'Welt ' + o.worlds[0].slice(1)}</small><b>${esc(wname)}</b><em>${o.worlds.length > 1 ? 'Beide Kaufwelten mit allen Stationen, Karten und Belohnungen' : 'Neue Stationen, Karten, Sonderregeln und Belohnungen'}</em></span>` +
+      `${extra && extra.best ? '<i class="pr-badge">Spare 20 %</i>' : ''}<span class="pr-price">${done ? 'Gekauft' : esc(offerPrice(o))}</span></button>`;
+  };
+  const soon = (ic, kind, title, txt) => `<button type="button" class="pr-item soon" data-soon="${esc(title)} kommt bald in den Shop."><span class="pr-pic ic">${ic}</span><span class="pr-t"><small>${kind}</small><b>${title}</b><em>${txt}</em></span><span class="pr-price">Bald</span></button>`;
+  const g = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+  return `<section class="pr-panel"><header class="pr-head"><img src="${new URL('art/shop-kissen.webp', document.baseURI).href}" alt=""><div><small>Für Echtgeld</small><h2>Shop</h2><p>Unterstütze Plundo und hol dir mehr Abenteuer.</p></div></header>` +
+    `<div class="pr-list"><span class="pr-lbl">Welten</span>${offer(OFFERS[2], {best: true})}${offer(OFFERS[0])}${offer(OFFERS[1])}` +
+    `<span class="pr-lbl">Extras</span>` +
+    soon(g('<path d="M4 4l16 16 M9.5 5H19v9.5 M5 9v10h10" />'), 'Komfort', 'Werbefrei', 'Spielen ohne Werbung, einmal kaufen, für immer') +
+    soon(g('<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6L3.4 9.3l6-.7z" />'), 'Unterstützer', 'Gönnerpaket', 'Exklusiver Rahmen, Titel und Hintergrund als Dankeschön') +
+    `</div><footer class="pr-foot"><span>${g('<rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />')}Sichere Bezahlung über Google Play</span><span>Käufe gelten für dein Konto auf allen Geräten</span></footer></section>`;
 }
 
-document.addEventListener('click', e => { if (e.target.closest('[data-pnshop]')) toast('Der Shop kommt bald: Werbung ausschalten, Welten freischalten und mehr.'); });
+document.addEventListener('click', e => { if (e.target.closest('[data-pnshop]')) { UI.shopFocus = true; if (CUR === 'shop') renderShopPage(); else go('shop'); } });
 
 // Inhaltsbreite am PC: von der linken Kante von „Spielen“ bis zur rechten Kante des Profils, live gemessen
 function pcEdgesNow() {
