@@ -735,6 +735,7 @@ function renderTable() {
     arts.dataset.n = C.mons.length;
     paintHud(el.querySelector('.hud'), C);
   } else if (!R) {
+    if ($('#app').classList.contains('pcg')) patch(el.querySelector('.idle'), `<div class="gdoor${S.cur === 0 && S.winner == null ? ' mine' : ''}"><span class="back door"></span></div><div class="idle-txt">${S.winner != null ? 'Das Spiel ist vorbei.' : S.cur === 0 ? 'Die Tür ist noch zu. Was wohl dahinter lauert?' : esc(P(S.cur).name) + ' ist am Zug.'}</div>`); else
     patch(el.querySelector('.idle'), `<div class="decks"><div class="deck"><div class="back door" role="img" aria-label="Türstapel"></div>Tür ${S.door.length} · Ablage ${S.doorDisc.length}</div><div class="deck"><div class="back treas" role="img" aria-label="Schatzstapel"></div>Schatz ${S.tr.length} · Ablage ${S.trDisc.length}</div></div><div class="idle-txt">${S.winner != null ? 'Das Spiel ist vorbei.' : S.cur === 0 ? 'Die Tür ist noch zu. Was wohl dahinter lauert?' : esc(P(S.cur).name) + ' ist am Zug.'}</div>`);
   }
 }
@@ -2135,13 +2136,13 @@ const TUT_LESSONS = [
   {id: 't2', st: S1, ok: 'Weiter', spot: '#table', step: [6, 10], only: () => false, when: () => tCtx() === 'kick' && S.turn === 1,
     text: 'In der Mitte ist das Spielfeld. Hier tauchen Monster auf, und hier wird gekämpft.'},
   {id: 't3', st: S1, ok: 'Weiter', spot: '#act', step: [7, 10], only: () => false, when: () => tCtx() === 'kick' && S.turn === 1,
-    text: 'Darunter stehen deine Möglichkeiten. Der orange Knopf ist fast immer der nächste Schritt.'},
+    text: () => PCGX() ? 'Rechts neben dem Spielfeld stehen deine Möglichkeiten. Der orange Knopf ist fast immer der nächste Schritt.' : 'Darunter stehen deine Möglichkeiten. Der orange Knopf ist fast immer der nächste Schritt.'},
   {id: 't4', st: S1, ok: 'Weiter', spot: '#mebar', step: [8, 10], only: () => false, when: () => tCtx() === 'kick' && S.turn === 1,
-    text: 'Das bist du. Die Münze zeigt deine Stufe: 1 von 2. Die Zahlen daneben erkläre ich dir, wenn wir sie brauchen. Tippst du hier drauf, siehst du deine Ausrüstung.'},
+    text: () => PCGX() ? 'Das bist du. Die Zahl an deinem Bild ist deine Stufe, die Punkte zeigen, wie weit es noch bis zum Sieg ist. Am unteren Rand des Spielfelds liegt deine Ausrüstung. Klickst du auf dein Schild, siehst du alles im Detail.' : 'Das bist du. Die Münze zeigt deine Stufe: 1 von 2. Die Zahlen daneben erkläre ich dir, wenn wir sie brauchen. Tippst du hier drauf, siehst du deine Ausrüstung.'},
   {id: 't5', st: S1, ok: 'Weiter', spot: '#hand', step: [9, 10], only: () => false, when: () => tCtx() === 'kick' && S.turn === 1,
     text: 'Ganz unten liegen deine Handkarten. Die hast du in Reserve und spielst sie aus, wenn du sie brauchst.'},
   {id: 't6', st: S1, ok: 'Alles klar', spot: '#scr-game .topbar', step: [10, 10], only: () => false, when: () => tCtx() === 'kick' && S.turn === 1,
-    text: 'Und ganz oben: Links ist das Menü, falls du eine Pause brauchst. In der Mitte siehst du, in welchem Schritt deines Zuges du gerade bist. Rechts stehen die Notizen mit allem, was im Spiel passiert ist.'},
+    text: () => PCGX() ? 'Links auf dem Spielfeld siehst du, in welchem Schritt deines Zuges du gerade bist. Rechts oben auf dem Spielfeld ist das Menü, falls du eine Pause brauchst. Daneben stehen die Notizen mit allem, was im Spiel passiert ist.' : 'Und ganz oben: Links ist das Menü, falls du eine Pause brauchst. In der Mitte siehst du, in welchem Schritt deines Zuges du gerade bist. Rechts stehen die Notizen mit allem, was im Spiel passiert ist.'},
   {id: 'karte', st: S1, act: /^Ausrüsten/, sheet: 'card', when: () => tCtx() === 'kick' && S.turn === 1, done: () => TUT.sawCard && !SHEETS.length, only: () => false, hl: () => '#hand .mc', shl: () => $$('#sheet [data-cact]').find(b => /Ausrüsten/.test(b.textContent)),
     text: 'Tipp mal auf deine Karte. Dann siehst du groß, was sie kann. Mit „Ausrüsten“ setzt du den Helm auf und wirst stärker.'},
   {id: 'tuer', st: S1, when: () => tCtx() === 'kick' && S.turn === 1, done: () => tCtx() !== 'kick', hl: () => '#act .btn.primary',
@@ -2305,7 +2306,8 @@ function tutSpot(L) {
   const dim = $('#tutdim'), hole = dim.firstElementChild;
   // Breite Ansicht: Gegner und eigene Leiste stehen woanders
   let spot = L.spot;
-  if (spot && LAYOUT) spot = spot.replace('#mebar', '#wme').replace('#opps', LAYOUT === 'pc' ? '#wopps' : '#opps');
+  if (spot && $('#app').classList.contains('pcg')) spot = spot.replace('#mebar', '#gme, #geq').replace('#opps', '#wopps').replace('#scr-game .topbar', '#gphase, #scr-game .gd-tools');
+  else if (spot && LAYOUT) spot = spot.replace('#mebar', '#wme').replace('#opps', LAYOUT === 'pc' ? '#wopps' : '#opps');
   const els = spot ? $$(spot).filter(e => e.offsetParent) : [];
   if (!els.length) { Object.assign(hole.style, {left: '50%', top: '50%', width: '0px', height: '0px'}); dim.dataset.at = ''; return; }
   const rs = els.map(e => e.getBoundingClientRect()), pad = 6;
@@ -2380,6 +2382,7 @@ function applyLayout() {
   if (typeof renderWnav === 'function') renderWnav();
   if (HUBBOT && !mq().pc.matches) hubBotsOff();
   dockSheet();
+  const g = mode === 'pc' && PCG_ON(); app.classList.toggle('pcg', g); document.documentElement.classList.toggle('pcg-on', g);
   if (mode === LAYOUT) return;
   LAYOUT = mode; app.classList.toggle('lay-pc', mode === 'pc'); app.classList.toggle('lay-tab', mode === 'tab');
   if (S && CUR === 'game') render();
@@ -2406,6 +2409,7 @@ function fightWideHTML() {
   return `<div class="wpanel wfight-in"><h4 class="wp-h">Kampf</h4>${v.body}</div>`;
 }
 function renderWide() {
+  if ($('#app').classList.contains('pcg')) { renderPCG(); return; }
   const pc = LAYOUT === 'pc', p = me();
   // Gegner: auf dem PC mit voller Ausrüstung, auf dem Tablet als Liste links
   if (pc) patch($('#wopps'), S.players.filter(x => !x.human).map(oppWideHTML).join(''));
@@ -2420,6 +2424,53 @@ function renderWide() {
   patch($('#wprev'), pv ? `<div class="wprev-in">${cardBig(pv)}</div>` : '');
   const dD = S.doorDisc[S.doorDisc.length - 1], dT = S.trDisc[S.trDisc.length - 1];
   patch($('#wpile'), pc && (dD || dT) ? `<span class="wp-lbl">Zuletzt abgelegt</span><span class="wp-cards">${[dD, dT].filter(Boolean).map(c => cardMini(c, {inert: true, size: 'tiny'})).join('')}</span>` : '');
+}
+/* ================= Partie am PC (neuer Aufbau, Entwurf mit ?entwurf) =================
+   Oben die Menüleiste, darunter die Gegner als Schilder im Format ihrer Hintergründe, in der Mitte der Tisch mit den Phasen links
+   und den Stapeln rechts, am unteren Tischrand deine Ausrüstung. Rechts Notizen, Kampfrechnung und die Knöpfe; unten dein Schild und die Hand. */
+const PCG_ON = () => /entwurf/.test(location.search);
+const PCGX = () => { const a = document.getElementById('app'); return !!a && a.classList.contains('pcg'); };
+function seatHTML(p) {
+  const C = S.combat, role = C && (C.f === p.id ? 'kämpft' : C.h === p.id ? 'hilft' : ''), turn = S.cur === p.id && S.winner == null, bx = bgOf(p);
+  const tag = role ? `<span class="gs-tag red">${role}</span>` : p.dead ? '<span class="gs-tag">tot</span>' : turn ? '<span class="gs-tag">am Zug</span>' : '';
+  const bgu = bx && bx[2] ? new URL(bgSrc(bx), document.baseURI).href : p.human ? new URL('art/kulisse-staedtchen.webp', document.baseURI).href : '';
+  const style = `--fc:${frameOf(p)[2]}${bgu ? `;--bg:url('${bgu}');--bgp:${(bx && bx[2] && bx[4]) || '50% 50%'}` : ''}`;
+  return `<button type="button" class="gseat${turn ? ' turn' : ''}${p.dead ? ' dead' : ''}${p.human ? ' me' : ''}" ${p.human ? 'data-go="equip"' : `data-opp="${p.id}"`} style="${style}" aria-label="${p.human ? 'Du' : esc(p.name)}, Stufe ${p.lvl}">` +
+    `<span class="gs-pt"><img src="${p.human ? myPortrait() : portrait(p)}" alt=""><i>${p.lvl}</i></span>` +
+    `<span class="gs-t"><span class="gs-n"><b>${p.human ? 'Du' : esc(p.name)}</b>${tag}</span>` +
+    `<span class="gs-st"><span title="Kampfstärke"><img src="${ICON.kampf}" alt="">${power(p)}</span><span title="Weglaufen"><img src="${ICON.run}" alt="">${sign(runBonus(p))}</span>` +
+    `<span title="Handkarten"${p.human && p.hand.length > handLimit(p) ? ' class="warn"' : ''}><img src="${ICON.hand}" alt="">${p.hand.length}${p.human ? '/' + handLimit(p) : ''}</span>${p.gold ? `<span class="gold" title="Goldbeutel">${fmt(p.gold)} G</span>` : ''}</span>` +
+    (p.human ? `<span class="gs-dots" aria-hidden="true">${Array.from({length: WINLVL()}, (_, i) => `<em class="${i < p.lvl ? 'on' : ''}"></em>`).join('')}</span>` : '') +
+    `</span></button>`;
+}
+function renderPCG() {
+  const p = me(), mine = S.cur === 0 && S.winner == null;
+  patch($('#wopps'), S.players.filter(x => !x.human).map(seatHTML).join(''));
+  patch($('#gme'), seatHTML(p));
+  // Phasen deines Zugs links am Tisch
+  const who = S.winner != null ? 'Spiel vorbei' : mine ? 'Dein Zug' : `${esc(P(S.cur).name)} ist am Zug`;
+  patch($('#gphase'), `<span class="gp-h">${who} · Runde ${S.turn}</span><ol>${ICON.phase.map((src, i) => `<li class="${S.phase === i + 1 ? 'on' : S.phase > i + 1 ? 'done' : ''}"><img src="${src}" alt=""><span>${PHASES[i]}</span></li>`).join('')}</ol>`);
+  // Stapel, zuletzt abgelegt und Menü rechts am Tisch
+  const dD = S.doorDisc[S.doorDisc.length - 1], dT = S.trDisc[S.trDisc.length - 1];
+  patch($('#gdeck'), `<div class="gd-tools"><button type="button" class="iconbtn" data-go="pause" aria-label="Menü"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></svg></button>${$('#btn-sound').outerHTML.replace('id="btn-sound"', '')}</div>` +
+    `<div class="gd-pile"><span class="back door"></span><span class="back door"></span><span class="back door"></span><small>Tür · ${S.door.length}</small></div>` +
+    `<div class="gd-pile"><span class="back treas"></span><span class="back treas"></span><span class="back treas"></span><small>Schatz · ${S.tr.length}</small></div>` +
+    (dD || dT ? `<div class="gd-disc"><small>Ablage</small><span>${[dD, dT].filter(Boolean).map(c => cardMini(c, {inert: true, size: 'tiny'})).join('')}</span></div>` : ''));
+  // Deine Ausrüstung am unteren Tischrand (Klick öffnet die Karte, leere Plätze deine Figur)
+  const by = s => p.eq.filter(i => i.slot === s), hands = by('hand'), two = hands.find(h => (h.hands || 1) > 1), misc = by('none');
+  const slot = (c, sl, l) => c ? eqTile(p, c, true, 'eq') : eqEmpty(sl, l);
+  patch($('#geq'), `<div class="ge-row">${identTile(p, p.race, 'race', true)}${identTile(p, p.cls, 'cls', true)}${slot(by('kopf')[0], 'kopf', 'Kopf')}${slot(by('ruestung')[0], 'ruestung', 'Rüstung')}` +
+    `${slot(two || hands[0], 'hand', 'Hand')}${two ? `<span class="et empty both"><img src="${ICON.slot.hand}" alt=""><span class="et-n">beide Hände</span></span>` : slot(hands[1], 'hand', 'Hand')}` +
+    `${slot(by('schuhe')[0], 'schuhe', 'Schuhe')}${misc.length ? misc.map(c => eqTile(p, c, true, 'eq', ' misc')).join('') : eqEmpty('none', 'Sonstiges', ' misc')}` +
+    `<button type="button" class="ge-pack" data-go="equip" aria-label="Rucksack, ${p.pack.length} von ${packLimit(p)}"><img src="${ICON.slot.pack}" alt=""><b>${p.pack.length}/${packLimit(p)}</b><small>Rucksack</small></button>` +
+    (isFree() && mine && !sellBlock(p) && p.eq.concat(p.pack, p.hand).some(c => c.g) ? `<button type="button" class="ge-pack ge-sell${UI.adv && UI.adv.sell ? ' rec' : ''}" data-go="sell"><img src="icons/muenze-voll.png" alt=""><b>Verkaufen</b><small>Gegenstände</small></button>` : '') + `</div>`);
+  // Notizen und Kampfrechnung rechts
+  const items = S.log.filter(e => UI.coach || e.kind !== 'rule').slice(0, 80);
+  patch($('#wlog'), `<div class="wpanel"><h4 class="wp-h">Notizen</h4><ul class="loglist">${items.map(e => `<li class="l-${e.kind}">${e.kind === 'rule' ? '<b>Regel:</b> ' : ''}${linkify(e.t)}</li>`).join('')}</ul></div>`);
+  W.logSeen = S.log.length;
+  patch($('#wfight'), fightWideHTML());
+  const pv = W.hoverUid != null && mq().hover.matches ? findCard(W.hoverUid) : null;
+  patch($('#wprev'), pv ? `<div class="wprev-in">${cardBig(pv)}</div>` : '');
 }
 // Kartenvorschau beim Überfahren mit der Maus (nur PC-Ansicht)
 document.addEventListener('pointerover', e => {
@@ -2541,7 +2592,7 @@ function hubNotes(st) {
 /* ================= PC und Tablet: Leiste oben auf allen Unterseiten ================= */
 function renderWnav() {
   const nav = $('#wnav'); if (!nav) return;
-  const on = document.documentElement.classList.contains('wide-menu') && CUR !== 'game';
+  const on = (document.documentElement.classList.contains('wide-menu') && CUR !== 'game') || (CUR === 'game' && document.documentElement.classList.contains('pcg-on'));
   nav.hidden = !on; document.documentElement.classList.toggle('has-wnav', on); if (!on) return;
   document.documentElement.classList.toggle('pcnav', on && mq().pc.matches);
   if (mq().pc.matches) { patch(nav, pcNavHTML()); pcEdges(); return; }

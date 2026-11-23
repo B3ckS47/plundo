@@ -2360,3 +2360,106 @@ html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
 .su-tables button:disabled{opacity:.3;cursor:default}
 .su-tables button:not(:disabled):hover{background:rgba(243,200,115,.4)}
 .su-table .su-reroll.b2{top:36%}
+/* ================= Partie am PC: neuer Aufbau (Entwurf) ================= */
+#app.pcg{background:linear-gradient(rgba(18,10,5,.42),rgba(18,10,5,.58)),url(../art/hub-taverne.webp) center/cover no-repeat #1a100a!important}
+#app.pcg .topbar,#app.pcg .opps,#app.pcg .mebar,#app.pcg #wme,#app.pcg .wpile{display:none!important}
+#app.pcg #scr-game{display:grid;padding:calc(var(--sat) + var(--nav) + 30px) var(--cr) 18px var(--cl);
+  grid-template-columns:330px minmax(0,1fr) 340px;grid-template-rows:auto minmax(0,1fr) auto auto auto;column-gap:14px;row-gap:12px;
+  grid-template-areas:"wopps wopps wlog" "table table wlog" "table table wside" "table table act" "gme hand hand"}
+#app.pcg .gphase,#app.pcg .gdeck,#app.pcg .geq,#app.pcg .gme{display:flex}
+.gphase,.gdeck,.geq,.gme{display:none}
+/* Schilder im Format der Hintergründe (3:1) */
+#app.pcg .wopps{grid-area:wopps;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:0}
+.gseat{appearance:none;position:relative;width:100%;aspect-ratio:3/1;display:flex;align-items:center;gap:12px;padding:0 14px;border-radius:16px;overflow:hidden;cursor:pointer;text-align:left;color:#fbefd6;
+  border:2px solid #5e3f23;background:#2a1a0e var(--bg,none) var(--bgp,50% 50%)/cover no-repeat;box-shadow:0 10px 20px -10px #000;font:inherit}
+.gseat::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(18,10,5,.84),rgba(18,10,5,.55) 55%,rgba(18,10,5,.12))}
+.gseat>*{position:relative}
+.gseat:hover{border-color:#b98a3e}
+.gseat.turn{border-color:#f3c873;box-shadow:0 0 0 2px rgba(243,200,115,.4),0 0 22px rgba(243,200,115,.35)}
+.gseat.dead{filter:grayscale(.8) brightness(.8)}
+.gs-pt{flex:none;position:relative}
+.gs-pt img{display:block;width:clamp(58px,4.4vw,82px);height:clamp(58px,4.4vw,82px);border-radius:50%;object-fit:cover;object-position:50% 20%;border:3px solid var(--fc,#c9a46a);background:#3a2414;box-shadow:0 6px 12px -4px #000}
+.gs-pt i{position:absolute;right:-4px;bottom:-2px;min-width:27px;height:27px;padding:0 4px;border-radius:14px;background:radial-gradient(#f6d27a,#b9801f);color:#3a2412;font:700 16px/24px var(--display);text-align:center;font-style:normal;border:2px solid #3a2412}
+.gs-t{display:flex;flex-direction:column;gap:6px;min-width:0}
+.gs-n{display:flex;align-items:center;gap:8px;min-width:0}
+.gs-n b{font:700 clamp(19px,1.45vw,26px)/1 var(--display);text-shadow:0 2px 3px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gs-tag{flex:none;padding:2px 8px;border-radius:999px;background:rgba(243,200,115,.9);color:#3a2412;font:800 11px var(--body)}
+.gs-tag.red{background:#9e2a22;color:#fff3dc}
+.gs-st{display:flex;flex-wrap:wrap;gap:5px}
+.gs-st>span{display:inline-flex;align-items:center;gap:3px;padding:2px 8px 2px 4px;border-radius:999px;background:rgba(18,10,5,.72);font:700 14px var(--body);color:#fbefd6}
+.gs-st>span.warn{background:rgba(158,42,34,.9)}
+.gs-st>span.gold{background:#e3a92b;color:#2a1700;padding-left:8px}
+.gs-st img{width:19px;height:19px}
+.gs-dots{display:flex;gap:3px}
+.gs-dots em{width:9px;height:9px;border-radius:50%;background:rgba(251,239,214,.25)}
+.gs-dots em.on{background:#f3c873}
+#app.pcg .gme{grid-area:gme;align-self:center}
+#app.pcg .gme .gseat{width:330px}
+/* Tisch */
+#app.pcg .table{grid-area:table;margin:0;min-height:0;border-radius:20px;border:2px solid #5e3f23;padding:14px 112px 124px 212px;
+  background:url(../art/tisch-breit.webp) center/cover;box-shadow:inset 0 0 80px rgba(0,0,0,.6),0 16px 30px -12px #000;overflow:hidden}
+#app.pcg.tbl-keller .table{background-image:url(../art/hintergrund-keller.webp)}
+#app.pcg.tbl-wald .table{background-image:url(../art/hintergrund-wald.webp)}
+#app.pcg.tbl-strand .table{background-image:url(../art/hintergrund-strand.webp)}
+#app.pcg.tbl-schiff .table{background-image:url(../art/hintergrund-schiff.webp)}
+#app.pcg .idle{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.gdoor .back{width:clamp(110px,8.6vw,160px);height:auto;aspect-ratio:5/7;border-radius:12px;border:3px solid rgba(243,200,115,.35);box-shadow:0 14px 24px -6px #000}
+.gdoor.mine .back{border-color:#f3c873;animation:gdoorGlow 2.2s ease-in-out infinite}
+@keyframes gdoorGlow{0%,100%{box-shadow:0 0 22px rgba(243,200,115,.35),0 14px 24px -6px #000}50%{box-shadow:0 0 44px rgba(243,200,115,.65),0 14px 24px -6px #000}}
+#app.pcg .idle-txt{font-size:20px;color:#f3e3c3;text-shadow:0 2px 4px #000;text-align:center}
+/* Phasen links am Tisch */
+#app.pcg .gphase{grid-area:table;align-self:start;justify-self:start;margin:14px;z-index:3;flex-direction:column;gap:4px;width:180px;padding:12px;border-radius:14px;background:rgba(18,10,5,.74);border:1px solid rgba(243,200,115,.25)}
+.gp-h{margin:0 0 6px 4px;font:800 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:#f3c873}
+.gphase ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.gphase li{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:9px;font:700 14px/1.15 var(--body);color:#a99274}
+.gphase li img{width:26px;height:26px;opacity:.45;filter:grayscale(.6)}
+.gphase li.done{color:#cdb68f}.gphase li.done img{opacity:.8;filter:none}
+.gphase li.on{background:rgba(243,200,115,.18);color:#fbefd6;box-shadow:inset 0 0 0 1px rgba(243,200,115,.5)}
+.gphase li.on img{opacity:1;filter:none}
+/* Stapel und Menü rechts am Tisch */
+#app.pcg .gdeck{grid-area:table;align-self:start;justify-self:end;margin:14px 16px;z-index:3;flex-direction:column;align-items:center;gap:14px;width:84px}
+.gd-tools{display:flex;gap:6px}
+.gd-tools .iconbtn{width:38px;height:38px;border-radius:11px;background:rgba(20,12,6,.8);border:1px solid rgba(243,200,115,.45);color:#fbefd6}
+.gd-tools .iconbtn svg{stroke:currentColor}
+.gd-pile{position:relative;width:66px;height:116px}
+.gd-pile .back{position:absolute;width:66px;height:92px;border-radius:8px}
+.gd-pile .back:nth-child(2){top:-3px;left:2px}.gd-pile .back:nth-child(3){top:-6px;left:4px}
+.gd-pile small,.gd-disc small{position:absolute;bottom:0;left:-12px;right:-12px;text-align:center;font:700 12.5px var(--body);color:#fbefd6;text-shadow:0 1px 3px #000}
+.gd-disc{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px}
+.gd-disc small{position:static}
+.gd-disc>span{display:flex;gap:4px}
+.gd-disc .mc.tiny{width:38px;height:52px}
+/* Ausrüstung vor dir */
+#app.pcg .geq{grid-area:table;align-self:end;justify-self:stretch;z-index:3;justify-content:center;padding:26px 16px 12px;border-radius:0 0 20px 20px;background:linear-gradient(transparent,rgba(12,7,3,.72) 40%);pointer-events:none}
+.ge-row{display:flex;gap:8px;align-items:flex-end;pointer-events:auto}
+#app.pcg .geq .et{width:64px;height:88px;aspect-ratio:auto;flex:none}
+#app.pcg .geq .et.empty{background:rgba(20,12,6,.45);border:2px dashed rgba(243,200,115,.4)}
+#app.pcg .geq .et.empty img{width:24px;height:24px;opacity:.55}
+#app.pcg .geq .et.empty .et-n{color:#e3cfa6;font-size:10.5px}
+.ge-pack{appearance:none;flex:none;width:72px;height:88px;margin-left:8px;border-radius:10px;border:2px solid #5e3f23;background:rgba(40,24,12,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#fbefd6;cursor:pointer;font:inherit}
+.ge-pack img{width:28px;height:28px}
+.ge-pack b{font:700 15px var(--display)}
+.ge-pack small{font:700 10.5px var(--body);color:#e3cfa6}
+.ge-pack:hover{border-color:#f3c873}
+.ge-sell{margin-left:0}
+.ge-sell.rec{box-shadow:0 0 0 3px #f3c873}
+/* rechte Spalte: Notizen, Kampf, Knöpfe */
+#app.pcg .wlog{grid-area:wlog;display:flex;min-height:0}
+#app.pcg .wlog>.wpanel{flex:1;display:flex;flex-direction:column;min-height:0;border-radius:16px;background:linear-gradient(rgba(34,21,12,.94),rgba(24,15,9,.94));border:2px solid #5e3f23}
+#app.pcg .wlog .loglist{flex:1;min-height:0;overflow-y:auto}
+#app.pcg .wside{grid-area:wside;display:block;min-height:0}
+#app.pcg #wfight:empty{display:none}
+#app.pcg #wfight .wpanel{border-radius:16px;background:linear-gradient(rgba(34,21,12,.94),rgba(24,15,9,.94));border:2px solid #5e3f23}
+#app.pcg .act{grid-area:act;margin:0;border-radius:16px;background:rgba(18,10,5,.78);border:2px solid #5e3f23;padding:10px 12px 12px}
+#app.pcg .wprev{grid-area:wlog;align-self:start;justify-self:center;margin:8px 0 0;width:270px;z-index:6}
+/* Hand: gerade Reihe, darf unter die rechte Spalte laufen */
+#app.pcg .hand{grid-area:hand;display:flex;flex-wrap:nowrap;gap:8px;align-items:center;justify-content:flex-start;min-height:0;padding:4px 0;overflow-x:auto;overflow-y:visible;scrollbar-width:none}
+#app.pcg .hand::-webkit-scrollbar{display:none}
+#app.pcg .hand .mc{flex:none;width:clamp(96px,6.9vw,132px);height:auto;aspect-ratio:104/132}
+/* Bühne: Kampf, Aufdecken, Beute und Draft bleiben zwischen Phasen, Stapeln und Ausrüstung */
+#app.pcg .table .arena{inset:14px 112px 118px 212px}
+#app.pcg .arena.fight .arts,#app.pcg .arena.reveal .arts{background:none;justify-content:center;align-items:center;gap:16px;inset:0 0 6px 0}
+#app.pcg .arena.fight .art,#app.pcg .arena.reveal .art{flex:0 1 auto;height:100%;max-height:100%;width:auto;aspect-ratio:3/4;border-radius:14px;border:3px solid var(--kc);box-shadow:0 14px 26px -6px #000;background:#1a0f07}
+#app.pcg .arena.fight .art img,#app.pcg .arena.reveal .art img{width:100%;height:100%;object-fit:cover}
+#app.pcg .arena .hud{background:none;padding:0 0 6px}
+#app.pcg .arena .hud .snum{font-size:64px}
