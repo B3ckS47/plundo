@@ -2534,3 +2534,4 @@ html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
 #app.pcg .hud{grid-template-columns:1fr minmax(clamp(150px,11vw,210px),auto) 1fr;padding:0 0 6px}
 #app.pcg .hud .side.me{justify-content:flex-end;padding-right:clamp(80px,7vw,130px)}
 #app.pcg .hud .side.mon{padding-left:clamp(80px,7vw,130px)}
+#app.pcg .wlog{margin:0}
