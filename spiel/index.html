@@ -153,7 +153,7 @@
   <section id="scr-settings" class="screen" aria-label="Einstellungen" hidden>
     <header class="bar"><button class="iconbtn" type="button" data-back aria-label="Zurück"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg></button><h2>Optionen</h2></header>
     <div class="content">
-      <div class="panel">
+      <div class="panel s-klang">
         <h3 class="lbl">Klang</h3>
         <div class="trow"><span>Musik</span><button class="switch" type="button" role="switch" data-toggle="music" aria-label="Musik"></button></div>
         <label class="slider"><span>Lautstärke Musik</span><input type="range" min="0" max="1" step="0.05" data-range="mvol" aria-label="Lautstärke Musik"></label>
@@ -162,7 +162,7 @@
         <div class="trow" id="row-vibrate"><span>Vibration</span><button class="switch" type="button" role="switch" data-toggle="vibrate" aria-label="Vibration"></button></div>
         <p class="hint">Am iPhone schaltet der Lautlos-Schalter auch die Musik der App stumm.</p>
       </div>
-      <div class="panel">
+      <div class="panel s-spiel">
         <h3 class="lbl">Spiel</h3>
         <div class="trow"><span>Tempo der Bots</span></div>
         <div class="seg" data-set="speed">
@@ -175,12 +175,12 @@
         <div class="trow"><span>Handkarten der Bots zeigen<small>Zum Lernen, wie die Bots denken.</small></span><button class="switch" type="button" role="switch" data-toggle="open" aria-label="Handkarten der Bots zeigen"></button></div>
         <div class="trow"><span>Effekte reduzieren<small>Weniger Bewegung und Animationen.</small></span><button class="switch" type="button" role="switch" data-toggle="reduce" aria-label="Effekte reduzieren"></button></div>
       </div>
-      <div class="panel">
+      <div class="panel s-stand">
         <h3 class="lbl">Spielstand</h3>
         <p class="hint" id="save-info">Kein gespeichertes Spiel.</p>
         <button class="btn small danger" type="button" data-go="delsave">Spielstand löschen</button>
       </div>
-      <div class="panel">
+      <div class="panel s-test">
         <h3 class="lbl">Testphase</h3>
         <div class="trow"><span>Stationen überspringen</span><button class="switch" type="button" role="switch" data-toggle="test" aria-label="Stationen überspringen"></button></div>
         <p class="hint">Im Storymodus bekommt jede Station einen Knopf zum Überspringen, auch gesperrte. Übersprungene Stationen zählen mit allen Sternen.</p>
@@ -199,6 +199,10 @@
         <p id="install-hint" class="hint"></p>
         <button class="btn small" type="button" id="btn-install" hidden>Als App installieren</button>
         <p class="legal-links"><a href="../datenschutz.html">Datenschutz</a> · <a href="../impressum.html">Impressum</a></p>
+      </div>
+      <div class="panel s-konto">
+        <h3 class="lbl">Konto</h3>
+        <button type="button" class="set-acct" id="set-acct" data-acct="open"></button>
       </div>
     </div>
   </section>

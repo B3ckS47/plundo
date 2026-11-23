@@ -334,7 +334,7 @@ function setScreen(name) {
   if (name === 'title') renderTitle();
   if (name === 'setup') setupPrep();
   if (name === 'game' && HUBBOT) hubBotsOff();
-  if (name === 'settings') { renderControls(); renderSaveInfo(); }
+  if (name === 'settings') { renderControls(); renderSaveInfo(); if (mq().pc.matches) settingsPC(); }
   if (name === 'cards') renderCards();
   if (name === 'quiz') renderQuiz();
   if (name === 'profile') renderProfile();
@@ -2401,6 +2401,38 @@ function rulesFilter(q) {
 }
 document.addEventListener('input', e => { if (e.target && e.target.id === 'rules-q') { if (mq().pc.matches) renderRulesPC(); else rulesFilter(e.target.value); } });
 
+/* ================= Optionen am PC: Karten mit Symbol, Testphase als breiter Streifen ================= */
+const SET_ICON = {
+  klang: '<path d="M4 9v6h4l5 4V5L8 9z M16 9a4 4 0 0 1 0 6 M18.5 6.5a7.5 7.5 0 0 1 0 11" />',
+  spiel: '<rect x="4" y="5" width="10" height="14" rx="2" transform="rotate(-8 9 12)" /><rect x="10" y="5" width="10" height="14" rx="2" transform="rotate(8 15 12)" />',
+  konto: '<circle cx="12" cy="8.5" r="3.5" /><path d="M5 19.5c1.2-3.6 4-5.5 7-5.5s5.8 1.9 7 5.5" />',
+  stand: '<path d="M6 4h10l3 3v13H6z M9 4v5h6V4 M9 14h7 M9 17h5" />',
+  test: '<path d="M10 3h4 M10.5 3v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2l-5.5-10V3 M7.5 15h9" />',
+  about: '<circle cx="12" cy="12" r="9" /><path d="M12 11v6 M12 7.5h.01" />'
+};
+function settingsPC() {
+  const box = $('#scr-settings .content'); if (!box || box.__pc) return; box.__pc = true;
+  [['s-klang', 'klang'], ['s-spiel', 'spiel'], ['s-stand', 'stand'], ['s-test', 'test'], ['about', 'about'], ['s-konto', 'konto']].forEach(([c, k]) => {
+    const h = box.querySelector(`.${c} > h3.lbl`); if (!h || h.querySelector('.set-ic')) return;
+    h.insertAdjacentHTML('afterbegin', `<span class="set-ic"><svg viewBox="0 0 24 24" aria-hidden="true">${SET_ICON[k]}</svg></span>`);
+  });
+  const ab = box.querySelector('.about > h3.lbl'); if (ab) ab.lastChild.textContent = 'Über Plundo';
+  // Klang und Bild: „Effekte reduzieren“ wandert zum Klang, Spielstand in die Konto-Karte
+  const kl = box.querySelector('.s-klang'), red = box.querySelector('[data-toggle="reduce"]');
+  if (kl && red) { kl.querySelector('h3.lbl').lastChild.textContent = 'Klang und Bild'; kl.appendChild(red.closest('.trow')); }
+  const ko = box.querySelector('.s-konto'), st = box.querySelector('.s-stand');
+  if (ko && st) { const d = document.createElement('div'); d.className = 'set-save'; d.innerHTML = '<span class="set-sub">Laufende Partie</span>'; [...st.children].filter(x => !x.matches('h3')).forEach(x => d.appendChild(x)); ko.appendChild(d); st.hidden = true; ko.querySelector('h3.lbl').lastChild.textContent = 'Konto und Spielstand'; }
+  const sub = (k, t) => { const r = box.querySelector(`[data-toggle="${k}"]`), sp = r && r.closest('.trow').querySelector('span'); if (sp && !sp.querySelector('small')) sp.insertAdjacentHTML('beforeend', `<small>${t}</small>`); };
+  sub('advice', 'Markiert, welcher Schritt sich gerade lohnt.'); sub('coach', 'Erklärt passende Regeln in Hinweisen und Notizen.');
+  sub('music', 'Jede Welt und jeder Tisch hat eigene Musik.'); sub('sfx', 'Karten, Würfel, Münzen und Kampf.');
+  const tp = box.querySelector('.s-test'); if (tp) {
+    tp.querySelector('h3.lbl').insertAdjacentHTML('beforeend', '<em class="set-badge">verschwindet zum Release</em>');
+    const kids = [...tp.children].filter(x => !x.matches('h3'));
+    const grp = (a, b, cls) => { const d = document.createElement('div'); d.className = 'tp-g ' + cls; kids.slice(a, b).forEach(x => d.appendChild(x)); tp.appendChild(d); };
+    grp(0, 3, 'g1'); grp(3, 6, 'g2'); grp(6, 9, 'g3'); grp(9, 10, 'g4');
+  }
+  renderAcctCard();
+}
 /* ================= Regeln am PC: ein Kapitel pro Seite, zu jeder Regel ein Bild =================
    Der Text kommt weiter aus rules.html (dieselben Regeln wie am Handy), hier stehen nur die Bilder dazu.
    Bild-Kürzel: c:Karte (echte Karte, anklickbar), tuer/schatz (Kartenrücken), i:Bild, wide:breites Bild,

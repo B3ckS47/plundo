@@ -220,11 +220,10 @@ function acctStatus() {
   return `Gesichert ${agoText(CLOUD.at)}`;
 }
 function renderAcctCard() {
-  const el = $('#pf-acct'); if (!el) return;
   const signed = CLOUD.uid || ACC.user;
-  patch(el, `<span class="acc-ic${signed ? ' on' : ''}">${ACC_ICON}</span><span><b>${signed ? 'Spielstand gesichert' : 'Fortschritt sichern'}</b><span>${signed
+  ['#pf-acct', '#set-acct'].forEach(sel => { const el = $(sel); if (el) patch(el, `<span class="acc-ic${signed ? ' on' : ''}">${ACC_ICON}</span><span><b>${signed ? 'Spielstand gesichert' : 'Fortschritt sichern'}</b><span>${signed
     ? `${esc((ACC.user && ACC.user.email) || CLOUD.email || 'Angemeldet')} · ${esc(acctStatus())}`
-    : 'Melde dich an, dann ist dein Spielstand sicher und auf allen Geräten dabei.'}</span></span>`);
+    : 'Melde dich an, dann ist dein Spielstand sicher und auf allen Geräten dabei.'}</span></span>`); });
 }
 function acctRefresh() { renderAcctCard(); if (SHEETS.length && topSheet().id === 'acct') renderSheet(false); }
 const accInput = (id, type, val, ph, ac) => `<input id="${id}" class="pf-input acc-in" type="${type}" value="${esc(val)}" placeholder="${ph}" autocomplete="${ac}" autocapitalize="off" spellcheck="false"${ACC.busy ? ' disabled' : ''}>`;
