@@ -2341,3 +2341,22 @@ html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
 .pd-bot.rollup .su-mid{animation:pdFade .25s ease reverse both}
 .pd-bot .pd-x{z-index:5}
 .hub.pc .su-mid{font:16px/1.4 var(--body);color:var(--ink)}
+.pd-bot .su-table{background:#1a120c var(--tbl,url(../art/hintergrund-tisch.webp)) center/cover;transition:background-image .25s}
+.su-foes{position:absolute;inset:0;pointer-events:none}
+.su-foes>*{pointer-events:auto}
+.su-table .su-reroll{position:absolute;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 9px;border-radius:999px;border:1px solid rgba(243,200,115,.55);background:rgba(20,12,6,.78);color:#fbefd6;font:700 13px var(--body);cursor:pointer;white-space:nowrap;box-shadow:0 4px 10px rgba(0,0,0,.5)}
+.su-table .su-reroll:hover{background:rgba(60,36,16,.92);border-color:#f3c873}
+.su-table .su-reroll svg{width:15px;height:15px;stroke:currentColor;stroke-width:2.4;fill:none;transition:transform .4s}
+.su-table .su-reroll:active svg{transform:rotate(-180deg)}
+.su-table .su-reroll.b3{top:33%}
+.su-table .su-reroll.b2{top:22%}
+.su-seat.s-me{top:69%}
+.su-tables{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:6px;padding:5px;border-radius:999px;background:rgba(20,12,6,.82);border:1px solid rgba(243,200,115,.45);box-shadow:0 6px 14px rgba(0,0,0,.5)}
+.su-tables>span{display:flex;flex-direction:column;align-items:center;min-width:86px;line-height:1.1}
+.su-tables small{font:800 10px var(--body);letter-spacing:.1em;text-transform:uppercase;color:#f3c873}
+.su-tables b{font:700 15px var(--display);color:#fbefd6}
+.su-tables button{flex:none;width:32px;height:32px;border-radius:50%;border:0;background:rgba(243,200,115,.18);display:grid;place-items:center;cursor:pointer}
+.su-tables button svg{width:18px;height:18px;stroke:#fbefd6;stroke-width:2.6;fill:none}
+.su-tables button:disabled{opacity:.3;cursor:default}
+.su-tables button:not(:disabled):hover{background:rgba(243,200,115,.4)}
+.su-table .su-reroll.b2{top:36%}

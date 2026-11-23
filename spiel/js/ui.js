@@ -196,10 +196,16 @@ let GAME_TABLE = 'taverne', GAME_THEME = 'taverne';
 const MOOD_WORLD = {keller: 'w2', wald: 'w3', strand: 'w4', schiff: 'w5'};
 const moodOk = v => !MOOD_WORLD[v] || !!STORY.worlds[MOOD_WORLD[v]];
 // Freies Spiel: Tischfläche und Musik kommen vom gewählten Deck (auch bei einem eigenen Deck, das ja auf einem Deck aufbaut)
-function freeMood(saved) { const d = deckById(DECK.deck), m = saved || (d.unlocked() ? d.mood : 'taverne'); GAME_TABLE = GAME_THEME = moodOk(m) ? m : 'taverne'; }
+function freeMood(saved, savedTable) {
+  const d = deckById(DECK.deck), m = saved || (d.unlocked() ? d.mood : 'taverne'); GAME_TABLE = GAME_THEME = moodOk(m) ? m : 'taverne';
+  const t = saved ? savedTable : SET.table; if (t && moodOk(t)) GAME_TABLE = t;
+}
+// Tischdesigns im freien Spiel: die Taverne und jede Welt, die man abgeschlossen hat
+const TABLES = [['taverne', 'Taverne', 'art/hintergrund-tisch.webp'], ['keller', 'Keller', 'art/hintergrund-keller.webp'], ['wald', 'Pilzwald', 'art/hintergrund-wald.webp'], ['strand', 'Strand', 'art/hintergrund-strand.webp'], ['schiff', 'Schiff', 'art/hintergrund-schiff.webp']];
+const freeTable = () => { const t = SET.table || ''; if (t && moodOk(t)) return t; const d = deckById(DECK.deck), m = d.unlocked() ? d.mood : 'taverne'; return moodOk(m) ? m : 'taverne'; };
 CHECKPOINT_HANDLER = () => {
   if (SCN) { if (!SCN.fight && !SCN.tut && STORY_RUN) store(K_STORYSAVE, {S, seen: UI.seen, ts: Date.now(), bots: UI.bots, diff: UI.diff, v: APP_VERSION, scn: SCN, st: STORY_RUN.st, table: GAME_TABLE, theme: GAME_THEME}); return; }
-  store(K_SAVE, {S, seen: UI.seen, ts: Date.now(), bots: UI.bots, diff: UI.diff, v: APP_VERSION, mood: GAME_TABLE});
+  store(K_SAVE, {S, seen: UI.seen, ts: Date.now(), bots: UI.bots, diff: UI.diff, v: APP_VERSION, mood: GAME_THEME, table: GAME_TABLE});
 };
 
 /* ================= Bildschirme ================= */
@@ -468,7 +474,7 @@ function renderFoes() {
   const el = $('#setup-foes'); if (!el) return;
   patch(el, list.slice(0, SET.bots).map(f => `<div class="foe"><img src="${f.face}" alt=""><span><b>${esc(f.name)}</b><small>${esc(f.style.l || '')}</small></span></div>`).join('') +
     (SET.foes === 'stammtisch' ? '' : '<button type="button" class="btn small" data-go="reroll">Neu würfeln</button>'));
-  if (HUBBOT) renderHub();
+  const hf = HUBBOT && $('#t-hub .su-foes'); if (hf) patch(hf, botSeatsHTML());
 }
 function renderSaveInfo() {
   const s = load(K_SAVE);
@@ -516,7 +522,7 @@ async function startNewGame() {
 function continueGame() {
   if (GAME_ON && S && S.winner == null) { setScreen('game'); return; }
   const d = load(K_SAVE); if (!d) return;
-  SCN = null; STORY_RUN = null; freeMood(d.mood); applySettings();
+  SCN = null; STORY_RUN = null; freeMood(d.mood, d.table || d.mood); applySettings();
   UI.bots = d.bots || UI.bots; UI.diff = d.diff || UI.diff;
   W.reset(); GAME_ON = true;
   STACK.length = 0; STACK.push('title');
@@ -1672,8 +1678,8 @@ SHEET_VIEWS.station = s => {
       : `<div class="acts"><button type="button" class="btn primary" data-story-start="${st.id}">${done ? 'Nochmal spielen' : 'Los geht’s'}</button>${testBtn}</div>`;
   }
   if (HUBST && CUR === 'title' && SHEETS.length === 1) {
-    const rest = body.slice(pre), cut = rest.lastIndexOf('<div class="acts">');
-    return {head: '', hero: true, body: hubStationHead(st) + `<div class="hs-main">${sayHTML(st.face, st.text)}<div class="st-goal"><b>Ziel</b><p>${esc(st.goal)}</p></div>${hubCast(st)}${cut >= 0 ? rest.slice(0, cut) : rest}${worldRulesHTML(worldById(st.world), true)}${cut >= 0 ? rest.slice(cut) : ''}</div>`};
+    const rest = body.slice(pre);
+    return {head: '', hero: true, body: hubStationHead(st) + `<div class="hs-main">${sayHTML(st.face, st.text)}<div class="st-goal"><b>Ziel</b><p>${esc(st.goal)}</p></div>${hubCast(st)}${rest}</div>`};
   }
   return {head: h3(`${esc(st.no)} · ${esc(st.name)}`), body};
 };
@@ -2652,21 +2658,39 @@ let SETUP_PANELS = null;
 function hubBotsHTML() {
   const list = SET.foes === 'stammtisch' ? ['Berta', 'Kalle', 'Uschi'].map(n => ({name: n, face: ICON.portrait[n], style: STYLES[n]})) : (ROSTER || []);
   const pos = SET.bots === 2 ? ['l2', 'r2'] : ['l', 't', 'r'];
-  return `<main class="pp-modes pd-st pd-bot${HUBBOT === 'open' ? ' unroll' : ''}">` +
+  return `<main class="pp-modes pd-st pd-bot${HUBBOT === 'open' ? ' unroll' : ''}" style="--tbl:url(${new URL((TABLES.find(t => t[0] === freeTable()) || TABLES[0])[2], document.baseURI).href})">` +
       `<section class="pd-stinfo su-mid"></section>` +
       `<section class="pd-stmap su-table"><span class="pd-rod" aria-hidden="true"></span>` +
-        list.slice(0, SET.bots).map((f, i) => `<div class="su-seat s-${pos[i]}"><span class="su-face"><img src="${f.face}" alt=""></span><b>${esc(f.name)}</b><small>${esc((f.style && f.style.l) || '')}</small></div>`).join('') +
-        `<div class="su-deck" aria-hidden="true"><span class="back door"></span><span class="back treas"></span></div>` +
-        (SET.foes === 'stammtisch' ? '' : `<button type="button" class="btn small su-reroll" data-go="reroll"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 4v4h4M4 13a8 8 0 0 0 14.6 4.5M20 20v-4h-4" /></svg>Neue Gegner</button>`) +
+        `<div class="su-foes"></div><div class="su-deck" aria-hidden="true"><span class="back door"></span><span class="back treas"></span></div>` +
         `<div class="su-seat s-me me"><span class="su-face"><img src="${myPortrait()}" alt=""></span><b>Du</b><small>fängst an</small></div>` +
+        `<div class="su-tables">${tablePickHTML()}</div>` +
         `<button type="button" class="iconbtn pd-x" data-hubst="close" aria-label="Schließen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button></section>` +
     `</main>`;
 }
+function botSeatsHTML() {
+  const list = SET.foes === 'stammtisch' ? ['Berta', 'Kalle', 'Uschi'].map(n => ({name: n, face: ICON.portrait[n], style: STYLES[n]})) : (ROSTER || []);
+  const pos = SET.bots === 2 ? ['l2', 'r2'] : ['l', 't', 'r'];
+  return list.slice(0, SET.bots).map((f, i) => `<div class="su-seat s-${pos[i]}"><span class="su-face"><img src="${f.face}" alt=""></span><b>${esc(f.name)}</b><small>${esc((f.style && f.style.l) || '')}</small></div>`).join('') +
+    (SET.foes === 'stammtisch' ? '' : `<button type="button" class="su-reroll b${SET.bots}" data-go="reroll" aria-label="Neue Gegner" title="Neue Gegner"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 4v4h4M4 13a8 8 0 0 0 14.6 4.5M20 20v-4h-4" /></svg><span>Neue Gegner</span></button>`);
+}
+function tablePickHTML() {
+  const cur = freeTable(), list = TABLES.filter(t => moodOk(t[0])), i = Math.max(0, list.findIndex(t => t[0] === cur));
+  return `<button type="button" data-tbl="-1"${list.length > 1 ? '' : ' disabled'} aria-label="Voriger Tisch"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg></button>` +
+    `<span><small>Tisch</small><b>${esc(list[i][1])}</b></span>` +
+    `<button type="button" data-tbl="1"${list.length > 1 ? '' : ' disabled'} aria-label="Nächster Tisch"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg></button>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-tbl]'); if (!b || !HUBBOT) return;
+  const list = TABLES.filter(t => moodOk(t[0])), i = Math.max(0, list.findIndex(t => t[0] === freeTable()));
+  SET.table = list[(i + +b.dataset.tbl + list.length) % list.length][0]; saveSettings(); Snd.sfx('deal'); buzz(6);
+  const m = $('#t-hub .pd-bot'); if (m) { m.style.setProperty('--tbl', `url(${new URL((TABLES.find(t => t[0] === SET.table) || TABLES[0])[2], document.baseURI).href})`); patch($('#t-hub .su-tables'), tablePickHTML()); }
+});
 function hubBotsMount() {
   const slot = $('#t-hub .su-mid'); if (!slot) return;
   if (!SETUP_PANELS) SETUP_PANELS = [...$$('#scr-setup .content > .panel')];
   slot.append(...SETUP_PANELS);
   slot.insertAdjacentHTML('beforeend', '<button type="button" class="btn primary su-start" data-go="start">Los geht’s!</button>');
+  const f = $('#t-hub .su-foes'); if (f) { f.__h = null; patch(f, botSeatsHTML()); }
 }
 function hubBotsOff() {
   if (SETUP_PANELS) $('#scr-setup .content').append(...SETUP_PANELS);
@@ -2678,7 +2702,7 @@ function openHubBots() {
   closeAllSheets(); if (!ROSTER && SET.foes !== 'stammtisch') ROSTER = rollRoster();
   HUBST = false; HUBSEL = null; HUBBOT = 'open';
   if (CUR !== 'title') setScreen('title'); else renderHub();
-  HUBBOT = true; setupPrep();
+  setupPrep(); HUBBOT = true;
 }
 function closeHubBots() {
   const m = $('#t-hub .pd-bot'); if (m && !UI.reduce) { m.classList.remove('unroll'); m.classList.add('rollup'); }
