@@ -690,7 +690,7 @@ function hudHTML(C) {
   const verdict = r.win ? (f.human ? 'du gewinnst' : team ? 'ihr gewinnt' : f.name + ' gewinnt') : (f.human ? 'du verlierst' : team ? 'ihr verliert' : f.name + ' verliert');
   return `<button type="button" class="side me" data-go="parts" aria-label="Kampfstärke ${sF.s}, Aufschlüsselung"><span class="pts">${pts}</span><span class="sv">${pvF ? `<span class="was">${f0} →</span>` : ''}<b class="snum${pvF ? ' pv' : ''}" data-n="f">${sF.s}</b><span class="slbl">${esc(who)}</span></span></button>` +
     `<div class="mid"><span class="verdict ${r.win ? 'win' : 'lose'}${pv ? ' pv' : ''}">${pv ? '→ ' : ''}${esc(verdict)}</span>${r.a === r.b ? `<span class="tie">${r.tieWin ? '' : 'Gleichstand verliert'}</span>` : ''}</div>` +
-    `<button type="button" class="side mon" data-go="parts" aria-label="Monsterstärke ${sM.s}, Aufschlüsselung"><span class="sv">${pvM ? `<span class="was">${m0} →</span>` : ''}<b class="snum red${pvM ? ' pv' : ''}" data-n="m">${sM.s}</b><span class="slbl">${C.mons.length > 1 ? C.mons.length + ' Monster' : 'Monster'}</span></span></button>`;
+    `<button type="button" class="side mon" data-go="parts" aria-label="Monsterstärke ${sM.s}, Aufschlüsselung">${PCGX() ? `<span class="pts mpts">${C.mons.map(m => `<img src="${ART[m.c.n] || ART_FALLBACK}" alt="">`).join('')}</span>` : ''}<span class="sv">${pvM ? `<span class="was">${m0} →</span>` : ''}<b class="snum red${pvM ? ' pv' : ''}" data-n="m">${sM.s}</b><span class="slbl">${C.mons.length > 1 ? C.mons.length + ' Monster' : 'Monster'}</span></span></button>`;
 }
 function paintHud(hud, C) {
   if (!patch(hud, hudHTML(C)) || UI.pv) return;

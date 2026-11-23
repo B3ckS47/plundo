@@ -2524,3 +2524,13 @@ html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
 /* Notizzettel (eigene Grafik, ohne Reißzwecke; die Zwecke sitzt darüber) */
 #app.pcg .wlog .loglist{border-width:30px 22px 28px 22px;border-image:url(../art/notizzettel.webp) 90 70 90 70 fill / 30px 22px 28px 22px stretch;padding:0 4px 4px}
 #app.pcg .wlog>.wpanel::before{top:34px;width:30px;height:24px;margin-left:-15px}
+/* PC-Partie: keine Kampfrechnung rechts (Platz für Notizen und Kartenvorschau); Monster mit rundem Bild an seiner Stärke */
+#app.pcg #scr-game.fighting{grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"wopps wopps wlog" "table table wlog" "table table act" "gme hand hand"}
+#app.pcg .wside,#app.pcg #wfight{display:none!important}
+#app.pcg .hud .side.mon{flex-direction:row-reverse}
+#app.pcg .hud .mpts img{border-color:#ff9d8c;object-position:50% 34%}
+#app.pcg .hud .side .pts img{width:48px;height:48px}
+#app.pcg .hud .side.mon{justify-content:flex-start}
+#app.pcg .hud{grid-template-columns:1fr minmax(clamp(150px,11vw,210px),auto) 1fr;padding:0 0 6px}
+#app.pcg .hud .side.me{justify-content:flex-end;padding-right:clamp(80px,7vw,130px)}
+#app.pcg .hud .side.mon{padding-left:clamp(80px,7vw,130px)}
