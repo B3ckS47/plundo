@@ -1050,13 +1050,13 @@ const SHEET_VIEWS = {
   opp(s) {
     const p = S && S.players[s.pid]; if (!p) return null;
     const hand = UI.open && p.hand.length ? `<div class="hsec"><span class="hsec-h"><img src="${ICON.hand}" alt="">Handkarten</span><span class="hsec-x">sichtbar, weil eingeschaltet</span></div><div class="pack-row">${p.hand.map(c => cardMini(c, {where: 'opp', size: 'tiny'})).join('')}</div>` : '';
-    if (PCGX()) return {hero: true, head: heroHead(p), body: `<div class="hbody hb2"><div class="hb-l">${heroStats(p)}${heroAbil(p)}${hand}</div><div class="hb-r">${heroDoll(p, false)}${heroPack(p, false)}</div></div>`};
+    if (PCGX()) return {hero: true, head: heroHead(p), body: `<div class="hbody hb2"><div class="hb-l">${heroStats(p)}${heroAbil(p)}${heroPack(p, false, true)}${hand}</div><div class="hb-r">${heroDoll(p, false)}</div></div>`};
     return {hero: true, head: heroHead(p), body: `<div class="hbody">${heroStats(p)}${heroAbil(p)}${heroDoll(p, false)}${heroPack(p, false)}${hand}</div>`};
   },
   equip() {
     if (!S) return null;
     const p = me(), free = isFree();
-    if (PCGX()) return {hero: true, head: heroHead(p), body: `<div class="hbody hb2"><div class="hb-l">${heroStats(p)}${heroAbil(p)}<p class="hint hb-hint">Karte anklicken für Aktionen. Im Kampf zählen Stufe, Volk, Klasse und die Ausrüstung, der Rucksack nicht.</p>${free ? sellBtnHTML(p) : ''}</div><div class="hb-r">${heroDoll(p, true)}${heroPack(p, true)}</div></div>`};
+    if (PCGX()) return {hero: true, head: heroHead(p), body: `<div class="hbody hb2"><div class="hb-l">${heroStats(p)}${heroAbil(p)}${heroPack(p, true, true)}<p class="hint hb-hint">Karte anklicken für Aktionen. Im Kampf zählen Stufe, Volk, Klasse und die Ausrüstung, der Rucksack nicht.</p>${free ? sellBtnHTML(p) : ''}</div><div class="hb-r">${heroDoll(p, true)}</div></div>`};
     return {hero: true, head: heroHead(p), body: `<div class="hbody">${heroStats(p)}${heroAbil(p)}${heroDoll(p, true)}${heroPack(p, true)}` +
       `<p class="hint hb-hint">Karte antippen für Aktionen. Im Kampf zählen Stufe, Volk, Klasse und die Ausrüstung, der Rucksack nicht.</p>` +
       (free ? sellBtnHTML(p) : '') + `</div>`};
@@ -1178,9 +1178,9 @@ function heroDoll(p, mine) {
   return `<div class="hsec"><span class="hsec-h">Ausrüstung und Herkunft</span><span class="hsec-x">${bonus ? `+${bonus} Kampfstärke` : 'noch kein Bonus'}</span></div>` +
     `<div class="doll">${html}</div>${extra || rest ? `<div class="pack-row">${extra}${rest}</div>` : ''}`;
 }
-function heroPack(p, mine) {
+function heroPack(p, mine, always) {
   return `<div class="hsec"><span class="hsec-h"><img src="${ICON.slot.pack}" alt="">Rucksack</span><span class="hsec-x">${p.pack.length ? `${p.pack.length} ${p.pack.length === 1 ? 'Karte' : 'Karten'} · zählt nicht im Kampf` : 'leer'}</span></div>` +
-    (p.pack.length ? `<div class="pack">${p.pack.map(c => eqTile(p, c, mine, 'pack')).join('')}</div>` : '');
+    (p.pack.length || always ? `<div class="pack${p.pack.length ? '' : ' empty'}">${p.pack.length ? p.pack.map(c => eqTile(p, c, mine, 'pack')).join('') : `<span class="pack-none">Noch nichts im Rucksack. Passen ${packLimit(p)} Karten hinein.</span>`}</div>` : '');
 }
 function slotRows(p, mine) {
   // Eigene Karten sind antippbar mit Aktionen, die der Gegner nur zum Ansehen (where 'opp')
