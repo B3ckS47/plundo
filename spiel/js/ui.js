@@ -2539,7 +2539,7 @@ function dockSheet() {
   const hd = !!HUBST && CUR === 'title' && SHEETS.length === 1 && topSheet().id === 'station';
   const on = hd || (document.documentElement.classList.contains('wide-menu') && CUR === 'story' && SHEETS.length === 1 && topSheet().id === 'station');
   wrap.classList.toggle('dock', on); wrap.classList.toggle('hubdock', hd);
-  if (hd) { const i = $('#t-hub .pd-stinfo'), a = $('#app'); if (i && a) { const r = i.getBoundingClientRect(), b = a.getBoundingClientRect(); Object.assign(wrap.style, {left: r.left - b.left + 'px', top: r.top - b.top + 'px', width: r.width + 'px', height: r.height + 'px'}); } }
+  if (hd) { const i = $('#t-hub .pd-stbox'), a = $('#app'); if (i && a) { const r = i.getBoundingClientRect(), b = a.getBoundingClientRect(); Object.assign(wrap.style, {left: r.left - b.left + 'px', top: r.top - b.top + 'px', width: r.width + 'px', height: r.height + 'px'}); } }
   else ['left', 'top', 'width', 'height'].forEach(k => wrap.style[k] = '');
   if (HUBST && !hd && HUBSEL && CUR === 'title' && !SHEETS.length) { HUBSEL = null; renderHub(); }
   const side = $('#st-side'); if (side) side.classList.toggle('covered', on);
@@ -2741,6 +2741,7 @@ function hubPatchPC(hub, html) {
   let m = hub.querySelector(':scope > .hub-ms'), sd = hub.querySelector(':scope > .hub-ss');
   if (!m || !sd) { hub.innerHTML = '<div class="hub-ms"></div><div class="hub-ss"></div>'; hub.__h = null; m = hub.firstChild; sd = hub.lastChild; }
   if (patch(m, main) && HUBBOT) hubBotsMount();
+  if (HUBST) requestAnimationFrame(() => pdTilesFade());
   patch(sd, side);
 }
 
@@ -2808,16 +2809,17 @@ function hubStoryHTML(cw) {
   let map = pg.w ? worldMapHTML(pg.w, next) : fogHTML(pg.f, pg.f.near).replace('<div class="st-link" aria-hidden="true"></div>', '');
   if (HUBSEL) map = map.replace(`class="snode `, m => m).replace(new RegExp(`class="(snode[^"]*)"( data-station="${HUBSEL}")`), 'class="$1 sel"$2');
   const nameOf = q => q.w ? q.w.name : q.f.name, lblOf = q => q.w ? wLabel(q.w) : `Welt ${q.f.n}`;
-  const nav = `<div class="pd-wnav"><button type="button" data-hubw="-1"${HUBW ? '' : ' disabled'} aria-label="Vorherige Welt"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg></button>` +
-    `<span><small>${esc(lblOf(pg))}</small><b>${esc(nameOf(pg))}</b><i>${pages.map((q, k) => `<em class="${k === HUBW ? 'on' : ''}${q.f ? ' fog' : ''}"></em>`).join('')}</i></span>` +
-    `<button type="button" data-hubw="1"${HUBW < pages.length - 1 ? '' : ' disabled'} aria-label="Nächste Welt"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg></button></div>`;
+  // Welten als Kacheln über dem Textfeld (wie auf der Startseite), praktisch auch für viele Welten
+  const tiles = `<div class="pd-wtiles">${pages.map((q, k) => { const ww = q.w, img = ww ? ww.map : q.f.map;
+    return `<button type="button" class="pd-wt${k === HUBW ? ' on' : ''}${q.f ? ' fog' : ''}${ww && !worldOwned(ww) ? ' shut' : ''}" data-hubwt="${k}"${img ? ` style="--img:url('${new URL(img, document.baseURI).href}')"` : ''} aria-label="${esc(lblOf(q))}: ${esc(nameOf(q))}">` +
+      `<span class="pd-wt-t"><small>${esc(lblOf(q))}</small><b>${esc(nameOf(q))}</b>${ww ? `<em>${starSvg(true)}${worldStars(ww)}/${worldMaxStars(ww)}</em>` : `<em>im Nebel</em>`}</span></button>`; }).join('')}</div>`;
   const w = pg.w || cw, all = w.stations.length, done = w.stations.filter(st => STORY.done[st.id]).length;
   return `<main class="pp-modes pd-st${HUBST === 'open' ? ' unroll' : ''}">` +
-      `<section class="pd-stmap"><span class="pd-rod" aria-hidden="true"></span><div class="pd-page${HUBPG ? ' pg-' + HUBPG : ''}" data-page="${HUBW}">${map}</div>${nav}` +
+      `<section class="pd-stmap"><span class="pd-rod" aria-hidden="true"></span><div class="pd-page${HUBPG ? ' pg-' + HUBPG : ''}" data-page="${HUBW}">${map}</div>` +
         `<button type="button" class="iconbtn pd-x" data-hubst="close" aria-label="Karte schließen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button></section>` +
-      `<section class="pd-stinfo"><div class="panel st-sidein"><span class="st-world">${wLabel(w)}</span><b class="st-name">${esc(w.name)}</b>` +
+      `<section class="pd-stinfo">${tiles}<div class="pd-stbox"><div class="panel st-sidein"><span class="st-world">${wLabel(w)}</span><b class="st-name">${esc(w.name)}</b>` +
         `<div class="st-sstats"><span>${starSvg(true)}<b>${worldStars(w)}</b> / ${worldMaxStars(w)} Sterne</span><span><b>${done}</b> / ${all} Stationen</span><span>${coinImg}<b>${STORY.coins}</b> Münzen</span></div>` +
-        `${worldRulesHTML(w)}<p class="hint">Klick auf der Karte auf eine Station, dann erscheint sie hier.</p></div></section>` +
+        `${worldRulesHTML(w)}<p class="hint">Klick auf der Karte auf eine Station, dann erscheint sie hier.</p></div></div></section>` +
     `</main>`;
 }
 function openHubStory(stId, noAuto) {
@@ -2837,6 +2839,17 @@ function closeHubStory() {
   setTimeout(() => { HUBST = false; HUBSEL = null; renderHub(); }, UI.reduce ? 0 : 420);
 }
 document.addEventListener('click', e => { if (e.target.closest('[data-hubst="close"]')) { if (HUBBOT) closeHubBots(); else closeHubStory(); } });
+// Weltkacheln: Mausrad scrollt seitwärts, wenn es mehr Welten gibt, als nebeneinander passen
+document.addEventListener('wheel', e => { const t = e.target.closest && e.target.closest('.pd-wtiles'); if (!t || t.scrollWidth <= t.clientWidth) return; e.preventDefault(); t.scrollLeft += e.deltaY || e.deltaX; pdTilesFade(t); }, {passive: false});
+function pdTilesFade(t) { t = t || $('#t-hub .pd-wtiles'); if (t) t.classList.toggle('more', t.scrollLeft + t.clientWidth < t.scrollWidth - 4); }
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-hubwt]'); if (!b || !HUBST) return;
+  const k = +b.dataset.hubwt; if (k === HUBW) return;
+  HUBPG = UI.reduce ? '' : k > HUBW ? 'r' : 'l'; HUBW = k; HUBSEL = null;
+  if (SHEETS.length) closeAllSheets();
+  renderHub(); HUBPG = ''; Snd.sfx('deal'); buzz(6);
+  const t = $(`#t-hub [data-hubwt="${k}"]`); if (t) t.scrollIntoView({block: 'nearest', inline: 'nearest'});
+});
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-hubw]'); if (!b || !HUBST) return;
   const d = +b.dataset.hubw, n = hubPages().length, k = Math.max(0, Math.min(n - 1, HUBW + d)); if (k === HUBW) return;
