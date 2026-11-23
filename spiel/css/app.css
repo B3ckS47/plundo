@@ -2571,3 +2571,11 @@ html.pcg-on .bc.k-monster{--kc:var(--k-monster)}html.pcg-on .bc.k-curse{--kc:var
 html.pcg-on .bc.k-item{--kc:var(--k-item)}html.pcg-on .bc.k-oneshot{--kc:var(--k-oneshot,#2f8f8a)}html.pcg-on .bc.k-enh{--kc:var(--k-enh,#7a4a1a)}html.pcg-on .bc.k-levelup{--kc:var(--k-levelup,#2f5d7a)}
 #app.pcg .gd-pile small{left:50%;right:auto;transform:translateX(-50%);white-space:nowrap;padding:2px 8px;border-radius:999px;background:rgba(18,10,5,.75);bottom:-4px}
 html.pcg-on .bc.k-wander{--kc:var(--k-wander)}html.pcg-on .bc.k-amulet{--kc:var(--k-amulet)}
+/* Kampfwerte mit fester Breite (zweistellig passt immer) */
+#app.pcg .hud .side .sv{width:92px;flex:none;align-items:center;text-align:center;padding-left:0;padding-right:0}
+#app.pcg .hud .side.mon .sv{align-items:center}
+/* Kartendetails überall in der Farbe der Kartenart (vorher überschrieb .bc die Farbe mit Gold) */
+.bc{border:3px solid var(--kc);border-top-width:8px}
+.bc-art{border-color:var(--kc)}
+.bc.k-monster{--kc:var(--k-monster)}.bc.k-curse{--kc:var(--k-curse)}.bc.k-race{--kc:var(--k-race)}.bc.k-class{--kc:var(--k-class)}.bc.k-item{--kc:var(--k-item)}
+.bc.k-oneshot{--kc:var(--k-oneshot)}.bc.k-enh{--kc:var(--k-enh)}.bc.k-levelup{--kc:var(--k-levelup)}.bc.k-wander{--kc:var(--k-wander)}.bc.k-amulet{--kc:var(--k-amulet)}

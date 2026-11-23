@@ -578,7 +578,7 @@ function watch() {
     const prev = W.lv[p.id];
     if (prev != null && p.lvl !== prev) {
       if (p.lvl > prev) {
-        if (p.human) { Snd.sfx('levelup'); buzz([20, 40, 20]); banner(`Stufe ${p.lvl}!`, 'good'); W.coinPop = true; setTimeout(() => { W.coinPop = false; }, 700); burstAt('#mebar', 14); }
+        if (p.human) { Snd.sfx('levelup'); buzz([20, 40, 20]); banner(`Stufe ${p.lvl}!`, 'good'); W.coinPop = true; setTimeout(() => { W.coinPop = false; }, 700); burstAt(PCGX() ? '#gme .gs-pt' : '#mebar', 14); }
         else { Snd.sfx('coin', 0.5); W.pulse.add(p.id); }
       } else if (p.human) { Snd.sfx('leveldown'); buzz(60); }
     }
@@ -1218,7 +1218,7 @@ const Particles = (() => {
     if (!running) { running = true; requestAnimationFrame(step); }
   } };
 })();
-function burstAt(sel, n) { const el = $(sel); if (!el) return; const r = el.getBoundingClientRect(); Particles.burst(r.left + r.width / 2, r.top + r.height / 2, n); }
+function burstAt(sel, n) { const el = $(sel); if (!el) return; const r = el.getBoundingClientRect(); if (!r.width && !r.height) return; Particles.burst(r.left + r.width / 2, r.top + r.height / 2, n); }
 
 FX_HANDLER = (t, d) => {
   switch (t) {
@@ -2437,7 +2437,7 @@ function renderWide() {
 /* ================= Partie am PC (neuer Aufbau, Entwurf mit ?entwurf) =================
    Oben die Menüleiste, darunter die Gegner als Schilder im Format ihrer Hintergründe, in der Mitte der Tisch mit den Phasen links
    und den Stapeln rechts, am unteren Tischrand deine Ausrüstung. Rechts Notizen, Kampfrechnung und die Knöpfe; unten dein Schild und die Hand. */
-const PCG_ON = () => /entwurf/.test(location.search);
+const PCG_ON = () => true;   // neue Partie am PC (früher nur mit ?entwurf)
 const PCGX = () => { const a = document.getElementById('app'); return !!a && a.classList.contains('pcg'); };
 function seatHTML(p) {
   const C = S.combat, role = C && (C.f === p.id ? 'kämpft' : C.h === p.id ? 'hilft' : ''), turn = S.cur === p.id && S.winner == null, bx = bgOf(p);
