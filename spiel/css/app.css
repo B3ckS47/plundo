@@ -2550,3 +2550,6 @@ html.wide-menu #sheetwrap.dock.hubdock{right:auto;bottom:auto}
 #app.pcg .wlog>.wpanel::before{display:none}
 #app.pcg .wlog>.wpanel{position:relative}
 #app.pcg .wlog .wpin{top:44px}
+/* Hildes Aufträge: nie Scrollbalken zeigen (Stempel ragen leicht über den Rand); Scrollen bleibt möglich */
+.hub-daily .notes{overflow-x:hidden;scrollbar-width:none}
+.hub-daily .notes::-webkit-scrollbar{display:none}

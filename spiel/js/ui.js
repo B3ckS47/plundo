@@ -2101,6 +2101,15 @@ const Drag = (() => {
   }, {passive: false});
   document.addEventListener('pointerup', end);
   document.addEventListener('pointercancel', end);
+  /* Rückfallebenen: Ein Rechtsklick öffnet während des Ziehens kein Kontextmenü mehr (das hat bisher das Loslassen „verschluckt“).
+     Kommt das Loslassen trotzdem nicht an (Maustaste außerhalb des Fensters losgelassen, Fenster gewechselt, Escape),
+     fliegt die Karte zurück auf die Hand, statt hängen zu bleiben. */
+  const abort = () => { if (st && st.started) end({type: 'pointercancel', pointerId: st.id}); else st = null; };
+  document.addEventListener('contextmenu', e => { if (st && st.started) e.preventDefault(); });
+  document.addEventListener('pointermove', e => { if (st && st.started && e.pointerId === st.id && e.pointerType === 'mouse' && !(e.buttons & 1)) abort(); }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && st && st.started) abort(); });
+  window.addEventListener('blur', abort);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) abort(); });
   return {noClickUntil: 0, active: () => !!(st && st.started)};
 })();
 
