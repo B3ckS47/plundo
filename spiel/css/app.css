@@ -3111,7 +3111,7 @@ html.pcnav #scr-profile .pf-hero .pf-big{width:66px;height:66px}
 html.pcnav.pf-art #scr-profile .pf-hero .pf-big{width:62px;height:62px}
 /* Charakter am PC: vier Reiter nach Art, Herkunft als Filter */
 html.pcnav #scr-profile .pf-main .pf-sec{display:none}
-html.pcnav #scr-profile .content[data-pftype="portrait"] .pf-sec:has(#pf-portraits),html.pcnav #scr-profile .content[data-pftype="frame"] .pf-sec:has(#pf-frames),html.pcnav #scr-profile .content[data-pftype="bg"] .pf-sec:has(#pf-bgs),html.pcnav #scr-profile .content[data-pftype="title"] .pf-sec:has(#pf-titles){display:block}
+html.pcnav #scr-profile .content[data-pfview="portrait"] .pf-sec:has(#pf-portraits),html.pcnav #scr-profile .content[data-pfview="frame"] .pf-sec:has(#pf-frames),html.pcnav #scr-profile .content[data-pfview="bg"] .pf-sec:has(#pf-bgs),html.pcnav #scr-profile .content[data-pfview="title"] .pf-sec:has(#pf-titles){display:block}
 html.pcnav #scr-profile .pf-main .pf-sec>.lbl{display:none}
 html.pcnav #scr-profile .pf-pager{padding:14px 16px}
 .pf-tabs4{display:flex;align-items:center;gap:8px;flex-wrap:wrap}

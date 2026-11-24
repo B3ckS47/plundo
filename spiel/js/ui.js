@@ -158,7 +158,7 @@ const playerTag = () => { const h = String(PROFILE.id || '').replace(/[^a-z0-9]/
 function renderProfilePC() {
   const box = $('#scr-profile .content'); if (!box) return;
   const type = UI.pfType || 'portrait', orig = UI.pfOrigin || 'all', miss = UI.pfMissing !== false;
-  box.dataset.pftype = type;
+  box.dataset.pfview = type;
   const egg = id => !EGG_IDS.includes(id) || owns(id);
   const lists = {portrait: ALL_PORTRAITS.map(x => x[3]), frame: ALL_FRAMES.map(x => x[3]), bg: ALL_BGS.map(x => x[3]), title: Object.keys(COSMETICS.title).map(k => 'title:' + k)};
   const cnt = ids => { const it = ids.filter(egg); return [it.filter(id => !id || owns(id)).length, it.length]; };
