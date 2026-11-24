@@ -124,7 +124,7 @@ const PROFILE_NAME_RE = /^[\p{L}\p{N}][\p{L}\p{N} ._-]{1,15}$/u;
 function renderProfile() {
   const hb = $('#pf-hero'), bx = myBg(); hb.classList.toggle('hasbg', !!bx[2]); hb.style.setProperty('--bg', bx[2] ? `url('${bgSrc(bx)}')` : ''); hb.style.setProperty('--bgp', bx[4] || '');
   patch(hb, `<span class="pf-bigw"><img class="pf-big" src="${myPortrait()}" alt=""></span><div class="pf-who"><b class="fitname">${esc(PROFILE.name || 'Namenlos')}</b>${myTitle() ? `<em class="pf-title">${esc(myTitle())}</em>` : ''}` +
-    `</div>`);
+    `</div>` + (mq().pc.matches ? `<span class="pf-id"><small>Spieler-ID</small><b>#${playerTag()}</b><button type="button" class="pf-copy" data-copyid aria-label="Spieler-ID kopieren" title="Kopieren"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button></span>` : ''));
   fitNames(hb);
   // Unter dem Kopf: links die längste Serie, rechts die Spielerstufe (kommt mit dem Online-Modus)
   const days = n => `${n} ${n === 1 ? 'Tag' : 'Tage'}`;
@@ -143,7 +143,40 @@ function renderProfile() {
   const titles = Object.entries(COSMETICS.title).filter(([k]) => owns('title:' + k) && inG('title:' + k));
   patch($('#pf-titles'), `<button type="button" class="pf-ti" data-title="" aria-pressed="${!myTitle()}">Kein Titel</button>` + titles.map(([k, l]) => `<button type="button" class="pf-ti" data-title="${k}" aria-pressed="${PROFILE.title === k}">${esc(l)}</button>`).join('') +
     `<p class="hint">${titles.length ? 'Weitere Titel' : 'Titel'} gibt es im Storymodus, im Krämerladen und in Truhen.</p>`);
+  if (mq().pc.matches) renderProfilePC();
 }
+// Kurze Spieler-ID aus der festen Profil-ID (für Freunde im Online-Modus)
+const playerTag = () => { const h = String(PROFILE.id || '').replace(/[^a-z0-9]/gi, '').toUpperCase(); return h.slice(0, 4) + '-' + h.slice(4, 8); };
+// Charakter am PC: Herkunft als Kacheln statt Blättern, rechts Statistik, Serie und Online
+function renderProfilePC() {
+  const box = $('#scr-profile .content'); if (!box) return;
+  const G = PF_GROUPS(), cur = G[pfPage()][0];
+  const all = [...ALL_PORTRAITS.map(x => x[3]), ...ALL_FRAMES.map(x => x[3]), ...ALL_BGS.map(x => x[3]), ...Object.keys(COSMETICS.title).map(k => 'title:' + k)];
+  const pic = k => k === 'start' ? `<img class="face" src="${PORTRAITS[0][2]}" alt="">` : k === 'laden' ? '<img src="icons/nav-laden.png" alt="">' : k === 'truhe' ? '<img src="icons/truhe-gold-zu.png" alt="">' : `<img class="map" src="${new URL(`art/karte-welt${k.slice(1)}.webp`, document.baseURI).href}" alt="">`;
+  patch($('#pf-filter'), `<div class="pf-tabs">` + G.map(([k, l, sub]) => {
+    const items = all.filter(id => cosmeticGroup(id) === k && (!EGG_IDS.includes(id) || owns(id))), got = items.filter(id => !id || owns(id)).length, w = WORLDS.find(x => x.id === k);
+    const open = !w || openWorlds().includes(w);
+    return `<button type="button" class="pf-tab${k === cur ? ' on' : ''}${open ? '' : ' shut'}" data-pfgroup="${k}" title="${esc(sub)}"><span class="pt-pic">${pic(k)}</span><b>${esc(k === 'laden' ? 'Laden' : l)}</b><small>${got} / ${items.length}</small><i style="--p:${items.length ? Math.round(got / items.length * 100) : 0}%"></i></button>`;
+  }).join('') + '</div>');
+  let right = box.querySelector('.pf-right'); if (!right) { right = document.createElement('div'); right.className = 'pf-right'; box.appendChild(right); }
+  const st = PROFILE.stats || {}, n = k => fmt(st[k] || 0), days = v => `${v} ${v === 1 ? 'Tag' : 'Tage'}`;
+  const cell = (ic, v, l, art) => `<div class="pfs-c"><img${art ? ' class="art"' : ''} src="${ic}" alt=""><b>${v}</b><span>${l}</span></div>`;
+  patch(right, `<div class="panel pf-card"><h4 class="pf-h">Statistik</h4><div class="pfs-grid">` +
+    cell('icons/muenze-sieg.png', n('won'), 'Partien gewonnen') + cell(ICON.hand, n('played'), 'Partien gespielt') +
+    cell(ICON.kampf, n('fights'), 'Kämpfe gewonnen') + cell('icons/st-boss.png', n('big'), 'Monster ab Stufe 10') +
+    cell(ICON.run, n('escapes'), 'Geflohen') + cell('icons/portrait-zwerg.png', n('helped'), 'Mal geholfen', true) +
+    cell(ICON.gold, n('gold'), 'Gold verkauft') + cell(ART['Pechsträhne'], n('curses'), 'Flüche verteilt', true) +
+    `</div><p class="hint">Zählt im freien Spiel und im Storymodus, nicht im Probespiel.</p></div>` +
+    `<div class="panel pf-card pf-streak">${candleHtml(streakNow() > 0)}<span><small>Auftrags-Serie</small><b>${days(streakNow())}</b><em>Rekord: ${days(streakBest())}</em></span></div>` +
+    `<div class="panel pf-card pf-online"><h4 class="pf-h">Online <em class="pf-soon">Bald</em></h4>` +
+    `<div class="pfo-row"><span class="pf-lvl" aria-hidden="true"></span><span><b>Spielerstufe und Liga</b><small>Steig mit jeder Online-Partie auf und miss dich in Ligen und Turnieren.</small></span></div>` +
+    `<div class="pfo-row"><span class="pfo-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.2"/><circle cx="17" cy="9.5" r="2.6"/><path d="M3.5 19c.9-3.2 3-5 5.5-5s4.6 1.8 5.5 5M14.5 15.2c.8-.5 1.6-.7 2.5-.7 2 0 3.5 1.4 4.1 4"/></svg></span><span><b>Freunde</b><small>Füge Freunde über ihre Spieler-ID hinzu und lade sie an deinen Tisch ein.</small></span></div>` +
+    `<div class="pfo-add"><input type="text" placeholder="Spieler-ID, z. B. #A1B2-C3D4" disabled><button type="button" class="btn small" disabled>Hinzufügen</button></div></div>`);
+}
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-pfgroup]'); if (g) { UI.pfFilter = g.dataset.pfgroup; renderProfile(); return; }
+  const c = e.target.closest('[data-copyid]'); if (c) { const t = '#' + playerTag(); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast(`Spieler-ID ${t} kopiert.`), () => toast(`Deine Spieler-ID: ${t}`)); }
+});
 // Wischen über Titel, Porträts und Rahmen blättert ebenfalls
 (() => { let x0 = null, y0 = 0;
   document.addEventListener('touchstart', e => { x0 = e.target.closest && e.target.closest('#scr-profile .pf-pager, #scr-profile .pf-sec:not(:first-of-type)') ? e.touches[0].clientX : null; y0 = e.touches[0].clientY; }, {passive: true});
@@ -1451,7 +1484,9 @@ function missionToast(text, coins) {   // auch über offenen Blättern sichtbar
   Snd.sfx('coin'); buzz([30, 40, 30]);
   if (CUR === 'title') renderTitle();
 }
-TRACK_HANDLER = (k, n) => dailyTrack(k, n);
+// Lebenslange Statistik im Profil (wird mit dem Konto gesichert); gezählt wie die Aufträge, also nicht in Probespiel und Rätseln
+const LIFE_KEYS = {gameplayed: 'played', gamewon: 'won', win: 'fights', escape: 'escapes', helped: 'helped', curse: 'curses', big: 'big', gold: 'gold', oneshot: 'oneshots', intf: 'intf'};
+TRACK_HANDLER = (k, n) => { dailyTrack(k, n); const key = LIFE_KEYS[k]; if (!key) return; PROFILE.stats = PROFILE.stats || {}; PROFILE.stats[key] = (PROFILE.stats[key] || 0) + n; try { localStorage.setItem(K_PROFILE, JSON.stringify(PROFILE)); } catch (e) {} };
 DAILY_NOTIFY = (text, coins) => missionToast(text, coins);
 // Serie: Kerze (brennt nur bei laufender Serie) und Fortschritt bis zum nächsten Ziel, ein Feld pro Tag
 function candleHtml(on) { return `<span class="candle${on ? ' on' : ''}" aria-hidden="true"><i class="glow"></i><img src="icons/sym-serie-aus.png" alt=""><img class="flame" src="icons/sym-serie-flamme.png" alt=""></span>`; }

@@ -964,6 +964,7 @@ async function gameLoop(t){
     if(S.cur===0){ S.turn++; if(S.tides && !S.spring){ const fl=isFlut(); log(fl ? `Runde ${S.turn}: Die Flut kommt! Meeresmonster +3, Weglaufen +1.` : `Runde ${S.turn}: Ebbe. Das Watt liegt frei: Wer den Raum durchsucht, zieht einen Schatz.`,'sys'); fx('tide',{flut:fl}); ruleOnce('tide','Ebbe und Flut: Bei Flut haben Meeresmonster +3 und Weglaufen klappt mit +1. Bei Ebbe bringt „Raum durchsuchen“ einen Schatz statt einer Türkarte.'); } }
     if(S.turn>400){ log('Abbruch nach 400 Runden.','sys'); break; }
   }
+  if(S.winner!=null && t===TOKEN) track('gameplayed');
   if(S.winner===0 && t===TOKEN){ track('gamewon'); if(!S.stats.lvlLost) track('cleanwin'); }
   if(S.winner!=null && t===TOKEN) fx('gameover',{winner:S.winner});
   render();
