@@ -235,12 +235,13 @@ function clearStorySave() { try { localStorage.removeItem(K_STORYSAVE); } catch 
 const SET_V = 2;
 const SAVED_SET = load(K_SET);
 const SET = Object.assign({music: true, sfx: true, mvol: 0.5, svol: 0.8, vibrate: true, reduce: false, advice: false, coach: false, open: false, speed: 'normal', goal: 10, bots: 3, diff: 'normal', foes: 'zufall', test: false, mode: 'free', draft: false}, SAVED_SET || {});
+SET.foes = 'zufall'; SET.draft = true;   // nur noch zufällige Gegner, Draft immer
 // Lernhilfen sind ab Einstellungs-Version 2 standardmäßig aus, auch für bereits gespeicherte Einstellungen
 if ((SET.sv || 1) < SET_V) { SET.advice = false; SET.coach = false; SET.sv = SET_V; if (SAVED_SET) store(K_SET, SET); }
 function saveSettings() { store(K_SET, SET); applySettings(); }
 function applySettings() {
   UI.advice = SCN && SCN.tips ? true : SET.advice && !SCN; UI.coach = SCN && SCN.tips ? true : SET.coach && !SCN;   // Probepartie der Einführung: Tipps immer an
-  UI.open = SET.open; UI.speed = SET.speed; UI.goal = SET.goal || 10; UI.draft = !!SET.draft;
+  UI.open = SET.open; UI.speed = SET.speed; UI.goal = SET.goal || 10; UI.draft = true;   // Draft ist Standard
   if (!SCN) { UI.bots = SET.bots; UI.diff = SET.diff; }
   UI.reduce = SET.reduce || matchMedia('(prefers-reduced-motion: reduce)').matches;
   document.documentElement.classList.toggle('reduce', !!SET.reduce);
@@ -358,11 +359,11 @@ function selectDeck(id) {
   if (!d.unlocked()) { toast(d.lockTxt || 'Dieses Deck ist noch nicht freigeschaltet.'); return; }
   DECK.deck = d.id;
   if (DECK.variant === 'eigenes' && !DECK.custom[d.id]) DECK.variant = 'standard';
-  DECK.counts = currentCounts(DECK); saveDeck(); renderCards();
+  DECK.counts = currentCounts(DECK); saveDeck(); renderCards(); if (HUBBOT) renderSuDecks();
 }
 function selectVariant(k) {
   if (k === 'eigenes' && !DECK.custom[DECK.deck]) { DECK.custom[DECK.deck] = Object.assign({}, DECK.counts); toast('Eigenes Deck angelegt. Passe unten die Anzahl an.'); }
-  DECK.variant = k; DECK.counts = currentCounts(DECK); saveDeck(); renderCards();
+  DECK.variant = k; DECK.counts = currentCounts(DECK); saveDeck(); renderCards(); if (HUBBOT) renderSuDecks();
 }
 async function setDeckCount(i, delta) {
   const p = POOL[i]; if (!p) return;
@@ -663,7 +664,7 @@ function watch() {
 let RQ = 0;
 function render() {
   if (RQ) return;
-  RQ = requestAnimationFrame(() => { RQ = 0; try { doRender(); } catch (e) { console.error(e); } });
+  RQ = requestAnimationFrame(() => { RQ = 0; try { doRender(); if (UI.step || $('#stepbtn')) showStep(); } catch (e) { console.error(e); } });
 }
 function doRender() {
   if (S) { try { UI.adv = UI.advice ? advise() : null; } catch (e) { console.error(e); UI.adv = null; } } else UI.adv = null;
@@ -2708,6 +2709,22 @@ function seatHTML(p) {
     `<span class="gs-dots" aria-hidden="true">${Array.from({length: WINLVL()}, (_, i) => `<em class="${i < p.lvl ? 'on' : ''}"></em>`).join('')}</span>` +
     `</span></button>`;
 }
+// Tempo „Manuell“: Knopf zum Weiterklicken, solange ein Bot auf dich wartet (auch Leertaste oder Enter am PC)
+function showStep() {
+  let b = $('#stepbtn');
+  if (!UI.step) { if (b) b.hidden = true; return; }
+  const host = PCGX() ? $('#table') : $('#scr-game');
+  if (!b) { b = document.createElement('button'); b.type = 'button'; b.id = 'stepbtn'; b.className = 'btn primary stepbtn'; }
+  if (host && b.parentNode !== host) host.appendChild(b);
+  const p = S && S.players[S.cur];
+  b.innerHTML = `<span><small>${p ? esc(p.name) + ' ist dran' : 'Bots'}</small>Weiter</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>`;
+  b.hidden = false;
+}
+document.addEventListener('click', e => { if (e.target.closest('#stepbtn') && UI.step) { buzz(6); UI.step(); } });
+document.addEventListener('keydown', e => {
+  if (!UI.step || CUR !== 'game' || e.repeat) return;
+  if ((e.key === ' ' || e.key === 'Enter') && !e.target.closest('input,textarea,select') && !SHEETS.length) { e.preventDefault(); UI.step(); }
+});
 // Flüche, die gerade an einem Spieler hängen (bleiben über den Zug hinaus)
 function lastingCurses(p) {
   const nm = k => (p.curses && p.curses[k]) || {chill: 'Kellerkälte', spore: 'Sporenwolke', sun: 'Sonnenbrand', sand: 'Sand in der Badehose'}[k];
@@ -2964,7 +2981,7 @@ function pcPlayHTML(cw, nx, st, sk, dn, wait, ay, fg) {
       `<section class="pd-online"><img src="art/kachel-online.webp" alt=""><span class="tc-badge pd-badge">Bald</span>` +
         `<div class="pd-on-txt"><span class="pp-mode">Online</span>` +
           `<div class="pd-league"><span class="pd-crest"><b>?</b></span><div class="pd-lg"><b>Ligen und Saisons</b><small>Spiel gegen andere, steig in höhere Ligen auf und gewinne Rahmen, Titel und Hintergründe, die es nur hier gibt.</small></div></div>` +
-          `<div class="pd-modesel"><button type="button" class="on" data-go="online"><b>Klassisch</b><small>3 bis 4 Spieler</small></button><button type="button" data-go="online"><b>Draft</b><small>Starthand wählen</small></button><button type="button" data-go="online"><b>2 gegen 2</b><small>Im Team</small></button></div>` +
+          `<div class="pd-modesel"><button type="button" class="on" data-go="online"><b>Klassisch</b><small>3 bis 4 Spieler</small></button><button type="button" data-go="online"><b>2 gegen 2</b><small>Im Team</small></button></div>` +
           `<div class="pp-acts"><button type="button" class="t-cta pd-off" data-go="online">${play}<span>Spiel suchen</span></button><button type="button" class="btn pp-map" data-go="online">Mit Freunden spielen</button></div>` +
         `</div></section>` +
       `<div class="pd-row3">` +
@@ -3042,8 +3059,22 @@ function hubBotsMount() {
   slot.append(...SETUP_PANELS);
   slot.insertAdjacentHTML('beforeend', '<button type="button" class="btn primary su-start" data-go="start">Los geht’s!</button>');
   const f = $('#t-hub .su-foes'); if (f) { f.__h = null; patch(f, botSeatsHTML()); }
+  const dp = $('#setup-deck'); if (dp && !dp.parentNode.querySelector('.su-decks')) dp.insertAdjacentHTML('afterend', '<div class="su-decks"></div>');
+  renderSuDecks();
+}
+// PC: Deck und Mischung direkt im Aufbau wählen, ohne Umweg über „Karten und Deck“
+function renderSuDecks() {
+  const box = $('#t-hub .su-decks'); if (!box) return;
+  const st = deckStats(DECK.counts);
+  patch(box, `<div class="sd-tiles">` + DECKS.map(x => { const un = x.unlocked(); return `<button type="button" class="sd-tile${un ? '' : ' locked'}" data-deck="${x.id}" aria-pressed="${DECK.deck === x.id}" title="${esc(un ? x.desc : x.lockTxt || '')}"><span><img src="${ART[x.icon]}" alt="" draggable="false">${un ? '' : `<i>${LOCK_SVG}</i>`}</span><b>${esc(x.name.replace('-Deck', '').replace('deck', ''))}</b></button>`; }).join('') + `</div>` +
+    `<div class="sd-vars">` + VARIANTS.map(([k, l, d]) => `<button type="button" class="pf-chip${DECK.variant === k ? ' on' : ''}" data-variant="${k}" title="${esc(d)}">${l}</button>`).join('') +
+    (DECK.custom[DECK.deck] ? `<button type="button" class="pf-chip${DECK.variant === 'eigenes' ? ' on' : ''}" data-variant="eigenes">Eigenes</button>` : '') + `</div>` +
+    `<p class="sd-info"><span class="${st.ok ? 'ok' : 'bad'}">${st.ok ? 'Spielbereit' : 'Nicht spielbereit'}</span> · ${st.door + st.tr} Karten · ${esc((VARIANTS.find(v => v[0] === DECK.variant) || ['', '', 'Deine eigene Zusammenstellung.'])[2])} <button type="button" class="sd-edit" data-go="cards">Karten ansehen und eigenes Deck bauen ›</button></p>`);
+  setupPrep();
+  const m = $('#t-hub .pd-bot'); if (m) { m.style.setProperty('--tbl', `url(${new URL((TABLES.find(t => t[0] === freeTable()) || TABLES[0])[2], document.baseURI).href})`); const tp = $('#t-hub .su-tables'); if (tp) patch(tp, tablePickHTML()); }
 }
 function hubBotsOff() {
+  $$('.su-decks').forEach(x => x.remove());
   if (SETUP_PANELS) $('#scr-setup .content').append(...SETUP_PANELS);
   HUBBOT = false;
 }

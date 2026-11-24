@@ -79,11 +79,6 @@
           <button type="button" data-v="2"><span class="pts"><img src="icons/portrait-berta.png" alt=""><img src="icons/portrait-kalle.png" alt=""></span>2 Bots</button>
           <button type="button" data-v="3"><span class="pts"><img src="icons/portrait-berta.png" alt=""><img src="icons/portrait-kalle.png" alt=""><img src="icons/portrait-uschi.png" alt=""></span>3 Bots</button>
         </div>
-        <div class="trow"><span>Gegner</span></div>
-        <div class="seg" data-set="foes">
-          <button type="button" data-v="zufall">Zufällig</button>
-          <button type="button" data-v="stammtisch">Der Stammtisch</button>
-        </div>
         <div class="foes" id="setup-foes"></div>
       </div>
       <div class="panel">
@@ -103,11 +98,11 @@
       <div class="panel">
         <h3 class="lbl">Deck</h3>
         <button type="button" class="btn deckbtn" data-go="cards" id="setup-deck">Empfohlen</button>
-        <div class="trow"><span>Starthand draften<small>Jeder wählt reihum aus 4 Karten und gibt den Rest weiter. Erst Türkarten, dann Schätze.</small></span><button class="switch" type="button" role="switch" data-toggle="draft" aria-label="Starthand draften"></button></div>
       </div>
       <div class="panel">
         <h3 class="lbl">Tempo der Bots</h3>
         <div class="seg" data-set="speed">
+          <button type="button" data-v="manuell">Manuell</button>
           <button type="button" data-v="langsam">Langsam</button>
           <button type="button" data-v="normal">Normal</button>
           <button type="button" data-v="schnell">Schnell</button>
@@ -166,6 +161,7 @@
         <h3 class="lbl">Spiel</h3>
         <div class="trow"><span>Tempo der Bots</span></div>
         <div class="seg" data-set="speed">
+          <button type="button" data-v="manuell">Manuell</button>
           <button type="button" data-v="langsam">Langsam</button>
           <button type="button" data-v="normal">Normal</button>
           <button type="button" data-v="schnell">Schnell</button>
@@ -226,7 +222,7 @@
       <p>Wer zuerst <b>Stufe 10</b> erreicht, gewinnt. Die letzte Stufe gibt es nur für einen <b>Sieg über ein Monster</b>.</p>
       <p>In jedem Zug öffnest du eine Tür. Dahinter wartet oft ein Monster. Ist deine <b>Kampfstärke höher</b> als das Monster, steigst du auf und bekommst Schätze. Sonst musst du weglaufen.</p>
       <p>Mit Gegenständen wirst du stärker, mit Volk und Klasse bekommst du Fähigkeiten. Die anderen dürfen dir in jedem Kampf dazwischenfunken, und du ihnen.</p>
-      <p>Alle starten auf Stufe 1 als Mensch ohne Klasse, mit <b>4 Türkarten und 4 Schatzkarten</b>. Völker, Klassen und Gegenstände darfst du sofort auslegen.</p></div></details>
+      <p>Alle starten auf Stufe 1 als Mensch ohne Klasse. Die Starthand wird <b>gedraftet</b>: Jeder bekommt 4 Türkarten, nimmt eine davon und gibt den Rest weiter, bis jeder 4 hat. Danach geht es genauso mit 4 Schatzkarten in die andere Richtung. Völker, Klassen und Gegenstände darfst du sofort auslegen.</p></div></details>
 <details class="rule panel" data-k="zug phase tür öffnen monster herausfordern raum durchsuchen trinkgeld handkarten limit"><summary>Dein Zug</summary><div class="rule-body"><ol class="phase-list">
         <li><div><b>Tür öffnen.</b> Die oberste Türkarte wird offen aufgedeckt. Monster: sofort Kampf. Fluch: trifft dich sofort. Alles andere kommt auf die Hand.</div></li>
         <li><div><b>Monster herausfordern.</b> Kein Kampf hinter der Tür? Dann darfst du ein Monster von deiner Hand bekämpfen.</div></li>

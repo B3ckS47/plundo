@@ -524,9 +524,12 @@ const BOT_STYLES = [
 const styleOf = p => (p && (p.style || STYLES[p.name])) || {};
 function stat(k, n=1){ if(S && S.stats) S.stats[k]=(S.stats[k]||0)+n; }
 const SPEEDS = {langsam:2400, normal:1500, schnell:380};
-const spd = (f=1) => HEADLESS ? 0 : SPEEDS[UI.speed]*f;
+// Manuell: Bots warten bei jedem Schritt, bis du auf „Weiter“ klickst (eigene Züge laufen im normalen Tempo)
+const MANUAL = -1;
+const spd = (f=1) => HEADLESS ? 0 : UI.speed==='manuell' ? (S && S.players[S.cur] && !S.players[S.cur].human ? MANUAL : SPEEDS.normal*f) : (SPEEDS[UI.speed]||SPEEDS.normal)*f;
 
-function sleep(ms){ const t=TOKEN; return new Promise((res,rej)=>{ const done=()=>{ if(t!==TOKEN) return rej(STALE); if(UI.paused && !HEADLESS) return setTimeout(done,150); res(); }; setTimeout(done, HEADLESS?0:ms); }); }
+function stepWait(t){ return new Promise((res,rej)=>{ UI.step=()=>{ UI.step=null; if(typeof showStep==='function') showStep(); if(t!==TOKEN) return rej(STALE); res(); }; if(typeof showStep==='function') showStep(); }); }
+function sleep(ms){ const t=TOKEN; if(ms===MANUAL && !HEADLESS) return stepWait(t); if(ms<0) ms=0; return new Promise((res,rej)=>{ const done=()=>{ if(t!==TOKEN) return rej(STALE); if(UI.paused && !HEADLESS) return setTimeout(done,150); res(); }; setTimeout(done, HEADLESS?0:ms); }); }
 function ask(get, ctx, data){
   const t=TOKEN;
   return new Promise((res,rej)=>{
@@ -824,14 +827,15 @@ function newGame(allBots){
   TOKEN++;
   if(UI.reject){ const r=UI.reject; UI.prompt=null; UI.resolve=null; UI.reject=null; try{ r(); }catch(e){} }
   if(UI.sel){ const r=UI.sel.reject; UI.sel=null; try{ r(); }catch(e){} }
-  UI.menu=null; UI.roll=null; UI.seen={}; UI.logLen=0; UI.dview=null;
+  UI.menu=null; UI.roll=null; UI.seen={}; UI.logLen=0; UI.dview=null; UI.step=null; if(typeof showStep==='function') showStep();
   UID=1;
   const sc=SCN;
   const d=buildDecks(sc && sc.counts);
   S={players:[], door:d.door, tr:d.tr, doorDisc:[], trDisc:[], cur:0, turn:1, phase:0, combat:null, reveal:null, log:[], winner:null,
      scn: sc ? sc.id||true : null, stats:{played:0, lvlLost:0, curses:0, help:0, ran:0, bossBy:null, bossHelped:false, fightWon:false}};
   if(!sc && !allBots && UI.goal && UI.goal !== 10) S.goal = UI.goal;   // kürzere Partie im freien Spiel
-  if(!sc && UI.draft) S.draft = true;   // Starthand wird gedraftet
+  // Starthand wird immer gedraftet, außer die Station legt Karten fest (Probespiel, Rätsel, feste Starthände)
+  if(!sc || !(sc.start || sc.botStart || sc.deck || sc.tut || sc.fight)) S.draft = true;
   // Freies Spiel: zufällige Gegner aus UI.roster (Name, Bild, Spielweise), sonst der Stammtisch
   const roster = !sc && UI.roster && UI.roster.length >= UI.bots ? UI.roster.slice(0, UI.bots) : null;
   const names = sc && sc.bots ? sc.bots : roster ? roster.map(r=>r.name) : ['Berta','Kalle','Uschi'].slice(0, UI.bots);
