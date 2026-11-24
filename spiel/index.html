@@ -3,6 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+/* Tablet im Querformat: so tun, als wäre der Bildschirm 1400 px breit, dann greift die PC-Ansicht und alles wird passend verkleinert.
+   Hochformat und Handys bleiben bei der normalen Breite. Zum Abschalten: localStorage loota.tabpc = "0" */
+(function () {
+  var m = document.querySelector('meta[name=viewport]'), base = m.content;
+  function fit() {
+    var off = false; try { off = localStorage.getItem('loota.tabpc') === '0'; } catch (e) {}
+    var s1 = Math.min(screen.width, screen.height), s2 = Math.max(screen.width, screen.height);
+    var tablet = !off && matchMedia('(pointer: coarse)').matches && s1 >= 600 && s2 >= 900 && s2 < 1400;
+    var land = matchMedia('(orientation: landscape)').matches;
+    var want = tablet && land ? 'width=1400, viewport-fit=cover' : base;
+    if (m.content !== want) m.content = want;
+    document.documentElement.classList.toggle('tabpc', tablet && land);
+  }
+  fit(); addEventListener('orientationchange', function () { setTimeout(fit, 60); }); addEventListener('resize', fit);
+})();
+</script>
 <meta name="theme-color" content="#15100c">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">

@@ -3157,8 +3157,12 @@ function closeHubStory() {
 }
 document.addEventListener('click', e => { if (e.target.closest('[data-hubst="close"]')) { if (HUBBOT) closeHubBots(); else closeHubStory(); } });
 // Weltkacheln: Mausrad scrollt seitwärts, wenn es mehr Welten gibt, als nebeneinander passen
-document.addEventListener('wheel', e => { const t = e.target.closest && e.target.closest('.pd-wtiles'); if (!t || t.scrollWidth <= t.clientWidth) return; e.preventDefault(); t.scrollLeft += e.deltaY || e.deltaX; pdTilesFade(t); }, {passive: false});
-function pdTilesFade(t) { t = t || $('#t-hub .pd-wtiles'); if (t) t.classList.toggle('more', t.scrollLeft + t.clientWidth < t.scrollWidth - 4); }
+document.addEventListener('wheel', e => { const t = e.target.closest && e.target.closest('.pd-wtiles'); if (!t || t.scrollWidth <= t.clientWidth) return; e.preventDefault(); const now = performance.now(); if (now - (t.__wh || 0) < 220) return; t.__wh = now; const w = (t.querySelector('.pd-wt') || {}).offsetWidth || 150; t.scrollBy({left: Math.sign(e.deltaY || e.deltaX) * (w + 10)}); }, {passive: false});
+function pdTilesFade(t) {
+  t = t || $('#t-hub .pd-wtiles'); if (!t) return;
+  if (!t.__sc) { t.__sc = true; t.addEventListener('scroll', () => pdTilesFade(t), {passive: true}); const on = t.querySelector('.pd-wt.on'); if (on && on.offsetLeft + on.offsetWidth > t.clientWidth) t.scrollLeft = on.offsetLeft - t.clientWidth + on.offsetWidth + 4; }
+  t.classList.toggle('more', t.scrollLeft + t.clientWidth < t.scrollWidth - 4); t.classList.toggle('less', t.scrollLeft > 4);
+}
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-hubwt]'); if (!b || !HUBST) return;
   const k = +b.dataset.hubwt; if (k === HUBW) return;
