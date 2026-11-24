@@ -19,6 +19,42 @@
   }
   fit(); addEventListener('orientationchange', function () { setTimeout(fit, 60); }); addEventListener('resize', fit);
 })();
+/* Desktop-Fenster zwischen Tablet und PC (z. B. Laptop 1366 × 768 oder kleineres Fenster): Die PC-Ansicht wird stufenlos verkleinert
+   (CSS-Zoom auf der Seite). Damit Maße aus dem Skript zur verkleinerten Seite passen, rechnen Position, Mausposition und Fenstergröße
+   im Skript in Seiten-Pixeln. Bei voller Größe (ab 1400 × 760) und auf Handys bleibt alles unverändert. */
+(function () {
+  var root = document.documentElement, Z = 1, PC_W = 1400, PC_H = 760;
+  var dW = Object.getOwnPropertyDescriptor(window, 'innerWidth'), dH = Object.getOwnPropertyDescriptor(window, 'innerHeight');
+  var realW = function () { return dW && dW.get ? dW.get.call(window) : document.documentElement.clientWidth; };
+  var realH = function () { return dH && dH.get ? dH.get.call(window) : document.documentElement.clientHeight; };
+  try {
+    Object.defineProperty(window, 'innerWidth', {configurable: true, get: function () { return realW() / Z; }});
+    Object.defineProperty(window, 'innerHeight', {configurable: true, get: function () { return realH() / Z; }});
+  } catch (e) {}
+  var gb = Element.prototype.getBoundingClientRect;
+  Element.prototype.getBoundingClientRect = function () { var r = gb.call(this); return Z === 1 ? r : new DOMRect(r.x / Z, r.y / Z, r.width / Z, r.height / Z); };
+  var efp = Document.prototype.elementFromPoint;
+  Document.prototype.elementFromPoint = function (x, y) { return efp.call(this, x * Z, y * Z); };
+  [window.MouseEvent && MouseEvent.prototype, window.Touch && Touch.prototype].forEach(function (P) {
+    if (!P) return;
+    ['clientX', 'clientY'].forEach(function (k) {
+      var d = Object.getOwnPropertyDescriptor(P, k); if (!d || !d.get) return;
+      Object.defineProperty(P, k, {configurable: true, get: function () { return d.get.call(this) / Z; }});
+    });
+  });
+  function fit() {
+    var w = realW(), h = realH(), z = 1;
+    if (!root.classList.contains('tabpc') && w >= 900 && h >= 480 && (w < PC_W || h < PC_H)) z = Math.min(w / PC_W, h / PC_H);
+    z = Math.round(z * 1000) / 1000;
+    var was = Z; Z = z; window.__ZOOM = z;
+    root.style.zoom = z === 1 ? '' : z;
+    root.classList.toggle('zoomed', z !== 1);
+    ['--vh', '--dvh'].forEach(function (k) { if (z === 1) root.style.removeProperty(k); else root.style.setProperty(k, (h / z / 100) + 'px'); });
+    if (z === 1) { root.style.removeProperty('--vw'); root.style.removeProperty('--vmax'); } else { root.style.setProperty('--vw', (w / z / 100) + 'px'); root.style.setProperty('--vmax', (Math.max(w, h) / z / 100) + 'px'); }
+    if (was !== z && window.__zoomChange) window.__zoomChange();
+  }
+  fit(); addEventListener('resize', fit);
+})();
 </script>
 <meta name="theme-color" content="#15100c">
 <meta name="mobile-web-app-capable" content="yes">

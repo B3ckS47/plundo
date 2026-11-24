@@ -2632,7 +2632,15 @@ document.addEventListener('click', e => {
 /* ================= Breite Ansicht (Tablet quer, PC) ================= */
 // var statt let/const: applyLayout läuft schon beim Start, bevor dieser Teil der Datei ausgeführt ist
 var LAYOUT = '';
-function mq() { return window.__MQ || (window.__MQ = {pc: matchMedia('(min-width: 1400px) and (min-height: 760px)'), tab: matchMedia('(min-width: 900px) and (min-height: 560px) and (orientation: landscape)'), hover: matchMedia('(hover: hover) and (pointer: fine)')}); }
+// PC-Ansicht: volle Größe ab 1400 × 760, darunter (ab Tablet-Größe) verkleinert per Zoom (siehe index.html). Die alte Tablet-Ansicht greift dann nicht mehr.
+function mq() {
+  if (window.__MQ) return window.__MQ;
+  const pcN = matchMedia('(min-width: 1400px) and (min-height: 760px)'), tabN = matchMedia('(min-width: 900px) and (min-height: 560px) and (orientation: landscape)');
+  const zoomed = () => (window.__ZOOM || 1) !== 1;
+  const wrap = (fn, nat) => { const L = []; let last = fn(); const chk = () => { const v = fn(); if (v !== last) { last = v; L.forEach(f => f({matches: v})); } };
+    nat.addEventListener('change', chk); addEventListener('resize', chk); return {get matches() { return fn(); }, addEventListener: (t, f) => L.push(f), removeEventListener: (t, f) => { const i = L.indexOf(f); if (i >= 0) L.splice(i, 1); }}; };
+  return (window.__MQ = {pc: wrap(() => pcN.matches || zoomed(), pcN), tab: wrap(() => tabN.matches && !pcN.matches && !zoomed(), tabN), hover: matchMedia('(hover: hover) and (pointer: fine)')});
+}
 function applyLayout() {
   const M = mq(), MQ_PC = M.pc, MQ_TAB = M.tab;
   const mode = CUR === 'game' ? (MQ_PC.matches ? 'pc' : MQ_TAB.matches ? 'tab' : '') : '';
