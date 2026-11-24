@@ -1275,6 +1275,8 @@ function banner(text, kind) {
   if (quietSheet()) return;
   $$('.banner').forEach(b => b.remove());
   const b = document.createElement('div'); b.className = 'banner ' + (kind || ''); b.textContent = text;
+  // PC: mittig auf dem Spielfeld statt mitten im Bildschirm
+  if (CUR === 'game' && typeof PCGX === 'function' && PCGX()) { const t = $('#table'), q = $('#geq'); if (t) { const r = t.getBoundingClientRect(), bot = q ? q.getBoundingClientRect().top : r.bottom; b.style.left = Math.round(r.left + r.width / 2) + 'px'; b.style.top = Math.round(r.top + (bot - r.top) * 0.45) + 'px'; } }
   document.body.appendChild(b); setTimeout(() => b.remove(), 1500);
 }
 function flash(kind) { if (UI.reduce) return; const f = document.createElement('div'); f.className = 'flash ' + kind; document.body.appendChild(f); setTimeout(() => f.remove(), 700); }
@@ -1323,13 +1325,21 @@ FX_HANDLER = (t, d) => {
       break;
   }
 };
+// PC: Endfenster mittig über dem Spielfeld statt mitten im Bildschirm (Abdunklung bleibt über allem)
+function endOnTable(el) {
+  if (CUR !== 'game' || typeof PCGX !== 'function' || !PCGX()) return;
+  const t = $('#table'); if (!t) return;
+  const r = t.getBoundingClientRect();
+  el.classList.add('ontable');
+  Object.assign(el.style, {paddingLeft: Math.max(24, r.left) + 'px', paddingRight: Math.max(24, innerWidth - r.right) + 'px', paddingTop: Math.max(24, r.top) + 'px', paddingBottom: Math.max(24, innerHeight - r.bottom) + 'px'});
+}
 function showEnd(wid) {
   if (!S) return;
   const w = P(wid), mine = w.human;
   Snd.sfx(mine ? 'victory' : 'defeat'); buzz(mine ? [40, 60, 40, 60, 120] : 200);
   const el = document.createElement('div'); el.className = 'endov';
   el.innerHTML = `<div class="panel"><div class="end-hero${bgAttr(bgOf(w))}">${bigPortrait(w)}</div><h2>${mine ? (PROFILE.name ? `Gewonnen, ${esc(PROFILE.name)}!` : 'Gewonnen!') : esc(w.name) + ' gewinnt'}</h2><p>${mine ? `Stufe ${WINLVL()} durch einen Monstersieg. Die ganze Beute gehört dir!` : 'Kein Drama, die nächste Runde wartet schon. In den Notizen siehst du, wie es dazu kam.'}</p><button type="button" class="btn primary" data-go="again">Nochmal spielen</button><button type="button" class="btn" data-go="log">Notizen ansehen</button><button type="button" class="btn" data-go="menu">Hauptmenü</button></div>`;
-  document.body.appendChild(el);
+  endOnTable(el); document.body.appendChild(el);
   if (mine) { let k = 0; const iv = setInterval(() => { Particles.burst(Math.random() * innerWidth, innerHeight * 0.25, 18, 1.4); if (++k > 5) clearInterval(iv); }, 280); }
 }
 // Antwort: true (ja), false (nein) oder null (abgebrochen: Abbrechen-Knopf oder Tippen daneben)
@@ -1798,7 +1808,7 @@ function showStoryEnd(res) {
       res.rewards.map(r => `<p class="se-reward">Geheim freigeschaltet: ${esc(cosmeticName(r))}</p>`).join('') +
       `<p class="hint">Das bekommt nur, wer die Probepartie verliert. Verrat es nicht weiter!</p>` +
       `<div class="acts"><button type="button" class="btn primary" data-go="again">Nochmal versuchen</button><button type="button" class="btn" data-go="storymap">Zur Karte</button></div></div>`;
-    document.body.appendChild(el);
+    endOnTable(el); document.body.appendChild(el);
     setTimeout(() => Particles.burst(innerWidth / 2, innerHeight * 0.3, 24, 1.2), 300);
     return;
   }
@@ -1810,7 +1820,7 @@ function showStoryEnd(res) {
     res.rewards.map(r => `<p class="se-reward">Neu: ${esc(cosmeticName(r))}</p>`).join('') +
     (res.worldDone ? `<p class="se-outro">${esc(worldById(st.world).outro)}</p>` + (worldById(st.world).unlocks ? `<p class="se-reward">Fürs freie Spiel freigeschaltet: ${esc(worldById(st.world).unlocks.join(', '))}</p>` : '') : '') +
     `<div class="acts"><button type="button" class="btn primary" data-go="storymap">Zur Karte</button><button type="button" class="btn" data-go="again">Nochmal</button></div></div>`;
-  document.body.appendChild(el);
+  endOnTable(el); document.body.appendChild(el);
   if (w) { let k = 0; const iv = setInterval(() => { Particles.burst(Math.random() * innerWidth, innerHeight * 0.25, 18, 1.4); if (++k > 4) clearInterval(iv); }, 280); }
 }
 
@@ -2720,10 +2730,11 @@ function seatHTML(p) {
 // Tempo „Manuell“: Knopf zum Weiterklicken, solange ein Bot auf dich wartet (auch Leertaste oder Enter am PC)
 function showStep() {
   let b = $('#stepbtn');
-  if (!UI.step) { if (b) b.hidden = true; return; }
-  const host = PCGX() ? $('#table') : $('#scr-game');
+  if (!UI.step) { if (b) b.hidden = true; $$('.ge-sell.stepped').forEach(x => x.classList.remove('stepped')); return; }
+  // PC: an die Stelle von „Verkaufen“ (ist bei fremden Zügen ohnehin gesperrt), also unten rechts bei den eigenen Aktionen
+  const sell = PCGX() && $('#geq .ge-sell'), host = sell ? sell.parentNode : $('#scr-game');
   if (!b) { b = document.createElement('button'); b.type = 'button'; b.id = 'stepbtn'; b.className = 'btn primary stepbtn'; }
-  if (host && b.parentNode !== host) host.appendChild(b);
+  if (sell) { if (b.previousElementSibling !== sell) sell.after(b); sell.classList.add('stepped'); } else if (host && b.parentNode !== host) host.appendChild(b);
   const p = S && S.players[S.cur];
   b.innerHTML = `<span><small>${p ? esc(p.name) + ' ist dran' : 'Bots'}</small>Weiter</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>`;
   b.hidden = false;
