@@ -133,7 +133,10 @@ function renderProfile() {
     `<div class="panel pf-stat soon"><span class="pf-lvl" aria-hidden="true"></span><span><small>Spielerstufe</small><b>Bald</b><em>Kommt mit dem Online-Modus</em></span></div>`);
   const inp = $('#pf-name'); if (document.activeElement !== inp) inp.value = PROFILE.name;
   const lockI = '<b class="pf-lock" aria-hidden="true"><svg viewBox="0 0 24 24">' + LOCK_PATH + '</svg></b>';
-  const G = PF_GROUPS(), pi = pfPage(), [fg, gl, gs] = G[pi], inG = id => cosmeticGroup(id) === fg && (!EGG_IDS.includes(id) || owns(id)), none = '<p class="hint pf-empty">Hier gibt es nichts auf dieser Seite.</p>';
+  const PC = mq().pc.matches;
+  const G = PF_GROUPS(), pi = pfPage(), [fg, gl, gs] = G[pi], egg = id => !EGG_IDS.includes(id) || owns(id);
+  const inG = PC ? id => pfOriginOk(id) && egg(id) && (UI.pfMissing !== false || !id || owns(id)) : id => cosmeticGroup(id) === fg && egg(id);
+  const none = PC ? '<p class="hint pf-empty">Mit diesem Filter gibt es hier nichts. Probier eine andere Herkunft.</p>' : '<p class="hint pf-empty">Hier gibt es nichts auf dieser Seite.</p>';
   const items = [...ALL_PORTRAITS.map(x => x[3]), ...ALL_FRAMES.map(x => x[3]), ...ALL_BGS.map(x => x[3]), ...Object.keys(COSMETICS.title).map(k => 'title:' + k)].filter(inG), got = items.filter(id => !id || owns(id)).length;
   const arrow = (d, dis) => `<button type="button" class="pf-arr" data-pfpage="${d}" aria-label="${d < 0 ? 'Vorherige' : 'Nächste'} Seite"${dis ? ' disabled' : ''}><svg viewBox="0 0 24 24"><path d="${d < 0 ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'}"/></svg></button>`;
   patch($('#pf-filter'), arrow(-1, pi === 0) + `<div class="pf-pg"><b>${esc(gl)}</b><small>${esc(gs)} · ${got} von ${items.length}</small><span class="pf-dots">${G.map((g, i) => `<i class="${i === pi ? 'on' : ''}"></i>`).join('')}</span></div>` + arrow(1, pi === G.length - 1));
@@ -141,24 +144,43 @@ function renderProfile() {
   patch($('#pf-frames'), (ALL_FRAMES.filter(x => inG(x[3])).map(x => { const [k, l, c] = x, on = cosOpen(x); return `<button type="button" class="pf-fr${on ? '' : ' locked'}" data-frame="${k}" aria-pressed="${on && PROFILE.frame === k}" style="--c:${c}">${frameArt(k) ? `<i class="frimg" style="background-image:url('${frameArt(k, true)}')">${on ? '' : `<svg viewBox="0 0 24 24">${LOCK_PATH}</svg>`}</i>` : `<i>${on ? '' : `<svg viewBox="0 0 24 24">${LOCK_PATH}</svg>`}</i>`}<span>${l}</span></button>`; }).join('')) || none);
   patch($('#pf-bgs'), (ALL_BGS.filter(x => inG(x[3])).map(x => { const [k, l] = x, on = cosOpen(x); return `<button type="button" class="pf-bg${on ? '' : ' locked'}" data-bg="${k}" aria-pressed="${on && myBg()[0] === k}"><i class="${x[2] ? '' : 'none'}"${x[2] ? ` style="background-image:url('${bgSrc(x, true)}');background-position:${x[4]}"` : ''}>${on ? '' : `<svg viewBox="0 0 24 24">${LOCK_PATH}</svg>`}</i><span>${l}</span></button>`; }).join('')) || none);
   // Titel: nur die freigeschalteten zeigen, gesperrte wären bei vielen Welten nur Ballast
-  const titles = Object.entries(COSMETICS.title).filter(([k]) => owns('title:' + k) && inG('title:' + k));
-  patch($('#pf-titles'), `<button type="button" class="pf-ti" data-title="" aria-pressed="${!myTitle()}">Kein Titel</button>` + titles.map(([k, l]) => `<button type="button" class="pf-ti" data-title="${k}" aria-pressed="${PROFILE.title === k}">${esc(l)}</button>`).join('') +
+  const titles = Object.entries(COSMETICS.title).filter(([k]) => (PC || owns('title:' + k)) && inG('title:' + k));
+  patch($('#pf-titles'), (!PC || pfOriginOk('') ? `<button type="button" class="pf-ti" data-title="" aria-pressed="${!myTitle()}">Kein Titel</button>` : '') + titles.map(([k, l]) => owns('title:' + k) ? `<button type="button" class="pf-ti" data-title="${k}" aria-pressed="${PROFILE.title === k}">${esc(l)}</button>` : `<span class="pf-ti locked"><svg viewBox="0 0 24 24" aria-hidden="true">${LOCK_PATH}</svg>${esc(l)}</span>`).join('') +
     `<p class="hint">${titles.length ? 'Weitere Titel' : 'Titel'} gibt es im Storymodus, im Krämerladen und in Truhen.</p>`);
   if (mq().pc.matches) renderProfilePC();
 }
 // Kurze Spieler-ID aus der festen Profil-ID (für Freunde im Online-Modus)
+// Herkunftsfilter am PC: alle, Start, Storymodus (oder eine Welt), Laden, Truhen, Besonderes
+function pfOriginOk(id) { const o = UI.pfOrigin || 'all', g = cosmeticGroup(id); return o === 'all' || g === o || (o === 'story' && /^w\d/.test(g)); }
+function pfSrcLabel(id) { const g = cosmeticGroup(id); if (g === 'start') return 'Start'; if (g === 'laden') return 'Laden'; if (g === 'truhe') return 'Truhe'; if (g === 'special') return 'Besonderes'; const w = WORLDS.find(x => x.id === g); return w ? wLabel(w) : ''; }
 const playerTag = () => { const h = String(PROFILE.id || '').replace(/[^a-z0-9]/gi, '').toUpperCase(); return h.slice(0, 4) + '-' + h.slice(4, 8); };
 // Charakter am PC: Herkunft als Kacheln statt Blättern, rechts Statistik, Serie und Online
 function renderProfilePC() {
   const box = $('#scr-profile .content'); if (!box) return;
-  const G = PF_GROUPS(), cur = G[pfPage()][0];
-  const all = [...ALL_PORTRAITS.map(x => x[3]), ...ALL_FRAMES.map(x => x[3]), ...ALL_BGS.map(x => x[3]), ...Object.keys(COSMETICS.title).map(k => 'title:' + k)];
-  const pic = k => k === 'start' ? `<img class="face" src="${PORTRAITS[0][2]}" alt="">` : k === 'laden' ? '<img src="icons/nav-laden.png" alt="">' : k === 'truhe' ? '<img src="icons/truhe-gold-zu.png" alt="">' : `<img class="map" src="${new URL(`art/karte-welt${k.slice(1)}.webp`, document.baseURI).href}" alt="">`;
-  patch($('#pf-filter'), `<div class="pf-tabs">` + G.map(([k, l, sub]) => {
-    const items = all.filter(id => cosmeticGroup(id) === k && (!EGG_IDS.includes(id) || owns(id))), got = items.filter(id => !id || owns(id)).length, w = WORLDS.find(x => x.id === k);
-    const open = !w || openWorlds().includes(w);
-    return `<button type="button" class="pf-tab${k === cur ? ' on' : ''}${open ? '' : ' shut'}" data-pfgroup="${k}" title="${esc(sub)}"><span class="pt-pic">${pic(k)}</span><b>${esc(k === 'laden' ? 'Laden' : l)}</b><small>${got} / ${items.length}</small><i style="--p:${items.length ? Math.round(got / items.length * 100) : 0}%"></i></button>`;
-  }).join('') + '</div>');
+  const type = UI.pfType || 'portrait', orig = UI.pfOrigin || 'all', miss = UI.pfMissing !== false;
+  box.dataset.pftype = type;
+  const egg = id => !EGG_IDS.includes(id) || owns(id);
+  const lists = {portrait: ALL_PORTRAITS.map(x => x[3]), frame: ALL_FRAMES.map(x => x[3]), bg: ALL_BGS.map(x => x[3]), title: Object.keys(COSMETICS.title).map(k => 'title:' + k)};
+  const cnt = ids => { const it = ids.filter(egg); return [it.filter(id => !id || owns(id)).length, it.length]; };
+  const tabs = [['portrait', 'Porträts'], ['frame', 'Rahmen'], ['bg', 'Hintergründe'], ['title', 'Titel']];
+  const tot = cnt(Object.values(lists).flat());
+  const groups = Object.values(lists).flat().map(cosmeticGroup);
+  const worlds = WORLDS.filter(w => groups.includes(w.id));
+  const chip = (k, l, on, extra) => `<button type="button" class="pf-chip${on ? ' on' : ''}" data-pforigin="${k}">${l}${extra || ''}</button>`;
+  const story = orig === 'story' || /^w\d/.test(orig);
+  patch($('#pf-filter'), `<div class="pf-tabs4">` + tabs.map(([k, l]) => { const [g, t] = cnt(lists[k]); return `<button type="button" class="pf-tab4${k === type ? ' on' : ''}" data-pftype="${k}">${l}<small>${g}/${t}</small></button>`; }).join('') +
+    `<span class="pf-total">Gesamt ${tot[0]} / ${tot[1]}</span></div>` +
+    `<div class="pf-bar"><i style="width:${tot[1] ? Math.round(tot[0] / tot[1] * 100) : 0}%"></i></div>` +
+    `<div class="pf-origins"><span class="pf-olbl">Herkunft</span>` + chip('all', 'Alle', orig === 'all') + chip('start', 'Start', orig === 'start') +
+    chip('story', 'Storymodus', story, ' <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>') + chip('laden', 'Laden', orig === 'laden') + chip('truhe', 'Truhen', orig === 'truhe') +
+    (groups.includes('special') ? chip('special', 'Besonderes', orig === 'special') : '') +
+    `<button type="button" class="pf-chip miss${miss ? ' on' : ''}" data-pfmissing aria-pressed="${miss}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Fehlende zeigen</button></div>` +
+    (story ? `<div class="pf-origins sub">` + chip('story', 'Alle Welten', orig === 'story') + worlds.map(w => { const [g, t] = cnt(Object.values(lists).flat().filter(id => cosmeticGroup(id) === w.id)); return chip(w.id, `${esc(wLabel(w))} <small>${g}/${t}</small>`, orig === w.id); }).join('') + '</div>' : ''));
+  // Herkunft als Schildchen an jedem Stück
+  const key = {}; ALL_PORTRAITS.forEach(x => key['p' + x[0]] = x[3]); ALL_FRAMES.forEach(x => key['f' + x[0]] = x[3]); ALL_BGS.forEach(x => key['b' + x[0]] = x[3]);
+  box.querySelectorAll('[data-portrait]').forEach(b => b.dataset.src = pfSrcLabel(key['p' + b.dataset.portrait]));
+  box.querySelectorAll('[data-frame]').forEach(b => b.dataset.src = pfSrcLabel(key['f' + b.dataset.frame]));
+  box.querySelectorAll('[data-bg]').forEach(b => b.dataset.src = pfSrcLabel(key['b' + b.dataset.bg]));
   let idb = box.querySelector('.pf-idbox'); if (!idb) { idb = document.createElement('div'); idb.className = 'panel pf-idbox'; $('#pf-hero').after(idb); }
   patch(idb, `<span><small>Spieler-ID</small><b>#${playerTag()}</b><em>Damit finden dich Freunde, sobald der Online-Modus da ist.</em></span><button type="button" class="pf-copy" data-copyid aria-label="Spieler-ID kopieren" title="Kopieren"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button>`);
   let right = box.querySelector('.pf-right'); if (!right) { right = document.createElement('div'); right.className = 'pf-right'; box.appendChild(right); }
@@ -178,6 +200,9 @@ function renderProfilePC() {
 }
 document.addEventListener('click', e => {
   const g = e.target.closest('[data-pfgroup]'); if (g) { UI.pfFilter = g.dataset.pfgroup; renderProfile(); return; }
+  const ty = e.target.closest('[data-pftype]'); if (ty) { UI.pfType = ty.dataset.pftype; renderProfile(); return; }
+  const or = e.target.closest('[data-pforigin]'); if (or) { UI.pfOrigin = or.dataset.pforigin; renderProfile(); return; }
+  if (e.target.closest('[data-pfmissing]')) { UI.pfMissing = UI.pfMissing === false; renderProfile(); return; }
   const c = e.target.closest('[data-copyid]'); if (c) { const t = '#' + playerTag(); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast(`Spieler-ID ${t} kopiert.`), () => toast(`Deine Spieler-ID: ${t}`)); }
 });
 // Wischen über Titel, Porträts und Rahmen blättert ebenfalls

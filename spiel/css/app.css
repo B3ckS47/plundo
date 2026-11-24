@@ -3109,3 +3109,30 @@ html.pcnav #scr-profile .pf-hero .pf-title{font-size:14px;font-style:italic;font
 html.pcnav #scr-profile .content .pf-hero{min-height:124px;padding:18px 18px 18px 26px;gap:22px}
 html.pcnav #scr-profile .pf-hero .pf-big{width:66px;height:66px}
 html.pcnav.pf-art #scr-profile .pf-hero .pf-big{width:62px;height:62px}
+/* Charakter am PC: vier Reiter nach Art, Herkunft als Filter */
+html.pcnav #scr-profile .pf-main .pf-sec{display:none}
+html.pcnav #scr-profile .content[data-pftype="portrait"] .pf-sec:has(#pf-portraits),html.pcnav #scr-profile .content[data-pftype="frame"] .pf-sec:has(#pf-frames),html.pcnav #scr-profile .content[data-pftype="bg"] .pf-sec:has(#pf-bgs),html.pcnav #scr-profile .content[data-pftype="title"] .pf-sec:has(#pf-titles){display:block}
+html.pcnav #scr-profile .pf-main .pf-sec>.lbl{display:none}
+html.pcnav #scr-profile .pf-pager{padding:14px 16px}
+.pf-tabs4{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pf-tab4{appearance:none;display:flex;align-items:baseline;gap:6px;padding:8px 16px;border-radius:12px;border:2px solid rgba(184,134,47,.45);background:rgba(255,250,235,.7);font:700 18px/1 var(--display);color:#5a2a14;cursor:pointer;transition:background .12s,border-color .12s}
+.pf-tab4:hover{border-color:#b8862f}
+.pf-tab4.on{border-color:#b8862f;background:linear-gradient(#ffe7a8,#f3c873);box-shadow:0 5px 10px -6px rgba(0,0,0,.5)}
+.pf-tab4 small{font:800 12px var(--body);color:#7a5a32}
+.pf-total{margin-left:auto;font:700 13px var(--body);color:var(--muted)}
+.pf-bar{position:relative;height:5px;margin:12px 0;border-radius:3px;background:rgba(110,76,44,.15);overflow:hidden}
+.pf-bar i{position:absolute;inset:0 auto 0 0;background:#4c9a3f;border-radius:3px}
+.pf-origins{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pf-origins.sub{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.pf-olbl{margin-right:4px;font:800 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:#a0742a}
+.pf-chip{appearance:none;display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;border:1.5px solid rgba(110,76,44,.3);background:rgba(255,255,255,.45);font:700 13px var(--body);color:var(--ink);cursor:pointer}
+.pf-chip:hover{border-color:#b8862f}
+.pf-chip.on{background:#5a3a1c;border-color:#5a3a1c;color:#fbefd6}
+.pf-chip small{font-weight:800;opacity:.7}
+.pf-chip svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pf-chip.miss{margin-left:auto}
+/* Herkunft unter jedem Stück */
+html.pcnav #scr-profile [data-src]::after{content:attr(data-src);display:block;font:700 10.5px var(--body);letter-spacing:.04em;color:#9a7a4a;text-transform:uppercase}
+html.pcnav #scr-profile .pf-fr[data-src]::after{display:none}
+html.pcnav #scr-profile .pf-ti.locked{display:inline-flex;align-items:center;gap:5px;opacity:.55;cursor:default;border-style:dashed}
+html.pcnav #scr-profile .pf-ti.locked svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2}
