@@ -2962,3 +2962,7 @@ html.pcnav #scr-settings .about .set-old{display:none!important}
 .set-foot{margin:0!important;font-size:13px!important;color:var(--muted)!important}
 .set-foot a{color:var(--red)}
 .set-img{flex:none;width:54px;height:54px;margin:-8px 0 -8px -4px;filter:drop-shadow(0 3px 3px rgba(60,30,10,.35))}
+/* Hildes Aufträge auf der Startseite: Zettel schon abgedunkelt statt per Filter (Chrome ließ mit Filterkette teils Text weg) */
+.hub-daily .note{filter:drop-shadow(0 5px 4px rgba(0,0,0,.5));border-image-source:url(../art/zettel-auftrag-dunkel.webp)}
+.hub-daily .note.done{filter:drop-shadow(0 5px 4px rgba(0,0,0,.5))}
+.hub-daily .notes{isolation:isolate;transform:translateZ(0)}

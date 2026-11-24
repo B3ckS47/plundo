@@ -752,6 +752,12 @@ function dailyState() {
   if (DAILY.day !== today) { DAILY.day = today; DAILY.list = rollMissions(today); DAILY.rer = false; DAILY.shop = rollShop(today); saveDaily(); }
   // Leeres Angebot (z. B. weil damals schon alles gekauft war), inzwischen gibt es aber wieder etwas: gleich neu bestücken
   else if (!DAILY.shop.length && SHOP_POOL.some(x => !owns(x.id))) { DAILY.shop = rollShop(today); saveDaily(); }
+  // Auftrag aus einer Welt, die dir nicht (mehr) gehört (etwa nach einer Erstattung): gegen einen passenden tauschen
+  DAILY.list.forEach((e, i) => {
+    const m = missionById(e.id); if (m && (e.p >= m.n || missionOk(m))) return;
+    const d = m ? m.d : i, pool = MISSIONS.filter(x => x.d === d && missionOk(x) && !DAILY.list.some(y => { const ym = missionById(y.id); return y.id === x.id || (ym && ym.k === x.k); }));
+    if (pool.length) { DAILY.list[i] = {id: pool[Math.floor(seeded('ersatz-' + today + i)() * pool.length)].id, p: 0}; saveDaily(); }
+  });
   // Tagesangebot: das vierte Stück ist reduziert
   if (DAILY.shop.length && (!DAILY.deal || !DAILY.shop.includes(DAILY.deal.id))) {
     const r = seeded('angebot-' + today + DAILY.shop.join());
