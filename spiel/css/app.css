@@ -3096,3 +3096,16 @@ html.pcnav .pf-idbox{display:flex;align-items:center;gap:12px;padding:12px 14px 
 .pf-idbox .pf-copy:hover{background:#fffaf0}
 .pf-idbox .pf-copy svg{width:18px;height:18px}
 html.pcnav #scr-profile .content .pf-hero.hasbg{background:linear-gradient(rgba(25,14,6,.12),rgba(25,14,6,.3)),var(--bg) var(--bgp,50% 50%)/cover no-repeat;border-color:#5a3d22}
+/* PC-Ausweis wie das Profil oben in der Leiste: kleineres Porträt, helles Namensschild, Hintergrund ohne Abdunklung */
+html.pcnav #scr-profile .content .pf-hero{gap:16px;padding:16px 18px 16px 20px;min-height:116px}
+html.pcnav #scr-profile .content .pf-hero.hasbg{background:var(--bg) var(--bgp,50% 50%)/cover no-repeat,#2a1a0e;border-color:#5e3f23}
+html.pcnav #scr-profile .pf-hero .pf-bigw{flex:0 0 auto;margin:0 6px}
+html.pcnav #scr-profile .pf-hero .pf-big{width:76px;height:76px;border-width:3px}
+html.pcnav.pf-art #scr-profile .pf-hero .pf-big{width:72px;height:72px}
+html.pcnav #scr-profile .pf-hero .pf-bigw::after{inset:-21.5%}
+html.pcnav #scr-profile .pf-hero .pf-who,html.pcnav #scr-profile .pf-hero.hasbg .pf-who{flex:1;min-width:0;align-items:flex-start;gap:1px;padding:8px 12px;border:0;border-radius:10px;background:rgba(255,248,230,.9);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 2px 8px rgba(0,0,0,.35);text-align:left}
+html.pcnav #scr-profile .pf-hero .pf-who b{font:700 26px/1.05 var(--display);color:#3b2a1c;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.pcnav #scr-profile .pf-hero .pf-title{font-size:14px;font-style:italic;font-weight:400;color:#6b5236}
+html.pcnav #scr-profile .content .pf-hero{min-height:124px;padding:18px 18px 18px 26px;gap:22px}
+html.pcnav #scr-profile .pf-hero .pf-big{width:66px;height:66px}
+html.pcnav.pf-art #scr-profile .pf-hero .pf-big{width:62px;height:62px}
