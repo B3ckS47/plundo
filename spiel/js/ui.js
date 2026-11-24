@@ -800,7 +800,7 @@ function renderTable() {
     paintHud(el.querySelector('.hud'), C);
     pcgArenaH();
   } else if (!R) {
-    if ($('#app').classList.contains('pcg')) patch(el.querySelector('.idle'), `<div class="gdoor${S.cur === 0 && S.winner == null ? ' mine' : ''}"><span class="back door"></span></div><div class="idle-txt">${S.winner != null ? 'Das Spiel ist vorbei.' : S.cur === 0 ? 'Tür noch geschlossen.' : esc(P(S.cur).name) + ' ist am Zug.'}</div>`); else
+    if ($('#app').classList.contains('pcg')) patch(el.querySelector('.idle'), `<div class="gdoor${S.cur === 0 && S.winner == null ? ' mine' : ''}"><span class="back door"></span><div class="idle-txt rtxt">${S.winner != null ? 'Das Spiel ist vorbei.' : S.cur === 0 ? 'Tür noch geschlossen.' : esc(P(S.cur).name) + ' ist am Zug.'}</div></div>`); else
     patch(el.querySelector('.idle'), `<div class="decks"><div class="deck"><div class="back door" role="img" aria-label="Türstapel"></div>Tür ${S.door.length} · Ablage ${S.doorDisc.length}</div><div class="deck"><div class="back treas" role="img" aria-label="Schatzstapel"></div>Schatz ${S.tr.length} · Ablage ${S.trDisc.length}</div></div><div class="idle-txt">${S.winner != null ? 'Das Spiel ist vorbei.' : S.cur === 0 ? 'Die Tür ist noch zu. Was wohl dahinter lauert?' : esc(P(S.cur).name) + ' ist am Zug.'}</div>`);
   }
 }
