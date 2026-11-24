@@ -1532,7 +1532,7 @@ async function runAway(p,m,i=0,n=1){
   const need=5-mod;
   const nebel=p.hand.find(c=>c.escape);
   if(p.human){
-    const parts=[]; if(hasRace(p,'elf')) parts.push('Elf +1'); p.eq.forEach(i=>{ if(i.run && usable(p,i)) parts.push(`${i.n} +${i.run}`); if(isFlut() && i.flutRun && usable(p,i)) parts.push(`${i.n} bei Flut +${i.flutRun}`); }); if(isFlut()) parts.push('Flut +1'); if(p.sand) parts.push('Sand in der Badehose −2'); if(deep) parts.push('Tiefsee −1'); if(m.c.run) parts.push(`${m.c.n} ${sign(m.c.run)}`);
+    const parts=[]; p.eq.forEach(i=>{ if(i.run && usable(p,i)) parts.push(`${i.n} +${i.run}`); if(isFlut() && i.flutRun && usable(p,i)) parts.push(`${i.n} bei Flut +${i.flutRun}`); }); if(isFlut()) parts.push('Flut +1'); if(p.sand) parts.push('Sand in der Badehose −2'); if(deep) parts.push('Tiefsee −1'); if(m.c.run) parts.push(`${m.c.n} ${sign(m.c.run)}`);
     const v=await ask(()=>({title:`Weglaufen vor ${m.c.n}${n>1?` (Monster ${i+1} von ${n})`:''}`, text: need<=1 ? 'Mit deinen Boni klappt die Flucht auf jeden Fall.' : need>6 ? 'Mit diesen Mali schaffst du es nur mit Hilfe von Karten.' : `Du brauchst eine ${need}${need<6?' oder mehr':''}. Grundwert 5${parts.length?', '+parts.join(', '):''}.`,
       hint:[`Misslingt es: ${m.c.badTxt}`, ...(n>1?['Bei mehreren Monstern läufst du vor jedem einzeln weg.']:[]), ...(nebel?[left>1?`Mit ${nebel.n} entkommst du sicher, und zwar vor allen ${left} übrigen Monstern.`:`Mit ${nebel.n} entkommst du sicher.`]:[])],
       opts:[{l:'Würfeln',v:'roll',kind:'primary'}, ...(nebel?[{l:`${nebel.n} einsetzen`,v:'nebel'}]:[])]}), 'run', {m, left});

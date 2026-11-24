@@ -1922,7 +1922,13 @@ function powerTip(p){
 }
 function runTip(p){
   const rows=[];
-  p.eq.forEach(i=>{ if(!i.run) return; rows.push(usable(p,i) ? {l:i.n,v:'+'+i.run} : {l:`${i.n} (inaktiv)`,v:'0',off:true}); });
+  const fl=isFlut();
+  p.eq.forEach(i=>{
+    if(i.run) rows.push(usable(p,i) ? {l:i.n,v:sign(i.run)} : {l:`${i.n} (inaktiv)`,v:'0',off:true});
+    if(i.flutRun) rows.push(!usable(p,i) ? {l:`${i.n} (inaktiv)`,v:'0',off:true} : fl ? {l:`${i.n} bei Flut`,v:sign(i.flutRun)} : {l:`${i.n} (nur bei Flut)`,v:'0',off:true});
+  });
+  if(fl) rows.push({l:'Flut',v:'+1'});
+  if(p.sand) rows.push({l:'Sand in der Badehose',v:'−2'});
   const b=runBonus(p), need=5-b, pc=Math.round(Math.max(0,Math.min(6,7-need))/6*100);
   const n=[];
   if(hasCls(p,'priester')) n.push('Exorzist: Untote verfolgen dich nie.');

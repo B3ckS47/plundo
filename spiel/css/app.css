@@ -2966,3 +2966,9 @@ html.pcnav #scr-settings .about .set-old{display:none!important}
 .hub-daily .note{filter:drop-shadow(0 5px 4px rgba(0,0,0,.5));border-image-source:url(../art/zettel-auftrag-dunkel.webp)}
 .hub-daily .note.done{filter:drop-shadow(0 5px 4px rgba(0,0,0,.5))}
 .hub-daily .notes{isolation:isolate;transform:translateZ(0)}
+/* Profile am PC: breiter, damit die vier Werte und Erklärungen Luft haben */
+html.pcg-on #sheet[data-sid="opp"],html.pcg-on #sheet[data-sid="equip"]{width:min(1120px,calc(100vw - 48px))}
+.hb2{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:6px 26px}
+.hb2 .hs{padding:10px 6px 9px}
+.hb2 .hs span{font-size:10.5px;letter-spacing:.04em}
+.hb2 .hs small{font-size:11.5px}
