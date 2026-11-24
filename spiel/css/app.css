@@ -2983,3 +2983,6 @@ html.pcg-on #sheet[data-sid="opp"],html.pcg-on #sheet[data-sid="equip"]{width:mi
 #cursetip .mc{zoom:.7;flex:none}
 #cursetip .ct-row span{display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:1.35}
 #cursetip .ct-row b{font:700 17px var(--display);color:var(--k-curse)}
+/* Laden und Shop: wieder ohne Flächenbilder (Krämerladen goldenes Pergament, Shop edles Lila) */
+.kl-panel{background:radial-gradient(ellipse at 30% 0%,rgba(255,236,180,.9),transparent 60%),linear-gradient(#f8e7bd,#ecd093);border:3px solid #b8862f;border-radius:20px;padding:22px 24px 24px;box-shadow:inset 0 0 0 2px rgba(255,248,220,.6),0 18px 34px -14px #000;color:#3b2a1c}
+.pr-panel{background:radial-gradient(ellipse at 85% -10%,rgba(214,160,255,.35),transparent 55%),radial-gradient(ellipse at 0% 110%,rgba(170,30,60,.35),transparent 50%),linear-gradient(160deg,#3a1458,#24093a 55%,#1a062a);border:2px solid #d6a84a;border-radius:20px;padding:22px 24px 20px;box-shadow:inset 0 0 0 1px rgba(255,220,150,.35),inset 0 0 40px rgba(0,0,0,.35),0 18px 34px -14px #000}
