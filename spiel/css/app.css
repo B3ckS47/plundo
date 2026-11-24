@@ -2972,3 +2972,14 @@ html.pcg-on #sheet[data-sid="opp"],html.pcg-on #sheet[data-sid="equip"]{width:mi
 .hb2 .hs{padding:10px 6px 9px}
 .hb2 .hs span{font-size:10.5px;letter-spacing:.04em}
 .hb2 .hs small{font-size:11.5px}
+/* PC: Fluch, der am Spieler hängt */
+.gs-curse{position:absolute;top:8px;right:10px;z-index:2;padding:3px 9px;border-radius:999px;background:var(--k-curse);border:1.5px solid rgba(255,220,255,.55);color:#fff;font:800 11px var(--body);letter-spacing:.06em;text-transform:uppercase;box-shadow:0 3px 8px -2px rgba(0,0,0,.6),0 0 10px rgba(160,80,220,.55);cursor:help;animation:gsCurse 2.4s ease-in-out infinite}
+@keyframes gsCurse{50%{box-shadow:0 3px 8px -2px rgba(0,0,0,.6),0 0 16px rgba(190,110,255,.85)}}
+.reduce .gs-curse{animation:none}
+#cursetip{position:fixed;z-index:200;max-width:360px;padding:10px 12px;border-radius:14px;border:2px solid var(--k-curse);background:linear-gradient(#fbf3df,#efdfbd);box-shadow:0 16px 30px -10px #000;pointer-events:none;color:var(--ink)}
+#cursetip>small{display:block;margin-bottom:6px;font:800 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--k-curse)}
+#cursetip .ct-row{display:flex;align-items:center;gap:12px}
+#cursetip .ct-row+.ct-row{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+#cursetip .mc{zoom:.7;flex:none}
+#cursetip .ct-row span{display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:1.35}
+#cursetip .ct-row b{font:700 17px var(--display);color:var(--k-curse)}

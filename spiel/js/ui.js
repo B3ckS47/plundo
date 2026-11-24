@@ -2638,12 +2638,37 @@ function seatHTML(p) {
   const style = `--fc:${frameOf(p)[2]}${bgu ? `;--bg:url('${bgu}');--bgp:${(bx && bx[2] && bx[4]) || '50% 50%'}` : ''}`;
   return `<button type="button" class="gseat${turn ? ' turn' : ''}${p.dead ? ' dead' : ''}${p.human ? ' me' : ''}" ${p.human ? 'data-go="equip"' : `data-opp="${p.id}"`} style="${style}" aria-label="${p.human ? 'Du' : esc(p.name)}, Stufe ${p.lvl}">` +
     `<span class="gs-pt">${bigPortrait(p)}<i>${p.lvl}</i></span>` +
+    (lastingCurses(p).length ? `<span class="gs-curse" data-cursetip="${p.id}">Verflucht</span>` : '') +
     `<span class="gs-t"><span class="gs-n"><b>${p.human ? 'Du' : esc(p.name)}</b>${tag}</span>` +
     `<span class="gs-st"><span title="Kampfstärke"><img src="${ICON.kampf}" alt="">${power(p)}</span><span title="Weglaufen"><img src="${ICON.run}" alt="">${sign(runBonus(p))}</span>` +
     `<span title="Handkarten"${p.human && p.hand.length > handLimit(p) ? ' class="warn"' : ''}><img src="${ICON.hand}" alt="">${p.hand.length}${p.human ? '/' + handLimit(p) : ''}</span><span title="Goldbeutel: ${fmt(p.gold || 0)} Gold"${p.gold ? ' class="gold"' : ''}><img src="${ICON.gold}" alt="">${fmt(p.gold || 0)}</span></span>` +
     `<span class="gs-dots" aria-hidden="true">${Array.from({length: WINLVL()}, (_, i) => `<em class="${i < p.lvl ? 'on' : ''}"></em>`).join('')}</span>` +
     `</span></button>`;
 }
+// Flüche, die gerade an einem Spieler hängen (bleiben über den Zug hinaus)
+function lastingCurses(p) {
+  const nm = k => (p.curses && p.curses[k]) || {chill: 'Kellerkälte', spore: 'Sporenwolke', sun: 'Sonnenbrand', sand: 'Sand in der Badehose'}[k];
+  const out = [];
+  if (p.chill) out.push({n: nm('chill'), t: `Im nächsten Kampf −${p.chill}.`});
+  if (p.spore) out.push({n: nm('spore'), t: `−${p.spore} in jedem Kampf, auch als Helfer, bis ein Kampf gewonnen ist.`});
+  if (p.sun) out.push({n: nm('sun'), t: '−1 in jedem Kampf und niemand hilft, bis ein Kampf gewonnen ist. Sonnencreme hilft sofort.'});
+  if (p.sand) out.push({n: nm('sand'), t: 'Weglaufen −2, bis zum nächsten Stufenaufstieg.'});
+  return out;
+}
+function curseTipHTML(p) {
+  return lastingCurses(p).map(c => { const tp = POOL.find(x => x.tpl.n === c.n); return `<div class="ct-row">${tp ? cardMini(tp.tpl, {inert: true}) : ''}<span><b>${esc(c.n)}</b>${esc(c.t)}</span></div>`; }).join('');
+}
+document.addEventListener('mouseover', e => {
+  const b = e.target.closest && e.target.closest('[data-cursetip]'); let tip = $('#cursetip');
+  if (!b) { if (tip) tip.hidden = true; return; }
+  const p = S && S.players.find(x => String(x.id) === b.dataset.cursetip); if (!p) return;
+  if (!tip) { tip = document.createElement('div'); tip.id = 'cursetip'; tip.setAttribute('role', 'tooltip'); document.body.appendChild(tip); }
+  tip.innerHTML = `<small>${p.human ? 'Dich verfolgt' : esc(p.name) + ' verfolgt'}</small>${curseTipHTML(p)}`; tip.hidden = false;
+  const r = b.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = Math.min(window.innerWidth - w - 10, Math.max(10, r.right - w)), y = r.bottom + 8;
+  if (y + h > window.innerHeight - 10) y = r.top - h - 8;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+});
 function renderPCG() {
   const p = me(), mine = S.cur === 0 && S.winner == null;
   patch($('#wopps'), S.players.filter(x => !x.human).map(seatHTML).join(''));
