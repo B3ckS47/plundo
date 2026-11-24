@@ -3221,3 +3221,5 @@ html.pcnav #t-hub .su-mid .panel:has(.su-decks)>.lbl{margin:0 0 8px}
 .pd-wtiles{scroll-snap-type:x mandatory;scroll-behavior:smooth;touch-action:pan-x}
 .pd-wtiles.less{-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%);mask-image:linear-gradient(90deg,transparent,#000 12%)}
 .pd-wtiles.more.less{-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+/* PC-Spiel: Hinweis unter der Tür immer einzeilig, damit die Karte in der Mitte nicht springt */
+#app.pcg .idle-txt{max-width:none;white-space:nowrap}
