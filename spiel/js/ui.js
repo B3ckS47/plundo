@@ -119,12 +119,13 @@ function applyProfile() {
   const de = document.documentElement, k = myFrameKey(), art = frameArt(k), u = x => `url("${new URL(x, document.baseURI).href}")`;
   de.style.setProperty('--pf', myFrame()); de.style.setProperty('--pfimg', art ? u(art) : 'none'); de.style.setProperty('--pfimgk', art ? u(frameArt(k, true)) : 'none'); de.classList.toggle('pf-art', !!art);
   if (S && CUR === 'game') { W.renderedOnce = true; render(); }
+  else if (typeof renderWnav === 'function') renderWnav();   // Leiste oben: Porträt, Name, Titel und Hintergrund gleich mit
 }
 const PROFILE_NAME_RE = /^[\p{L}\p{N}][\p{L}\p{N} ._-]{1,15}$/u;
 function renderProfile() {
   const hb = $('#pf-hero'), bx = myBg(); hb.classList.toggle('hasbg', !!bx[2]); hb.style.setProperty('--bg', bx[2] ? `url('${bgSrc(bx)}')` : ''); hb.style.setProperty('--bgp', bx[4] || '');
   patch(hb, `<span class="pf-bigw"><img class="pf-big" src="${myPortrait()}" alt=""></span><div class="pf-who"><b class="fitname">${esc(PROFILE.name || 'Namenlos')}</b>${myTitle() ? `<em class="pf-title">${esc(myTitle())}</em>` : ''}` +
-    `</div>` + (mq().pc.matches ? `<span class="pf-id"><small>Spieler-ID</small><b>#${playerTag()}</b><button type="button" class="pf-copy" data-copyid aria-label="Spieler-ID kopieren" title="Kopieren"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button></span>` : ''));
+    `</div>`);
   fitNames(hb);
   // Unter dem Kopf: links die längste Serie, rechts die Spielerstufe (kommt mit dem Online-Modus)
   const days = n => `${n} ${n === 1 ? 'Tag' : 'Tage'}`;
@@ -158,6 +159,8 @@ function renderProfilePC() {
     const open = !w || openWorlds().includes(w);
     return `<button type="button" class="pf-tab${k === cur ? ' on' : ''}${open ? '' : ' shut'}" data-pfgroup="${k}" title="${esc(sub)}"><span class="pt-pic">${pic(k)}</span><b>${esc(k === 'laden' ? 'Laden' : l)}</b><small>${got} / ${items.length}</small><i style="--p:${items.length ? Math.round(got / items.length * 100) : 0}%"></i></button>`;
   }).join('') + '</div>');
+  let idb = box.querySelector('.pf-idbox'); if (!idb) { idb = document.createElement('div'); idb.className = 'panel pf-idbox'; $('#pf-hero').after(idb); }
+  patch(idb, `<span><small>Spieler-ID</small><b>#${playerTag()}</b><em>Damit finden dich Freunde, sobald der Online-Modus da ist.</em></span><button type="button" class="pf-copy" data-copyid aria-label="Spieler-ID kopieren" title="Kopieren"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button>`);
   let right = box.querySelector('.pf-right'); if (!right) { right = document.createElement('div'); right.className = 'pf-right'; box.appendChild(right); }
   const st = PROFILE.stats || {}, n = k => fmt(st[k] || 0), days = v => `${v} ${v === 1 ? 'Tag' : 'Tage'}`;
   const cell = (ic, v, l, art) => `<div class="pfs-c"><img${art ? ' class="art"' : ''} src="${ic}" alt=""><b>${v}</b><span>${l}</span></div>`;
@@ -3134,6 +3137,7 @@ function pcEdgesNow() {
 function pcEdges() {
   cancelAnimationFrame(pcEdges.r);
   pcEdges.r = requestAnimationFrame(() => requestAnimationFrame(pcEdgesNow));
+  clearTimeout(pcEdges.t); pcEdges.t = setTimeout(pcEdgesNow, 350);   // nach dem Nachladen von Bildern und Schrift noch einmal messen
   if (!pcEdges.ro && window.ResizeObserver) { const n = $('#wnav'); if (n) { pcEdges.ro = new ResizeObserver(() => { if (document.documentElement.classList.contains('pcnav')) pcEdgesNow(); }); pcEdges.ro.observe(n); } }
 }
 window.addEventListener('resize', () => { if (document.documentElement.classList.contains('pcnav')) pcEdges(); });
