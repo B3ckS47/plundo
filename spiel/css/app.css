@@ -3169,3 +3169,50 @@ html.pcg-on .stepbtn{left:calc((100% - 380px) / 2 + 20px);bottom:auto;top:calc(v
 .stepbtn{display:flex!important;flex-direction:row!important;align-items:center;height:auto!important}
 html.pcg-on #table{position:relative}
 html.pcg-on #table .stepbtn{position:absolute;left:50%;top:auto;bottom:22%;transform:translateX(-50%)}
+/* Handy-Draft: Karten behalten ihr Seitenverhältnis, statt bei schmalen Geräten in die Länge gezogen zu werden */
+#app:not(.lay-pc):not(.lay-tab) .lootar.draft .loot-cards .mc{width:min(104px,calc((100vw - 34px) / 4 + 6px));height:auto;aspect-ratio:104/132}
+#app:not(.lay-pc):not(.lay-tab) .lootar.draft .loot-cards[data-n="4"] .dcard+.dcard{margin-left:-8px}
+/* PC-Aufbau: ein Deck zum Durchblättern, darunter fünf Mischungen */
+html.pcnav #t-hub .s-tisch{display:none}
+.sd-one{display:flex;align-items:center;gap:8px}
+.sd-arr{appearance:none;flex:none;display:grid;place-items:center;width:34px;height:34px;padding:0;border-radius:50%;border:2px solid #b8862f;background:rgba(255,250,235,.85);color:#7a4a12;cursor:pointer}
+.sd-arr:hover:not(:disabled){background:#fffaf0}
+.sd-arr:disabled{opacity:.35;cursor:default}
+.sd-arr svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.sd-card{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:8px 12px 8px 8px;border-radius:12px;border:2px solid #b8862f;background:linear-gradient(#ffe7a8,#f3c873);box-shadow:0 5px 12px -7px rgba(0,0,0,.55)}
+.sd-card img{flex:none;width:58px;height:58px;border-radius:9px;object-fit:cover;border:2px solid rgba(90,42,20,.35)}
+.sd-card span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sd-card b{font:700 19px/1.1 var(--display);color:#5a2a14}
+.sd-card small{font-size:12px;line-height:1.3;color:#6b4a26}
+.sd-dots{display:flex;gap:4px;margin-top:3px}
+.sd-dots em{width:6px;height:6px;border-radius:50%;background:rgba(90,42,20,.25)}
+.sd-dots em.on{background:#9e2a22}
+.sd-vars5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-top:8px}
+.sd-var{appearance:none;position:relative;min-height:34px;padding:4px 3px;border-radius:9px;border:1.5px solid rgba(110,76,44,.35);background:rgba(255,255,255,.5);font:700 12px/1.1 var(--body);color:var(--ink);cursor:pointer}
+.sd-var:hover{border-color:#b8862f}
+.sd-var.on{background:#5a3a1c;border-color:#5a3a1c;color:#fbefd6}
+.sd-var.off{opacity:.45;border-style:dashed;cursor:help}
+.sd-var[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);z-index:20;width:200px;padding:7px 10px;border-radius:10px;background:#2a1a0e;color:#fbefd6;font:600 12px/1.35 var(--body);text-align:left;box-shadow:0 8px 18px -6px #000;pointer-events:none}
+.sd-vars5 .sd-var:last-child[data-tip]:hover::after{left:auto;right:0;transform:none}
+.sd-vars5 .sd-var:first-child[data-tip]:hover::after{left:0;transform:none}
+.sd-tiles,.sd-vars,.sd-info{display:none}
+/* Türrücken auf dem Aufbau-Tisch passend zur Optik */
+.pd-bot.tb-keller .su-deck .back.door,.st-prev.tb-keller .back.door{background-image:url(../art/ruecken-tuer-keller.webp)}
+.pd-bot.tb-wald .su-deck .back.door,.st-prev.tb-wald .back.door{background-image:url(../art/ruecken-tuer-wald.webp)}
+.pd-bot.tb-strand .su-deck .back.door,.st-prev.tb-strand .back.door{background-image:url(../art/ruecken-tuer-strand.webp)}
+.pd-bot.tb-schiff .su-deck .back.door,.st-prev.tb-schiff .back.door{background-image:url(../art/ruecken-tuer-schiff.webp)}
+/* Handy-Aufbau: Spieltisch */
+.st-pick{display:flex;align-items:center;gap:10px}
+.st-arr{appearance:none;flex:none;display:grid;place-items:center;width:38px;height:38px;padding:0;border-radius:50%;border:2px solid var(--edge);background:var(--card-hi,#fff8e8);color:var(--ink)}
+.st-arr:disabled{opacity:.35}
+.st-arr svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.st-prev{position:relative;flex:1;height:86px;border-radius:12px;border:2px solid #5e3f23;background:center/cover no-repeat #3a2414;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;box-shadow:inset 0 0 22px rgba(0,0,0,.45)}
+.st-prev .back.door{position:absolute;left:50%;top:10px;width:34px;height:48px;transform:translateX(-50%) rotate(-4deg);border-radius:5px;box-shadow:0 4px 8px -2px rgba(0,0,0,.6)}
+.st-prev b{position:relative;padding:2px 12px;border-radius:999px;background:rgba(255,248,230,.92);font:700 15px var(--display);color:#3b2a1c}
+html.pcnav #t-hub .su-mid .panel:has(.su-decks){display:block}
+html.pcnav #t-hub .su-mid .panel:has(.su-decks)>.lbl{margin:0 0 8px}
+.sd-var.off{opacity:1;color:#a48c6c;background:rgba(255,255,255,.25)}
+.sd-card{min-height:76px}
+.sd-card small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sd-var{font-size:12.5px;white-space:nowrap}
+.sd-var[data-tip]:hover::after{white-space:normal;width:220px}

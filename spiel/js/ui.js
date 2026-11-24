@@ -491,7 +491,7 @@ function playNow() {
   freePlay();
 }
 // Freies Spiel: offene Partie weiterspielen oder eine neue einrichten
-function setupPrep() { renderFoes(); renderControls(); const sd = $('#setup-deck'); if (sd) { const st = deckStats(DECK.counts); sd.innerHTML = `${esc(deckLabel())} <small>${st.door + st.tr} Karten${st.ok ? '' : ' · nicht spielbereit'}</small>`; } }
+function setupPrep() { renderFoes(); renderControls(); renderSetupTable(); const sd = $('#setup-deck'); if (sd) { const st = deckStats(DECK.counts); sd.innerHTML = `${esc(deckLabel())} <small>${st.door + st.tr} Karten${st.ok ? '' : ' · nicht spielbereit'}</small>`; } }
 async function freePlay() {
   const fg = freeGame();
   const toSetup = () => HUBST_ON() ? openHubBots() : show('setup');
@@ -3026,7 +3026,7 @@ let SETUP_PANELS = null;
 function hubBotsHTML() {
   const list = SET.foes === 'stammtisch' ? ['Berta', 'Kalle', 'Uschi'].map(n => ({name: n, face: ICON.portrait[n], style: STYLES[n]})) : (ROSTER || []);
   const pos = SET.bots === 2 ? ['l2', 'r2'] : ['l', 't', 'r'];
-  return `<main class="pp-modes pd-st pd-bot${HUBBOT === 'open' ? ' unroll' : ''}" style="--tbl:url(${new URL((TABLES.find(t => t[0] === freeTable()) || TABLES[0])[2], document.baseURI).href})">` +
+  return `<main class="pp-modes pd-st pd-bot tb-${freeTable()}${HUBBOT === 'open' ? ' unroll' : ''}" style="--tbl:url(${new URL((TABLES.find(t => t[0] === freeTable()) || TABLES[0])[2], document.baseURI).href})">` +
       `<section class="pd-stinfo su-mid"></section>` +
       `<section class="pd-stmap su-table"><span class="pd-rod" aria-hidden="true"></span>` +
         `<div class="su-foes"></div><div class="su-deck" aria-hidden="true"><span class="back door"></span><span class="back treas"></span></div>` +
@@ -3051,7 +3051,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-tbl]'); if (!b || !HUBBOT) return;
   const list = TABLES.filter(t => moodOk(t[0])), i = Math.max(0, list.findIndex(t => t[0] === freeTable()));
   SET.table = list[(i + +b.dataset.tbl + list.length) % list.length][0]; saveSettings(); Snd.sfx('deal'); buzz(6);
-  const m = $('#t-hub .pd-bot'); if (m) { m.style.setProperty('--tbl', `url(${new URL((TABLES.find(t => t[0] === SET.table) || TABLES[0])[2], document.baseURI).href})`); patch($('#t-hub .su-tables'), tablePickHTML()); }
+  suTableSync();
 });
 function hubBotsMount() {
   const slot = $('#t-hub .su-mid'); if (!slot) return;
@@ -3063,16 +3063,44 @@ function hubBotsMount() {
   renderSuDecks();
 }
 // PC: Deck und Mischung direkt im Aufbau wählen, ohne Umweg über „Karten und Deck“
+// Handy-Aufbau: Spieltisch (Optik) wählen
+function renderSetupTable() {
+  const box = $('#setup-table'); if (!box) return;
+  const cur = freeTable(), list = TABLES.filter(t => moodOk(t[0])), i = Math.max(0, list.findIndex(t => t[0] === cur)), t = list[i];
+  patch(box, `<button type="button" class="st-arr" data-sttbl="-1"${list.length > 1 ? '' : ' disabled'} aria-label="Voriger Tisch"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>` +
+    `<div class="st-prev tb-${t[0]}" style="background-image:url('${new URL(t[2], document.baseURI).href}')"><span class="back door"></span><b>${esc(t[1])}</b></div>` +
+    `<button type="button" class="st-arr" data-sttbl="1"${list.length > 1 ? '' : ' disabled'} aria-label="Nächster Tisch"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>`);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-sttbl]'); if (!b) return;
+  const list = TABLES.filter(t => moodOk(t[0])), i = Math.max(0, list.findIndex(t => t[0] === freeTable()));
+  SET.table = list[(i + +b.dataset.sttbl + list.length) % list.length][0]; saveSettings(); Snd.sfx('deal'); buzz(6); renderSetupTable();
+});
 function renderSuDecks() {
   const box = $('#t-hub .su-decks'); if (!box) return;
-  const st = deckStats(DECK.counts);
-  patch(box, `<div class="sd-tiles">` + DECKS.map(x => { const un = x.unlocked(); return `<button type="button" class="sd-tile${un ? '' : ' locked'}" data-deck="${x.id}" aria-pressed="${DECK.deck === x.id}" title="${esc(un ? x.desc : x.lockTxt || '')}"><span><img src="${ART[x.icon]}" alt="" draggable="false">${un ? '' : `<i>${LOCK_SVG}</i>`}</span><b>${esc(x.name.replace('-Deck', '').replace('deck', ''))}</b></button>`; }).join('') + `</div>` +
-    `<div class="sd-vars">` + VARIANTS.map(([k, l, d]) => `<button type="button" class="pf-chip${DECK.variant === k ? ' on' : ''}" data-variant="${k}" title="${esc(d)}">${l}</button>`).join('') +
-    (DECK.custom[DECK.deck] ? `<button type="button" class="pf-chip${DECK.variant === 'eigenes' ? ' on' : ''}" data-variant="eigenes">Eigenes</button>` : '') + `</div>` +
-    `<p class="sd-info"><span class="${st.ok ? 'ok' : 'bad'}">${st.ok ? 'Spielbereit' : 'Nicht spielbereit'}</span> · ${st.door + st.tr} Karten · ${esc((VARIANTS.find(v => v[0] === DECK.variant) || ['', '', 'Deine eigene Zusammenstellung.'])[2])} <button type="button" class="sd-edit" data-go="cards">Karten ansehen und eigenes Deck bauen ›</button></p>`);
-  setupPrep();
-  const m = $('#t-hub .pd-bot'); if (m) { m.style.setProperty('--tbl', `url(${new URL((TABLES.find(t => t[0] === freeTable()) || TABLES[0])[2], document.baseURI).href})`); const tp = $('#t-hub .su-tables'); if (tp) patch(tp, tablePickHTML()); }
+  const list = DECKS.filter(x => x.unlocked()), i = Math.max(0, list.findIndex(x => x.id === DECK.deck)), d = list[i] || DECKS[0], many = list.length > 1;
+  const arr = (k, lbl) => `<button type="button" class="sd-arr" data-sddeck="${k}"${many ? '' : ' disabled'} aria-label="${lbl}"><svg viewBox="0 0 24 24"><path d="${k < 0 ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'}"/></svg></button>`;
+  const own = !!DECK.custom[DECK.deck];
+  const vt = (k, l, tip, off) => `<button type="button" class="sd-var${DECK.variant === k ? ' on' : ''}${off ? ' off' : ''}" ${off ? 'data-sdown aria-disabled="true"' : `data-variant="${k}"`} data-tip="${esc(tip)}">${l}</button>`;
+  patch(box, `<div class="sd-one">${arr(-1, 'Voriges Deck')}<div class="sd-card"><img src="${ART[d.icon]}" alt="" draggable="false"><span><b>${esc(d.name)}</b><small>${esc(d.desc.split(':')[0].replace(/\. .*/, '.'))}</small>` +
+    (many ? `<i class="sd-dots">${list.map(x => `<em class="${x === d ? 'on' : ''}"></em>`).join('')}</i>` : '') + `</span></div>${arr(1, 'Nächstes Deck')}</div>` +
+    `<div class="sd-vars5">` + VARIANTS.map(([k, l, tip]) => vt(k, l, tip)).join('') +
+    vt('eigenes', 'Eigenes', own ? 'Deine eigene Zusammenstellung für dieses Deck.' : 'Unter „Karten und Deck“ kannst du dir ein eigenes Deck bauen. Dann wählst du es hier aus.', !own) + `</div>`);
+  setupPrep(); suTableSync();
 }
+// Tisch im PC-Aufbau: Bild, Name und Türrücken passend zur Optik
+function suTableSync() {
+  const m = $('#t-hub .pd-bot'); if (!m) return;
+  const t = freeTable();
+  m.style.setProperty('--tbl', `url(${new URL((TABLES.find(x => x[0] === t) || TABLES[0])[2], document.baseURI).href})`);
+  m.className = m.className.replace(/\btb-\w+/g, '').trim() + ' tb-' + t;
+  const tp = $('#t-hub .su-tables'); if (tp) patch(tp, tablePickHTML());
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-sddeck]');
+  if (a) { const list = DECKS.filter(x => x.unlocked()), i = Math.max(0, list.findIndex(x => x.id === DECK.deck)); selectDeck(list[(i + +a.dataset.sddeck + list.length) % list.length].id); Snd.sfx('deal'); return; }
+  if (e.target.closest('[data-sdown]')) toast('Unter „Karten und Deck“ kannst du dir ein eigenes Deck bauen.');
+});
 function hubBotsOff() {
   $$('.su-decks').forEach(x => x.remove());
   if (SETUP_PANELS) $('#scr-setup .content').append(...SETUP_PANELS);
