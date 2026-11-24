@@ -3232,14 +3232,14 @@ html.pcg-on #table .stepbtn small{font-size:10px;max-width:96px;overflow:hidden;
 html.pcg-on #table .stepbtn{right:14px;bottom:30px;max-width:124px;padding:8px 12px 8px 14px}
 html.pcg-on #table .stepbtn small{max-width:78px}
 html.pcg-on #table .stepbtn svg{width:16px;height:16px}
-/* Manuell am PC: Weiter-Knopf an der Stelle von „Verkaufen“ */
-#geq .ge-sell.stepped{display:none}
-#geq .stepbtn{position:static;left:auto;right:auto;top:auto;bottom:auto;transform:none;flex:none;align-self:stretch;flex-direction:column!important;justify-content:center;gap:4px;min-width:0;width:auto!important;max-width:none;padding:6px 10px;border-radius:12px;animation:none}
+/* Manuell am PC: Weiter-Knopf unten rechts im freien Feld neben der Ausrüstung. Der Platz ist immer frei gehalten,
+   damit die Ausrüstung nicht springt; bei schmalen Fenstern werden die Ausrüstungsfelder dafür etwas schmaler. */
+#app.pcg .geq{container-type:inline-size;padding-right:104px;padding-left:16px}
+#app.pcg .geq .et{width:clamp(48px,calc((100cqw - 344px) / 8),64px)}
+#geq .stepbtn{position:absolute;left:auto;top:auto;right:16px;bottom:12px;transform:none;display:flex!important;flex-direction:column!important;align-items:center;justify-content:center;gap:4px;width:72px!important;height:88px!important;min-width:0;max-width:none;min-height:0;margin:0;padding:6px 4px;border-radius:12px;box-sizing:border-box;pointer-events:auto;animation:stepInR .25s ease-out}
 #geq .stepbtn span{align-items:center;font-size:17px;text-align:center}
-#geq .stepbtn small{font-size:9.5px;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#geq .stepbtn small{font-size:9.5px;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #geq .stepbtn svg{display:none}
-#geq .stepbtn{width:var(--packw,72px)!important;height:var(--packh,88px)!important;min-height:0;margin-left:8px;padding:6px 4px}
-#geq .stepbtn small{max-width:64px}
-#geq .stepbtn{width:72px!important;height:88px!important;max-height:88px;align-self:auto;box-sizing:border-box}
 .endov.ontable{place-items:center;align-content:center}
 .endov.story.ontable{justify-content:center}
+#app.pcg .geq{position:relative}

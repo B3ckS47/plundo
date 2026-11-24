@@ -2730,11 +2730,11 @@ function seatHTML(p) {
 // Tempo „Manuell“: Knopf zum Weiterklicken, solange ein Bot auf dich wartet (auch Leertaste oder Enter am PC)
 function showStep() {
   let b = $('#stepbtn');
-  if (!UI.step) { if (b) b.hidden = true; $$('.ge-sell.stepped').forEach(x => x.classList.remove('stepped')); return; }
-  // PC: an die Stelle von „Verkaufen“ (ist bei fremden Zügen ohnehin gesperrt), also unten rechts bei den eigenen Aktionen
-  const sell = PCGX() && $('#geq .ge-sell'), host = sell ? sell.parentNode : $('#scr-game');
+  if (!UI.step) { if (b) b.hidden = true; return; }
+  // PC: unten rechts im Spielfeld, im freien Feld rechts neben Rucksack und Verkaufen
+  const host = (PCGX() && $('#geq')) || $('#scr-game');
   if (!b) { b = document.createElement('button'); b.type = 'button'; b.id = 'stepbtn'; b.className = 'btn primary stepbtn'; }
-  if (sell) { if (b.previousElementSibling !== sell) sell.after(b); sell.classList.add('stepped'); } else if (host && b.parentNode !== host) host.appendChild(b);
+  if (b.parentNode !== host) host.appendChild(b);
   const p = S && S.players[S.cur];
   b.innerHTML = `<span><small>${p ? esc(p.name) + ' ist dran' : 'Bots'}</small>Weiter</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>`;
   b.hidden = false;
