@@ -3380,3 +3380,21 @@ html.wide-any .sheet.bare{width:fit-content}
 #invbar .btn{width:auto;min-height:38px;padding:4px 16px}
 #invbar .su-face{position:relative;animation:none}
 @keyframes invIn{from{transform:translateY(-20px);opacity:0}to{transform:none;opacity:1}}
+/* Online: Einstellungen der Runde */
+.on-cfg .on-row{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;align-items:center;margin:0 0 8px}
+.on-cfg .lbl{margin:0;font:800 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.on-cfg .on-seg{margin:0}
+.on-cfg .on-seg button{min-height:36px;padding:4px 6px;font-size:14px;line-height:1.1}
+.on-cfg .on-seg button small{display:block;font-size:11px;font-weight:600;opacity:.75}
+.on-cfg .on-seg button:disabled{cursor:default}
+.on-cfg .on-seg button:disabled:not([aria-pressed="true"]){opacity:.45}
+.on-cfg .on-vars button{font-size:12.5px;min-height:30px;padding:3px 4px}
+.on-deck{display:flex;align-items:center;gap:8px}
+.on-dk{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:12px;background:rgba(120,80,30,.09);border:2px solid rgba(224,138,44,.45)}
+.on-dk img{width:38px;height:38px;border-radius:8px;object-fit:cover}
+.on-dk b{display:block;font:700 17px var(--display);color:var(--ink);line-height:1.05}
+.on-dk small{font-size:12px;color:var(--muted)}
+.on-arr{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid rgba(120,80,30,.35);background:#fffaf0;color:var(--ink);font:700 22px/1 sans-serif;cursor:pointer}
+.on-arr:hover{border-color:#e08a2c}
+.on-cfg .on-note{margin:4px 0 0}
+.on-plate b{font-family:var(--display);font-weight:700;letter-spacing:0}

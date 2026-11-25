@@ -82,7 +82,7 @@ function createTable() {
     await NET.ready();
     for (let i = 0; i < 8; i++) {
       const code = newCode();
-      const res = await NET.tx('tables/' + code, cur => cur ? undefined : {host: netUid(), state: 'lobby', created: NET.now(), v: 1, seats: {0: mySeatData()}});
+      const res = await NET.tx('tables/' + code, cur => cur ? undefined : {host: netUid(), state: 'lobby', created: NET.now(), v: 1, seats: {0: mySeatData()}, cfg: hostCfg()});
       if (res.committed) { await enterTable(code); return; }
     }
     throw userErr('Gerade ist kein Tisch frei. Versuch es gleich noch einmal.');
@@ -291,6 +291,46 @@ document.addEventListener('click', e => {
 document.addEventListener('input', e => { if (e.target.id === 'fr-id') SOC.addId = e.target.value; });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'fr-id') addFriend(e.target.value); });
 
+
+/* ---------- Einstellungen der Runde: nur der Gastgeber ändert sie, alle sehen sie ----------
+   cfg: {goal, deck, variant, deckName, table, diff, turn}. Zug-Empfehlung und Tipps sind online immer aus. */
+const TURN_OPTS = [[30, '30 Sek.'], [60, '60 Sek.'], [0, 'Unbegrenzt']];
+const GOAL_OPTS = [[6, 'Kurz', 'Stufe 6'], [8, 'Mittel', 'Stufe 8'], [10, 'Ganz', 'Stufe 10']];
+const DIFF_OPTS = [['gemuetlich', 'Gemütlich'], ['normal', 'Normal'], ['gnadenlos', 'Gnadenlos']];
+function hostCfg(old) {
+  const o = old || {}, goal = GOAL_OPTS.some(g => g[0] === o.goal) ? o.goal : 10;
+  return {goal, deck: DECK.deck, variant: DECK.variant, deckName: deckLabel(), table: TABLES.some(t => t[0] === o.table) ? o.table : freeTable(), diff: o.diff || SET.diff || 'normal', turn: o.turn != null ? o.turn : 60};
+}
+const tCfg = () => Object.assign(hostCfg(), (ON.t && ON.t.cfg) || {});
+function setCfg(patch) { if (!amHost() || !ON.code) return; const c = Object.assign(tCfg(), patch); NET.set(`tables/${ON.code}/cfg`, c).catch(e => { ON.err = onErr(e); renderOnline(); }); }
+function cycleDeck(d) {
+  const list = DECKS.filter(x => x.unlocked()), i = Math.max(0, list.findIndex(x => x.id === DECK.deck));
+  selectDeck(list[(i + d + list.length) % list.length].id); setCfg({deck: DECK.deck, variant: DECK.variant, deckName: deckLabel()});
+}
+function pickVariant(k) { selectVariant(k); setCfg({deck: DECK.deck, variant: DECK.variant, deckName: deckLabel()}); }
+function cycleTable(d) { const list = TABLES.filter(t => moodOk(t[0])), c = tCfg(), i = Math.max(0, list.findIndex(t => t[0] === c.table)); setCfg({table: list[(i + d + list.length) % list.length][0]}); }
+function cfgPanelHTML() {
+  const c = tCfg(), host = amHost(), dis = host ? '' : ' disabled';
+  const seg = (k, opts, cur) => `<div class="seg on-seg">${opts.map(o => `<button type="button" data-cfg="${k}" data-v="${o[0]}" aria-pressed="${cur === o[0]}"${dis}>${o[1]}${o[2] ? `<small>${o[2]}</small>` : ''}</button>`).join('')}</div>`;
+  const d = deckById(c.deck), unl = DECKS.filter(x => x.unlocked()).length;
+  const vars = host ? `<div class="seg on-seg on-vars">${[...VARIANTS.map(v => [v[0], v[1]]), ...(DECK.custom[DECK.deck] ? [['eigenes', 'Eigenes']] : [])].map(([k, l]) => `<button type="button" data-cfg="variant" data-v="${k}" aria-pressed="${c.variant === k}">${l}</button>`).join('')}</div>` : '';
+  return `<div class="panel on-p on-cfg"><h3>${host ? 'Einstellungen' : 'Einstellungen des Gastgebers'}</h3>` +
+    `<div class="on-row"><span class="lbl">Länge</span>${seg('goal', GOAL_OPTS, c.goal)}</div>` +
+    `<div class="on-row"><span class="lbl">Deck</span><div class="on-deck">${host && unl > 1 ? `<button type="button" class="on-arr" data-cfg="deck" data-v="-1" aria-label="Voriges Deck">‹</button>` : ''}<span class="on-dk"><img src="${ART[d.icon]}" alt=""><span><b>${esc(d.name)}</b><small>${esc((c.deckName || '').split(' · ')[1] || 'Standard')}</small></span></span>${host && unl > 1 ? `<button type="button" class="on-arr" data-cfg="deck" data-v="1" aria-label="Nächstes Deck">›</button>` : ''}</div></div>` +
+    (vars ? `<div class="on-row"><span class="lbl"></span>${vars}</div>` : '') +
+    `<div class="on-row"><span class="lbl">Zugzeit</span>${seg('turn', TURN_OPTS, c.turn)}</div>` +
+    `<div class="on-row"><span class="lbl">Bots</span>${seg('diff', DIFF_OPTS, c.diff)}</div>` +
+    `<p class="on-note">${host ? 'Gekaufte Welten aus deinem Konto dürfen alle am Tisch mitspielen. ' : ''}Läuft die Zugzeit ab, macht das Spiel den empfohlenen Zug. Zug-Empfehlung und Tipps sind online aus.</p></div>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-cfg]'); if (!b || b.disabled || !amHost()) return;
+  const k = b.dataset.cfg, v = b.dataset.v;
+  if (k === 'deck') cycleDeck(+v); else if (k === 'variant') pickVariant(v);
+  else if (k === 'goal' || k === 'turn') setCfg({[k]: +v}); else if (k === 'diff') setCfg({diff: v});
+  else if (k === 'table') cycleTable(+v);
+  Snd.sfx('deal');
+});
+
 /* ---------- Oberfläche (PC): „Mit Freunden spielen“ auf der Seite „Spielen“ ---------- */
 
 const tableLink = code => `https://plundo.eu/spiel/#tisch=${code}`;
@@ -333,17 +373,18 @@ function hubOnlineHTML() {
       `<div class="panel on-p on-codep"><h3>Tisch-Code <span class="on-smallcode">${ON.code}</span></h3>` +
       `<p class="on-note">Für Freunde, die noch nicht in deiner Liste sind: Code oder Link schicken.</p>` +
       `<div class="on-copy"><button type="button" class="btn" data-on="copycode">Code kopieren</button><button type="button" class="btn" data-on="copylink">Link kopieren</button></div></div>` +
-      `<div class="panel on-p"><h3>${host ? 'Deine Runde' : 'Am Tisch'}</h3><ul class="on-facts"><li><b>${humans}</b> ${humans === 1 ? 'Mensch' : 'Menschen'} am Tisch</li><li><b>${filled - humans}</b> ${filled - humans === 1 ? 'Bot' : 'Bots'}</li><li><b>${SEATS - filled}</b> ${SEATS - filled === 1 ? 'freier Platz' : 'freie Plätze'}</li></ul>` +
-      (host ? `<p class="on-note">Freie Plätze besetzt du mit „Bot setzen“. Gespielt wird mit deinem Deck (${esc(deckLabel())}).</p>` : `<p class="on-note">Der Gastgeber richtet die Runde ein und startet die Partie.</p>`) + `</div>` +
+      cfgPanelHTML() +
       (host ? `<button type="button" class="btn primary su-start on-go" data-on="start"${humans < 2 || filled < 3 ? ' disabled' : ''}>Partie starten</button><p class="on-soon">${humans < 2 ? 'Warte, bis sich mindestens ein Freund an den Tisch gesetzt hat.' : filled < 3 ? 'Es braucht mindestens drei Spieler: Setz einen Bot auf einen freien Platz.' : 'Online-Partien kommen im nächsten Schritt. Die Lobby kannst du schon ausprobieren.'}</p>`
         : `<div class="panel on-p on-wait"><span class="on-dots"><i></i><i></i><i></i></span>Warte auf den Gastgeber …</div>`);
   }
   if (ON.err) side += `<p class="on-err">${esc(ON.err)}</p>`;
-  return `<main class="pp-modes pd-st pd-bot pd-on tb-taverne${HUBON === 'open' ? ' unroll' : ''}" style="--tbl:url(${new URL(TABLES[0][2], document.baseURI).href})">` +
+  const tb = t ? (TABLES.find(x => x[0] === tCfg().table) || TABLES[0]) : TABLES[0];
+  return `<main class="pp-modes pd-st pd-bot pd-on tb-${tb[0]}${HUBON === 'open' ? ' unroll' : ''}" style="--tbl:url(${new URL(tb[2], document.baseURI).href})">` +
       `<section class="pd-stinfo su-mid on-side">${side}</section>` +
       `<section class="pd-stmap su-table on-table"><span class="pd-rod" aria-hidden="true"></span>` +
         `<div class="su-foes">${seats}</div><div class="su-deck" aria-hidden="true"><span class="back door"></span><span class="back treas"></span></div>` +
-        `<div class="on-plate">${t ? `<small>Tisch</small><b>${ON.code}</b>` : `<small>Online</small><b>Mit Freunden</b>`}</div>` +
+        (t && amHost() ? `<div class="su-tables on-tables"><button type="button" data-cfg="table" data-v="-1" aria-label="Voriger Tisch"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg></button><span><small>Tisch ${ON.code}</small><b>${esc(tb[1])}</b></span><button type="button" data-cfg="table" data-v="1" aria-label="Nächster Tisch"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg></button></div>`
+          : `<div class="on-plate">${t ? `<small>Tisch ${ON.code}</small><b>${esc(tb[1])}</b>` : `<small>Online</small><b>Mit Freunden</b>`}</div>`) +
         `<button type="button" class="iconbtn pd-x" data-on="${t ? 'leave' : 'close'}" aria-label="${t ? 'Tisch verlassen' : 'Schließen'}" title="${t ? 'Tisch verlassen' : 'Schließen'}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button></section>` +
     `</main>`;
 }
