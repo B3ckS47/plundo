@@ -86,9 +86,9 @@ function cosmeticSource(id) {
   }
   for (const w of WORLDS) if (w.starReward && w.starReward.id === id) return `${cosmeticName(id)}: für ${w.starReward.n} Sterne in ${wLabel(w)}.`;
   if (id === STREAK_FRAME) return `${cosmeticName(id)}: steckt in der Goldtruhe, die es alle 7 Tage Auftrags-Serie gibt.`;
-  if (CHEST_ITEMS.gold.includes(id)) return `${cosmeticName(id)}: selten, nur in der Goldtruhe (alle 7 Tage Auftrags-Serie).`;
-  if (CHEST_ITEMS.holz.includes(id)) return `${cosmeticName(id)}: nur aus Truhen, mit etwas Glück schon in der Holztruhe nach 3 Tagen Serie.`;
-  const sh = shopItem(id); if (sh) return `${cosmeticName(id)}: im Krämerladen für ${sh.price} Münzen, wenn er im Angebot ist.`;
+  const rn = rarityName(id), rr = rarityOf(id) > 2 ? ' Je seltener, desto seltener taucht es auf.' : '';
+  if (CHEST_ITEMS.gold.includes(id) || CHEST_ITEMS.holz.includes(id)) return `${cosmeticName(id)} (${rn}): nur aus Truhen, die es für die Auftrags-Serie gibt.${rr}`;
+  const sh = shopItem(id); if (sh) return `${cosmeticName(id)} (${rn}): im Krämerladen für ${sh.price} Münzen, wenn er im Angebot ist, oder mit Glück aus einer Truhe.${rr}`;
   return 'Schaltest du im Storymodus frei.';
 }
 // Herkunft einer Optik für den Filter im Charakter-Bildschirm: start, w1…, laden, truhe
@@ -147,7 +147,7 @@ function renderProfile() {
   patch($('#pf-bgs'), (ALL_BGS.filter(x => inG(x[3])).map(x => { const [k, l] = x, on = cosOpen(x); return `<button type="button" class="pf-bg${on ? '' : ' locked'}" data-bg="${k}" aria-pressed="${on && myBg()[0] === k}"><i class="${x[2] ? '' : 'none'}"${x[2] ? ` style="background-image:url('${bgSrc(x, true)}');background-position:${x[4]}"` : ''}>${on ? '' : `<svg viewBox="0 0 24 24">${LOCK_PATH}</svg>`}</i><span>${l}</span></button>`; }).join('')) || none);
   // Titel: nur die freigeschalteten zeigen, gesperrte wären bei vielen Welten nur Ballast
   const titles = Object.entries(COSMETICS.title).filter(([k]) => (PC || owns('title:' + k)) && inG('title:' + k));
-  patch($('#pf-titles'), (!PC || pfOriginOk('') ? `<button type="button" class="pf-ti" data-title="" aria-pressed="${!myTitle()}">Kein Titel</button>` : '') + titles.map(([k, l]) => owns('title:' + k) ? `<button type="button" class="pf-ti" data-title="${k}" aria-pressed="${PROFILE.title === k}">${esc(l)}</button>` : `<span class="pf-ti locked"><svg viewBox="0 0 24 24" aria-hidden="true">${LOCK_PATH}</svg>${esc(l)}</span>`).join('') +
+  patch($('#pf-titles'), (!PC || pfOriginOk('') ? `<button type="button" class="pf-ti" data-title="" aria-pressed="${!myTitle()}">Kein Titel</button>` : '') + titles.map(([k, l]) => owns('title:' + k) ? `<button type="button" class="pf-ti" data-title="${k}" data-tid="${k}" aria-pressed="${PROFILE.title === k}">${esc(l)}</button>` : `<span class="pf-ti locked" data-tid="${k}"><svg viewBox="0 0 24 24" aria-hidden="true">${LOCK_PATH}</svg>${esc(l)}</span>`).join('') +
     `<p class="hint">${titles.length ? 'Weitere Titel' : 'Titel'} gibt es im Storymodus, im Krämerladen und in Truhen.</p>`);
   if (mq().pc.matches) renderProfilePC();
 }
@@ -183,6 +183,12 @@ function renderProfilePC() {
   box.querySelectorAll('[data-portrait]').forEach(b => b.dataset.src = pfSrcLabel(key['p' + b.dataset.portrait]));
   box.querySelectorAll('[data-frame]').forEach(b => b.dataset.src = pfSrcLabel(key['f' + b.dataset.frame]));
   box.querySelectorAll('[data-bg]').forEach(b => b.dataset.src = pfSrcLabel(key['b' + b.dataset.bg]));
+  // Seltenheit: farbiger Rand und Edelstein (nur bei freischaltbaren Stücken)
+  const rar = (b, id) => { if (!id) { delete b.dataset.rar; return; } const t = rarityOf(id); b.dataset.rar = t; if (!b.querySelector('.rgem')) b.insertAdjacentHTML('beforeend', `<i class="rgem" title="${RARITY[t].n}"></i>`); else b.querySelector('.rgem').title = RARITY[t].n; };
+  box.querySelectorAll('[data-portrait]').forEach(b => rar(b, key['p' + b.dataset.portrait]));
+  box.querySelectorAll('[data-frame]').forEach(b => rar(b, key['f' + b.dataset.frame]));
+  box.querySelectorAll('[data-bg]').forEach(b => rar(b, key['b' + b.dataset.bg]));
+  box.querySelectorAll('.pf-ti[data-tid]').forEach(b => rar(b, 'title:' + b.dataset.tid));
   let idb = box.querySelector('.pf-idbox'); if (!idb) { idb = document.createElement('div'); idb.className = 'panel pf-idbox'; $('#pf-hero').after(idb); }
   patch(idb, `<span><small>Spieler-ID</small><b>#${playerTag()}</b><em>Damit fügen dich Freunde unter „Spielen“ → „Mit Freunden spielen“ hinzu.</em></span><button type="button" class="pf-copy" data-copyid aria-label="Spieler-ID kopieren" title="Kopieren"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button>`);
   let right = box.querySelector('.pf-right'); if (!right) { right = document.createElement('div'); right.className = 'pf-right'; box.appendChild(right); }
@@ -1624,9 +1630,9 @@ function showChest() {
       el.classList.add('open'); box.classList.remove('shake');
       Snd.sfx('levelup'); buzz([40, 50, 80]);
       const b = box.getBoundingClientRect(); Particles.burst(b.left + b.width / 2, b.top + b.height * 0.35, w.t === 'gold' ? 40 : 26, 1.2);
-      const k = r.id && r.id.split(':')[0], loot = el.querySelector('.cv-loot');
+      const k = r.id && r.id.split(':')[0], loot = el.querySelector('.cv-loot'); if (r.id) el.dataset.rar = rarityOf(r.id);
       loot.innerHTML = r.id
-        ? `<span class="ribbon"><span>Neu für dich</span></span>${k === 'title' ? `<span class="cv-title">„${esc(COSMETICS.title[r.id.split(':')[1]])}“</span>` : cosPreview(r.id)}<b>${esc(cosmeticName(r.id).replace(/^\S+ „|“$/g, ''))}</b><small>${{portrait: 'Porträt', frame: 'Rahmen', bg: 'Hintergrund', title: 'Titel'}[k]} · im Charakter-Bildschirm auswählen</small>${r.coins ? `<span class="cv-coins sm">${coinImg}+${r.coins}</span>` : ''}`
+        ? `<span class="ribbon"><span>Neu für dich</span></span>${k === 'title' ? `<span class="cv-title">„${esc(COSMETICS.title[r.id.split(':')[1]])}“</span>` : cosPreview(r.id)}<em class="cv-rar" data-rar="${rarityOf(r.id)}">${rarityName(r.id)}</em><b>${esc(cosmeticName(r.id).replace(/^\S+ „|“$/g, ''))}</b><small>${{portrait: 'Porträt', frame: 'Rahmen', bg: 'Hintergrund', title: 'Titel'}[k]} · im Charakter-Bildschirm auswählen</small>${r.coins ? `<span class="cv-coins sm">${coinImg}+${r.coins}</span>` : ''}`
         : `<span class="ribbon"><span>Münzen</span></span><span class="cv-coins">${coinImg}+${r.coins}</span><small>Für den Krämerladen</small>`;
       loot.insertAdjacentHTML('beforeend', '<button type="button" class="btn primary small cv-ok">Super!</button>');
       setTimeout(() => { loot.hidden = false; watchBoards(el); Snd.sfx('coin'); }, 450);
@@ -1675,7 +1681,7 @@ function shelfItem(id, base, price, pct, buyAttr) {
   const ware = k === 'title' ? `<span class="sp-ti"><span>${esc(COSMETICS.title[key])}</span></span>` : cosPreview(id);
   const tag = `<span class="ptag${pct ? ' old' : ''}"><span>${coinImg}<s>${base}</s></span></span>`;
   const sale = pct ? `<span class="sale" aria-label="Angebot: ${price} Münzen statt ${base}"><b>${price}</b><em>−${pct} %</em></span>` : '';
-  return `<div class="sitem${own ? ' own' : ''}${pct ? ' deal' : ''}"><span class="si-ware">${tag}${ware}${sale}</span><span class="si-t"><b>${nm}</b><small>${{portrait: 'Porträt', frame: 'Rahmen', bg: 'Hintergrund', title: 'Titel'}[k]}</small></span>` +
+  return `<div class="sitem${own ? ' own' : ''}${pct ? ' deal' : ''}" data-rar="${rarityOf(id)}"><span class="si-ware">${tag}${ware}${sale}</span><span class="si-t"><b>${nm}</b><small>${{portrait: 'Porträt', frame: 'Rahmen', bg: 'Hintergrund', title: 'Titel'}[k]}<em class="si-rar"> · ${rarityName(id)}</em></small></span>` +
     `<button type="button" class="btn small sbuy${own || poor ? '' : ' primary'}" ${buyAttr}="${id}"${own || poor ? ' disabled' : ''}>${own ? 'Gekauft' : 'Kaufen'}</button></div>`;
 }
 SHEET_VIEWS.shop = () => {

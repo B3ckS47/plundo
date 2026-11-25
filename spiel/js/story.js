@@ -714,6 +714,31 @@ const CHEST_ITEMS = {
   holz: ['title:truhenknacker', 'title:gluecksritter', 'title:dauerbrenner'],
   gold: ['title:stammtischlegende', 'portrait:minka', 'portrait:klappi', 'portrait:kurt', 'frame:truhenbeschlag', 'frame:schluesselbund', 'frame:edelsteine', 'bg:schatzkammer']
 };
+// Seltenheit der Individualisierungen: 1 Gewöhnlich, 2 Selten, 3 Episch, 4 Legendär (ohne Eintrag: Gewöhnlich).
+// Laden und Truhen wählen zuerst die Stufe nach Gewicht (nur Stufen, aus denen es noch etwas gibt), dann ein Stück daraus.
+// Kein Glücksspiel für Echtgeld: Truhen gibt es nur über die Auftrags-Serie, Echtgeld bringt immer genau das Gekaufte.
+const RARITY = [null,
+  {k: 'gewoehnlich', n: 'Gewöhnlich', laden: 60, holz: 65, gold: 0},
+  {k: 'selten', n: 'Selten', laden: 28, holz: 27, gold: 50},
+  {k: 'episch', n: 'Episch', laden: 10, holz: 7, gold: 38},
+  {k: 'legendaer', n: 'Legendär', laden: 2, holz: 1, gold: 12}];
+const RAR = {
+  'frame:strandtuch': 2, 'frame:rettungsring': 2, 'frame:meeresschaum': 2, 'frame:walblau': 2, 'frame:dublonengold': 2, 'frame:korallenrot': 2, 'frame:mitternacht': 2, 'frame:perlmutt': 2,
+  'portrait:fridolin': 2, 'portrait:gustav': 2, 'portrait:trudi': 2, 'portrait:walter': 2, 'portrait:bruno': 2, 'portrait:gesine': 2, 'portrait:pepe': 2, 'portrait:sardella': 2,
+  'bg:sandstrand': 2, 'bg:hohesee': 2, 'bg:sternennacht': 2, 'bg:abendrot': 2,
+  'title:truhenknacker': 2, 'title:gluecksritter': 2, 'title:dauerbrenner': 2, 'title:seebaer': 2, 'title:kaepten': 2,
+  'frame:wochenstammgast': 3, 'frame:truhenbeschlag': 3, 'frame:schluesselbund': 3, 'portrait:hilde': 3, 'portrait:klappi': 3, 'portrait:kurt': 3,
+  'frame:edelsteine': 4, 'portrait:minka': 4, 'bg:schatzkammer': 4, 'title:stammtischlegende': 4, 'portrait:hoppel': 4, 'title:hasenfuss': 4
+};
+const rarityOf = id => RAR[id] || 1;
+const rarityName = id => RARITY[rarityOf(id)].n;
+// Zuerst die Stufe (Gewicht aus RARITY[..][key]), dann gleichverteilt innerhalb der Stufe. r = Zufallsquelle
+function pickByRarity(ids, key, r = Math.random) {
+  const tiers = [1, 2, 3, 4].map(t => ({t, ids: ids.filter(id => rarityOf(id) === t), w: RARITY[t][key]})).filter(x => x.ids.length && x.w > 0);
+  const tot = tiers.reduce((s, x) => s + x.w, 0); if (!tot) return null;
+  let x = r() * tot; const tier = tiers.find(q => (x -= q.w) < 0) || tiers[tiers.length - 1];
+  return tier.ids[Math.floor(r() * tier.ids.length)];
+}
 const cosmeticExists = id => { const [k, key] = id.split(':'); return !!(COSMETICS[k] && COSMETICS[k][key]); };
 const chestItem = id => id === STREAK_FRAME || CHEST_ITEMS.holz.includes(id) || CHEST_ITEMS.gold.includes(id);
 let DAILY_NOTIFY = null;   // (Text, Münzen) => Hinweis in der Oberfläche
@@ -736,7 +761,7 @@ function rollMissions(day) {
 // Fehlt eine Sorte, füllt der Rest auf. salt würfelt für Tests ein anderes Angebot am selben Tag.
 function rollShop(day, salt) {
   const r = seeded('laden-' + day + (salt || '')), open = SHOP_POOL.filter(x => !owns(x.id)).map(x => x.id);
-  const take = a => a.length ? a.splice(Math.floor(r() * a.length), 1)[0] : null, out = [];
+  const take = a => { const id = a.length ? pickByRarity(a, 'laden', r) : null; if (id) a.splice(a.indexOf(id), 1); return id; }, out = [];
   ['portrait', 'frame', 'title'].forEach(k => { const id = take(open.filter(id => id.startsWith(k + ':'))); if (id) out.push(id); });
   const rest = open.filter(id => !out.includes(id));
   while (rest.length && out.length < SHOP_N) out.push(take(rest));
@@ -777,12 +802,13 @@ const chestsWaiting = () => dailyState().chests || [];
 // Schon Vorhandenes wird nie gezogen.
 function openChest() {
   const d = dailyState(); if (!d.chests || !d.chests.length) return null;
-  const c = d.chests.shift(), gold = c.t === 'gold', rnd = a => a[Math.floor(Math.random() * a.length)];
+  const c = d.chests.shift(), gold = c.t === 'gold';
   const open = a => a.filter(id => cosmeticExists(id) && !owns(id));
   const pool = open(SHOP_POOL.map(x => x.id)), common = open(CHEST_ITEMS.holz), rare = open(CHEST_ITEMS.gold);
   let id = null;
-  if (gold) id = !owns(STREAK_FRAME) ? STREAK_FRAME : rare.length ? rnd(rare) : common.length ? rnd(common) : pool.length ? rnd(pool) : null;
-  else if (Math.random() < 0.35) id = common.length && (Math.random() < 0.6 || !pool.length) ? rnd(common) : pool.length ? rnd(pool) : null;
+  const all = [...new Set([...rare, ...common, ...pool])];
+  if (gold) id = !owns(STREAK_FRAME) ? STREAK_FRAME : pickByRarity(all, 'gold') || pickByRarity(all, 'holz');
+  else if (Math.random() < 0.35) id = pickByRarity(all, 'holz');
   const coins = gold ? (id ? 20 : 60 + 5 * Math.floor(Math.random() * 9)) : (id ? 0 : 15 + 5 * Math.floor(Math.random() * 5));
   if (id) grant(id);
   STORY.coins += coins; saveStory(); saveDaily();

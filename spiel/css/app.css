@@ -3443,3 +3443,18 @@ html.pcnav #scr-profile #pf-frames{grid-template-columns:repeat(5,minmax(0,1fr))
 .oc .pt .offb{width:18px;height:18px;left:-6px;top:-5px;border-width:1.5px}
 .oc .pt .offb svg{width:11px;height:11px}
 .gseat:has(.offb) .gs-pt img,.oc:has(.offb) .pt img{filter:grayscale(.7) brightness(.8)}
+/* Seltenheit (am PC sichtbar): 1 Gewöhnlich, 2 Selten, 3 Episch, 4 Legendär */
+:root{--r1:#c9b894;--r2:#4f95e6;--r3:#b05be0;--r4:#f2b62c}
+.rgem,.si-rar,.cv-rar{display:none}
+html.pcnav [data-rar="1"]{--rc:var(--r1)}html.pcnav [data-rar="2"]{--rc:var(--r2)}html.pcnav [data-rar="3"]{--rc:var(--r3)}html.pcnav [data-rar="4"]{--rc:var(--r4)}
+html.pcnav #scr-profile [data-rar]{position:relative}
+html.pcnav #scr-profile [data-rar]:not([data-rar="1"]){box-shadow:inset 0 0 0 2px var(--rc),0 0 14px -4px var(--rc)}
+html.pcnav #scr-profile [data-rar="4"]{animation:rarglow 2.4s ease-in-out infinite}
+@keyframes rarglow{50%{box-shadow:inset 0 0 0 2px var(--rc),0 0 22px 0 var(--rc)}}
+html.pcnav .rgem{display:block;position:absolute;top:7px;right:7px;width:11px;height:11px;transform:rotate(45deg);background:linear-gradient(135deg,#fff8 0 30%,var(--rc) 31%);border:1.5px solid rgba(0,0,0,.55);border-radius:2px;z-index:2;pointer-events:auto}
+html.pcnav .pf-ti .rgem{position:static;display:inline-block;width:8px;height:8px;margin-left:6px;vertical-align:1px}
+html.pcnav .si-rar{display:inline;font-style:normal;font-weight:800;color:var(--rc)}
+html.pcnav .sitem[data-rar]:not([data-rar="1"]) .si-ware{filter:drop-shadow(0 0 8px var(--rc))}
+html.pcnav .cv-rar{display:block;font:800 13px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--rc);text-shadow:0 1px 0 #000,0 0 10px var(--rc)}
+html.pcnav .chestov[data-rar="3"] .cv-flash,html.pcnav .chestov[data-rar="4"] .cv-flash{background:radial-gradient(circle,color-mix(in srgb,var(--rc) 70%,#fff) 0,transparent 60%)}
+html.pcnav [data-rar="1"] .rgem{display:none}
