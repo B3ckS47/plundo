@@ -3454,3 +3454,64 @@ html.pcnav #scr-profile #pf-frames{grid-template-columns:repeat(5,minmax(0,1fr))
 .pf-ti.locked[data-rar] svg{stroke:#fff8ea}
 .si-rar{font-style:normal;font-weight:800}
 .cv-rar{display:inline-block;margin:0 auto 4px;padding:2px 10px;border-radius:999px;background:var(--rc);color:#fff8ea;font:800 12px var(--body);letter-spacing:.12em;text-transform:uppercase;font-style:normal;text-shadow:0 1px 0 rgba(0,0,0,.45)}
+/* ===== Gemeinschaft: Anfragen, Profil, Melden, Notizen, Freunde online, Admin ===== */
+.on-myreq{display:flex;align-items:center;gap:10px;font-weight:700}
+.on-myreq .btn{margin-left:auto}
+.on-reqs{border:2px solid #e08a2c}
+.on-ban{border:2px solid #b23a2a;background:linear-gradient(#fff1ea,#f6dcd0)}
+.on-ban h3{color:#9c2a1c}
+.on-admin{margin-top:10px;width:100%}
+.on-admin b{display:inline-block;min-width:20px;padding:0 6px;margin-left:4px;border-radius:999px;background:#b23a2a;color:#fff}
+.fr-row b[data-prof],.on-reqs b[data-prof]{cursor:pointer}
+.fr-row b[data-prof]:hover{text-decoration:underline}
+.fr-row .su-face img,.on-reqs .su-face img,.pfo-card .su-face img,.pp-hero .su-face img{width:40px;height:40px;border-radius:50%;object-fit:cover;object-position:50% 20%;border:2px solid var(--fc,#d9bf8c);display:block;background:#3a2414}
+.fr-row .su-face.fa::after,.pfo-card .su-face.fa::after,.pp-hero .su-face.fa::after,#invbar .su-face.fa::after{content:'';position:absolute;inset:-5px;background:var(--fimg) center/contain no-repeat;pointer-events:none}
+.pfo-card .su-face,.pp-hero .su-face{position:relative;flex:none;animation:none}
+/* Knopfleiste im Gegnerbereich (PC) */
+.gs-acts{position:absolute;right:8px;bottom:6px;z-index:3;display:flex;gap:2px}
+.gsa{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:transparent;color:rgba(251,239,214,.72);cursor:pointer;transition:background .15s,color .15s}
+.gsa svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.gsa:hover,.gsa:focus-visible{background:rgba(0,0,0,.38);color:#fff;outline:none}
+.gsa.on{color:#ff8a8a}.gsa.on svg{fill:#e2504a;stroke:#ffd0c8}
+.gsa.has{color:#f3c873}.gsa.has svg{fill:rgba(243,200,115,.25)}
+/* Gegnerblatt und Profil */
+.comm-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
+.comm-bar .btn svg,.comm-fr svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px;margin-right:5px}
+.comm-fr{font-weight:800;color:#a8352a;padding:4px 8px}.comm-fr svg{fill:#e2504a;stroke:#a8352a}
+.comm-fr.wait{color:#7a6448}.comm-fr.wait svg{fill:none;stroke:#7a6448}
+.comm-ta{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:2px solid var(--edge);background:#fffaf0;font:500 15px/1.4 var(--body);color:var(--ink);resize:vertical;margin:8px 0}
+.comm-reasons{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.comm-r{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:12px;border:2px solid var(--edge);background:var(--card-hi);cursor:pointer}
+.comm-r:has(input:checked){border-color:#e08a2c;background:#fff3dc}
+.comm-r span{display:flex;flex-direction:column}.comm-r small{color:#7a6448}
+.pp-hero{position:relative;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;overflow:hidden;background:#3a2414;color:#fbefd6;min-height:84px;width:100%;box-sizing:border-box}
+.pp-hero.hasbg{background:linear-gradient(90deg,rgba(20,12,6,.82),rgba(20,12,6,.35)),var(--bg) var(--bgp)/cover}
+.pp-hero .su-face img{width:60px;height:60px}
+.pp-who{display:flex;flex-direction:column;min-width:0}.pp-who b{font:700 22px var(--head,inherit)}.pp-who em{font-size:13px;color:#f3d79b}.pp-who small{opacity:.75;letter-spacing:.06em}
+.pp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:4px 0 12px}
+.pp-cell{position:relative;display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;background:var(--card-hi);border:2px solid var(--edge)}
+.pp-cell small{font:800 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:#9a7a4a}.pp-cell b{font-size:22px}.pp-cell em{font-style:normal;font-size:12.5px;color:#7a6448}
+.pp-bar{display:block;height:6px;border-radius:9px;background:rgba(0,0,0,.12);margin-top:6px;overflow:hidden}.pp-bar i{display:block;height:100%;border-radius:9px;background:var(--fsc,#46a03a)}
+.fs-good{--fsc:#46a03a}.fs-ok{--fsc:#d9a52a}.fs-bad{--fsc:#b23a2a}.fs-bad b{color:#b23a2a}
+.pp-note{padding:10px 12px;border-radius:14px;background:#fff6dc;border:2px dashed #d9bf8c;margin-bottom:10px}.pp-note small{font:800 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:#9a7a4a}.pp-note p{margin:4px 0 0;white-space:pre-wrap}
+.adm-box{margin-top:12px;padding:10px 12px;border-radius:14px;border:2px solid #b23a2a;background:#fff1ea}.adm-box small{font:800 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:#9c2a1c}
+.adm-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.adm-warn{color:#b23a2a}
+.adm-p{margin-bottom:10px}.adm-h{display:flex;align-items:center;gap:10px}.adm-h b{font-size:17px;cursor:pointer}.adm-h span{color:#7a6448}.adm-h .btn{margin-left:auto}
+.adm-list{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}.adm-list li{padding:8px 10px;border-radius:10px;background:rgba(120,80,30,.07)}.adm-list q{display:block;margin-top:4px;font-style:italic;color:#5a4630}
+/* PC-Startseite: Freunde online im Online-Banner rechts */
+.pd-friends{position:absolute;z-index:2;right:22px;top:22px;bottom:22px;width:min(300px,30%);display:flex;flex-direction:column;gap:8px}
+.pfo-h{font:800 12px var(--body);letter-spacing:.1em;text-transform:uppercase;color:#f3d79b;text-shadow:0 1px 2px #000}.pfo-h b{display:inline-block;margin-left:6px;padding:0 7px;border-radius:999px;background:#46a03a;color:#fff}
+.pfo-list{display:flex;flex-direction:column;gap:6px;overflow:auto;min-height:0}
+.pfo-card{appearance:none;position:relative;display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:14px;border:1.5px solid rgba(255,214,160,.35);background:rgba(20,12,6,.72);color:#fbefd6;text-align:left;cursor:pointer;overflow:hidden;backdrop-filter:blur(2px)}
+.pfo-card.hasbg{background:linear-gradient(90deg,rgba(20,12,6,.86),rgba(20,12,6,.45)),var(--bg) var(--bgp)/cover}
+.pfo-card:hover{border-color:#f3c873}
+.pfo-t{display:flex;flex-direction:column;min-width:0}.pfo-t b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pfo-t em{font-size:12px;color:#f3d79b;font-style:italic}.pfo-t small{display:flex;align-items:center;gap:5px;font-size:12px;opacity:.85}
+.pfo-t .fr-dot{background:#5ccf4c;box-shadow:0 0 0 2px rgba(92,207,76,.3)}
+.pfo-none,.pfo-more{margin:0;padding:10px 12px;border-radius:12px;background:rgba(20,12,6,.6);color:#e8d8b8;font-size:13px}
+/* Laufende Online-Partie: zurück */
+#ongback{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:10px;padding:10px 18px;border-radius:999px;border:2px solid #e08a2c;background:linear-gradient(#fff8e8,#f3e2bf);color:var(--ink);font:700 15px var(--body);box-shadow:0 12px 28px rgba(0,0,0,.55);cursor:pointer}
+#ongback.hot{background:linear-gradient(#ffb562,#e0782c);color:#fff;animation:ongHot 1.2s ease-in-out infinite}
+@keyframes ongHot{50%{box-shadow:0 0 0 6px rgba(224,120,44,.35),0 12px 28px rgba(0,0,0,.55)}}
+.pd-friends{top:60px}
+.adm-acts .btn,.adm-h .btn{width:auto;flex:none;padding-left:12px;padding-right:12px}
+.adm-h span{white-space:nowrap}

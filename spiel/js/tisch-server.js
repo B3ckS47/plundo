@@ -47,6 +47,7 @@ function finish(seat, id, v) {
 // Zugzeit abgelaufen: der naheliegende Zug (Hauptknopf; bei einer Auswahl das Nötigste)
 function autoAnswer(seat, id) {
   const job = QUEUE[seat] && QUEUE[seat][0]; if (!job || job.id !== id) return;
+  postMessage({t: 'to', seat});   // für den Friendly-Score: Zeit abgelaufen
   if (job.kind === 'ask') {
     const q = asSeat(seat, () => job.get()), opts = (q && q.opts || []).filter(o => !o.dis && o.kind !== 'ghost');
     const o = opts.find(x => x.kind === 'primary') || opts[0];

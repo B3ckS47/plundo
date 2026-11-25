@@ -1893,7 +1893,7 @@ function go(a) {
     case 'tutorial': closeAllSheets(); startStation('w0s1'); break;
     case 'resetstory': confirmDialog('Storymodus zurücksetzen?', 'Alle Stationen, Sterne, Münzen und Belohnungen aus dem Storymodus gehen verloren.', 'Zurücksetzen', 'Abbrechen').then(ok => { if (ok) { resetStory(); clearStorySave(); toast('Storymodus zurückgesetzt'); } }); break;
     case 'reroll': ROSTER = rollRoster(); renderFoes(); Snd.sfx('deal'); break;
-    case 'home': if (HUBON) { closeHubOnline(); break; } if (HUBBOT) { closeHubBots(); break; } if (HUBST) { closeHubStory(); break; } closeAllSheets(); STACK.length = 0; setScreen('title'); break;
+    case 'home': if (typeof ongRunning === 'function' && ongRunning() && CUR !== 'game') { closeAllSheets(); setScreen('game'); break; } if (HUBON) { closeHubOnline(); break; } if (HUBBOT) { closeHubBots(); break; } if (HUBST) { closeHubStory(); break; } closeAllSheets(); STACK.length = 0; setScreen('title'); break;
     case 'story': if (HUBST_ON()) openHubStory(); else show('story'); break;
     case 'storymap': $$('.endov').forEach(x => x.remove()); closeAllSheets(); if (GAME_ON && S && S.scn && S.winner == null) { TOKEN++; } if (S && S.scn) GAME_ON = false; STACK.length = 0; if (HUBST_ON()) { openHubStory(); break; } STACK.push('title'); setScreen('story'); break;
     case 'start': startNewGame(); break;
@@ -2783,7 +2783,7 @@ function seatHTML(p) {
     `<span class="gs-st"><span title="Kampfstärke"><img src="${ICON.kampf}" alt="">${power(p)}</span><span title="Weglaufen"><img src="${ICON.run}" alt="">${sign(runBonus(p))}</span>` +
     `<span title="Handkarten"${p.human && p.hand.length > handLimit(p) ? ' class="warn"' : ''}><img src="${ICON.hand}" alt="">${p.hand.length}${p.human ? '/' + handLimit(p) : ''}</span><span title="Goldbeutel: ${fmt(p.gold || 0)} Gold"${p.gold ? ' class="gold"' : ''}><img src="${ICON.gold}" alt="">${fmt(p.gold || 0)}</span></span>` +
     `<span class="gs-dots" aria-hidden="true">${Array.from({length: WINLVL()}, (_, i) => `<em class="${i < p.lvl ? 'on' : ''}"></em>`).join('')}</span>` +
-    `</span></button>`;
+    `</span>${!p.human && typeof seatActsHTML === 'function' && ONG.active ? seatActsHTML(p) : ''}</button>`;
 }
 // Tempo „Manuell“: Knopf zum Weiterklicken, solange ein Bot auf dich wartet (auch Leertaste oder Enter am PC)
 function showStep() {
@@ -3061,7 +3061,7 @@ function pcPlayHTML(cw, nx, st, sk, dn, wait, ay, fg) {
           `<div class="pd-league"><span class="pd-crest"><b>?</b></span><div class="pd-lg"><b>Ligen und Saisons</b><small>Spiel gegen andere, steig in höhere Ligen auf und gewinne Rahmen, Titel und Hintergründe, die es nur hier gibt.</small></div></div>` +
           `<div class="pd-modesel"><button type="button" class="on" data-soon="Gegen Fremde spielst du, sobald es genug Spieler gibt. Mit Freunden geht es schon jetzt."><b>Klassisch</b><small>3 bis 4 Spieler</small></button><button type="button" data-soon="2 gegen 2 kommt später dazu."><b>2 gegen 2</b><small>Im Team</small></button></div>` +
           `<div class="pp-acts"><button type="button" class="btn pp-map pd-off" data-soon="Gegen Fremde spielst du, sobald es genug Spieler gibt. Mit Freunden geht es schon jetzt.">Spiel suchen <small>bald</small></button><button type="button" class="t-cta" data-go="online">${play}<span>Mit Freunden spielen</span></button></div>` +
-        `</div></section>` +
+        `</div>${typeof friendsOnlineHTML === 'function' ? friendsOnlineHTML() : ''}</section>` +
       `<div class="pd-row3">` +
         soon('icons/truhe-gold-zu.png', 'Turnier', 'Jeden 2. Sonntag', 'Mit besonderen Preisen', 'Das Sonntagsturnier startet zusammen mit dem Online-Modus.') +
         soon('icons/nav-freunde.png', 'Gilde', 'Gemeinsam stärker', 'Mit anderen um Gildenpunkte spielen', 'Gilden kommen, sobald der Online-Modus läuft.') +

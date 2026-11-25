@@ -79,10 +79,11 @@ const userErr = m => Object.assign(new Error(m), {userMsg: m});
 function createTable() {
   return onBusy(async () => {
     if (!onSignedIn()) throw userErr('Für Online-Partien musst du angemeldet sein.');
+    if (banActive()) throw userErr(banText());
     await NET.ready();
     for (let i = 0; i < 8; i++) {
       const code = newCode();
-      const res = await NET.tx('tables/' + code, cur => cur ? undefined : {host: netUid(), state: 'lobby', created: NET.now(), v: 1, seats: {0: mySeatData()}, cfg: hostCfg()});
+      const res = await NET.tx('tables/' + code, cur => cur ? undefined : {host: netUid(), state: 'lobby', created: NET.now(), v: 1, seats: {0: mySeatData()}, allow: {[netUid()]: true}, cfg: hostCfg()});
       if (res.committed) { await enterTable(code); return; }
     }
     throw userErr('Gerade ist kein Tisch frei. Versuch es gleich noch einmal.');
@@ -119,7 +120,7 @@ async function enterTable(code) {
     if (first && t) { first = false; hostRecover(code, t); }
     if (!t || t.state === 'closed') { const wasGuest = t && t.host !== netUid(); dropTable(); if (wasGuest || !t) toast('Der Gastgeber hat den Tisch geschlossen.'); }
     else if (!Object.values(t.seats || {}).some(s => s && s.uid === netUid())) { dropTable(); toast('Du bist nicht mehr an diesem Tisch.'); }
-    else ongWatchTable(t);
+    else { noticeReqs(t); ongWatchTable(t); }
     renderOnline();
   });
   renderOnline();
@@ -214,14 +215,14 @@ function addFriend(raw) {
     const uid = await NET.get('tags/' + k);
     if (!uid) throw userErr('Zu dieser Spieler-ID gibt es niemanden. Ist der Freund schon angemeldet und hat Plundo am PC geöffnet?');
     if (SOC.friends[uid]) throw userErr('Ihr seid schon befreundet oder deine Anfrage läuft noch.');
-    await NET.set(`users/${SOC.uid}/friends/${uid}`, true);
+    await NET.set(`users/${SOC.uid}/friends/${uid}`, NET.now());
     await NET.set(`users/${uid}/req/${SOC.uid}`, Object.assign(myPub(), {at: NET.now()}));
     SOC.addId = ''; toast('Freundschaftsanfrage verschickt');
   });
 }
 function answerReq(uid, yes) {
   return onBusy(async () => {
-    if (yes) await NET.set(`users/${SOC.uid}/friends/${uid}`, true);
+    if (yes) await NET.set(`users/${SOC.uid}/friends/${uid}`, NET.now());
     await NET.set(`users/${SOC.uid}/req/${uid}`, null);
     if (yes) toast('Ihr seid jetzt befreundet');
   });
@@ -229,13 +230,17 @@ function answerReq(uid, yes) {
 function removeFriend(uid) { return onBusy(() => NET.set(`users/${SOC.uid}/friends/${uid}`, null)); }
 function inviteFriend(uid) {
   if (!ON.code) return;
-  return onBusy(async () => { await NET.set(`users/${uid}/inv/${SOC.uid}`, Object.assign(myPub(), {code: ON.code, at: NET.now()})); SOC.invited[uid] = ON.code; toast('Einladung verschickt'); });
+  return onBusy(async () => {
+    const host = amHost(); if (host) await NET.set(`tables/${ON.code}/allow/${uid}`, true);
+    await NET.set(`users/${uid}/inv/${SOC.uid}`, Object.assign(myPub(), {code: ON.code, at: NET.now(), host}));
+    SOC.invited[uid] = ON.code; toast(host ? 'Einladung verschickt' : 'Einladung verschickt. Nimmt er an, entscheidet der Gastgeber.');
+  });
 }
 function answerInv(uid, yes) {
   const inv = SOC.invs[uid]; if (!inv) return;
   delete SOC.invs[uid]; NET.set(`users/${SOC.uid}/inv/${uid}`, null).catch(() => {});
   renderInvBar();
-  if (yes) { openOnline(); setTimeout(() => joinTable(inv.code), 200); }
+  if (yes) { openOnline(); setTimeout(() => inv.host ? joinTable(inv.code) : requestJoin(inv.code, inv.name), 200); }
   else renderOnline();
 }
 const friendName = f => (f.pub && f.pub.name) || 'Unbekannt';
@@ -247,8 +252,8 @@ function friendRowHTML(f, mode) {
   if (f.mutual && mode === 'lobby') {
     if (atMine) status = 'sitzt an deinem Tisch';
     else if (f.online) btn = SOC.invited[f.uid] === ON.code ? '<span class="fr-done">eingeladen</span>' : `<button type="button" class="btn" data-soc="inv" data-u="${f.uid}">Einladen</button>`;
-  } else if (f.mutual && t && t.state === 'lobby' && f.table !== ON.code) { status = `am Tisch · ${SEATS - free}/${SEATS}`; if (free && mode === 'open') btn = `<button type="button" class="btn primary" data-soc="go" data-c="${f.table}">Beitreten</button>`; }
-  return `<li class="fr-row${f.online && f.mutual ? ' on' : ''}">${face}<span class="fr-t"><b>${esc(friendName(f))}</b><small><i class="fr-dot"></i>${status}</small></span>${btn}` +
+  } else if (f.mutual && t && t.state === 'lobby' && f.table !== ON.code) { status = `am Tisch · ${SEATS - free}/${SEATS}`; if (free && mode === 'open') btn = COMM.req && COMM.req.code === f.table ? '<span class="fr-done">angefragt</span>' : `<button type="button" class="btn primary" data-soc="go" data-c="${f.table}">Anfragen</button>`; }
+  return `<li class="fr-row${f.online && f.mutual ? ' on' : ''}">${face}<span class="fr-t"><b data-prof="${f.uid}">${esc(friendName(f))}</b><small><i class="fr-dot"></i>${status}</small></span>${btn}` +
     (mode !== 'lobby' ? `<button type="button" class="fr-x" data-soc="del" data-u="${f.uid}" title="Aus der Freundesliste entfernen" aria-label="Entfernen">×</button>` : '') + `</li>`;
 }
 function friendsSorted() { return Object.values(SOC.friends).sort((a, b) => (b.mutual - a.mutual) || (b.online - a.online) || friendName(a).localeCompare(friendName(b), 'de')); }
@@ -257,7 +262,7 @@ function socPanelsHTML() {
   const invs = Object.entries(SOC.invs), reqs = Object.entries(SOC.reqs), fl = friendsSorted();
   const open = fl.filter(f => f.mutual && f.table && SOC.tables[f.table] && SOC.tables[f.table].state === 'lobby');
   const seen = new Set(); const openU = open.filter(f => !seen.has(f.table) && seen.add(f.table));
-  let h = `<div class="panel on-p"><h3>Offene Tische deiner Freunde</h3>`;
+  let h = banPanelHTML() + myReqHTML() + `<div class="panel on-p"><h3>Offene Tische deiner Freunde</h3>`;
   if (invs.length) h += `<ul class="fr-list">${invs.map(([u, x]) => `<li class="fr-row inv">${seatFace(x)}<span class="fr-t"><b>${esc(x.name)}</b><small>lädt dich an den Tisch ein</small></span><button type="button" class="btn primary" data-soc="iyes" data-u="${u}">Beitreten</button><button type="button" class="fr-x" data-soc="ino" data-u="${u}" aria-label="Ablehnen" title="Ablehnen">×</button></li>`).join('')}</ul>`;
   h += openU.length ? `<ul class="fr-list">${openU.map(f => friendRowHTML(f, 'open')).join('')}</ul>` : (invs.length ? '' : `<p class="on-note">Gerade hat keiner deiner Freunde einen offenen Tisch. Eröffne selbst einen und lade sie ein.</p>`);
   h += `</div>`;
@@ -265,7 +270,7 @@ function socPanelsHTML() {
   if (reqs.length) h += `<p class="fr-sub">Anfragen</p><ul class="fr-list">${reqs.map(([u, x]) => `<li class="fr-row req">${seatFace(x)}<span class="fr-t"><b>${esc(x.name)}</b><small>#${esc(x.tag || '')} möchte mit dir befreundet sein</small></span><button type="button" class="btn primary" data-soc="ryes" data-u="${u}">Annehmen</button><button type="button" class="fr-x" data-soc="rno" data-u="${u}" aria-label="Ablehnen" title="Ablehnen">×</button></li>`).join('')}</ul>`;
   h += fl.length ? `<ul class="fr-list">${fl.map(f => friendRowHTML(f, 'list')).join('')}</ul>` : `<p class="on-note">Noch keine Freunde. Gib unten die Spieler-ID eines Freundes ein. Seine ID steht bei ihm unter „Dein Charakter“.</p>`;
   h += `<div class="on-join fr-add"><input id="fr-id" class="on-codein fr-in" maxlength="12" autocomplete="off" spellcheck="false" placeholder="#ABCD-1234" value="${esc(SOC.addId)}" aria-label="Spieler-ID"><button type="button" class="btn" data-soc="add"${ON.busy ? ' disabled' : ''}>Hinzufügen</button></div>` +
-    `<p class="fr-me">Deine Spieler-ID: <b>#${esc(myTag())}</b> <button type="button" class="fr-copy" data-soc="myid">kopieren</button></p></div>`;
+    `<p class="fr-me">Deine Spieler-ID: <b>#${esc(myTag())}</b> <button type="button" class="fr-copy" data-soc="myid">kopieren</button></p>${adminBtnHTML()}</div>`;
   return h;
 }
 function socInviteHTML() {
@@ -288,7 +293,7 @@ document.addEventListener('click', e => {
   else if (a === 'del') removeFriend(u);
   else if (a === 'inv') inviteFriend(u);
   else if (a === 'iyes') answerInv(u, true); else if (a === 'ino') answerInv(u, false);
-  else if (a === 'go') { openOnline(); joinTable(b.dataset.c); }
+  else if (a === 'go') { openOnline(); requestJoin(b.dataset.c); }
   else if (a === 'myid') copyText('#' + myTag(), 'Spieler-ID kopiert');
 });
 document.addEventListener('input', e => { if (e.target.id === 'fr-id') SOC.addId = e.target.value; });
@@ -368,16 +373,11 @@ function hubOnlineHTML() {
       `<div class="acts"><button type="button" class="btn primary" data-acct="open">Anmelden</button></div></div>`;
   } else if (!t) {
     side = `<div class="panel on-p"><h3>Tisch eröffnen</h3><p>Lade bis zu drei Freunde an deinen Tisch ein. Freie Plätze besetzt du mit Bots.</p>` +
-      `<button type="button" class="btn primary su-start on-go" data-on="create"${ON.busy ? ' disabled' : ''}>Tisch eröffnen</button></div>` +
-      socPanelsHTML() +
-      `<div class="panel on-p on-codejoin"><h3>Mit Code beitreten</h3>` +
-      `<div class="on-join"><input id="on-code" class="on-codein" maxlength="5" autocomplete="off" spellcheck="false" placeholder="CODE" value="${esc(ON.joinCode)}" aria-label="Tisch-Code"><button type="button" class="btn" data-on="join"${ON.busy ? ' disabled' : ''}>Beitreten</button></div></div>`;
+      `<button type="button" class="btn primary su-start on-go" data-on="create"${ON.busy || banActive() ? ' disabled' : ''}>Tisch eröffnen</button></div>` +
+      socPanelsHTML();
   } else {
     const host = amHost();
-    side = socInviteHTML() +
-      `<div class="panel on-p on-codep"><h3>Tisch-Code <span class="on-smallcode">${ON.code}</span></h3>` +
-      `<p class="on-note">Für Freunde, die noch nicht in deiner Liste sind: Code oder Link schicken.</p>` +
-      `<div class="on-copy"><button type="button" class="btn" data-on="copycode">Code kopieren</button><button type="button" class="btn" data-on="copylink">Link kopieren</button></div></div>` +
+    side = reqPanelHTML() + socInviteHTML() +
       cfgPanelHTML() +
       (host ? `<button type="button" class="btn primary su-start on-go" data-on="start"${humans < 2 || filled < 3 ? ' disabled' : ''}>Partie starten</button><p class="on-soon">${humans < 2 ? 'Warte, bis sich mindestens ein Freund an den Tisch gesetzt hat.' : filled < 3 ? 'Es braucht mindestens drei Spieler: Setz einen Bot auf einen freien Platz.' : 'Alle bereit? Dann los!'}</p>`
         : `<div class="panel on-p on-wait"><span class="on-dots"><i></i><i></i><i></i></span>Warte auf den Gastgeber …</div>`);
@@ -388,8 +388,8 @@ function hubOnlineHTML() {
       `<section class="pd-stinfo su-mid on-side">${side}</section>` +
       `<section class="pd-stmap su-table on-table"><span class="pd-rod" aria-hidden="true"></span>` +
         `<div class="su-foes">${seats}</div><div class="su-deck" aria-hidden="true"><span class="back door"></span><span class="back treas"></span></div>` +
-        (t && amHost() ? `<div class="su-tables on-tables"><button type="button" data-cfg="table" data-v="-1" aria-label="Voriger Tisch"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg></button><span><small>Tisch ${ON.code}</small><b>${esc(tb[1])}</b></span><button type="button" data-cfg="table" data-v="1" aria-label="Nächster Tisch"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg></button></div>`
-          : `<div class="on-plate">${t ? `<small>Tisch ${ON.code}</small><b>${esc(tb[1])}</b>` : `<small>Online</small><b>Mit Freunden</b>`}</div>`) +
+        (t && amHost() ? `<div class="su-tables on-tables"><button type="button" data-cfg="table" data-v="-1" aria-label="Voriger Tisch"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg></button><span><small>Tischdesign</small><b>${esc(tb[1])}</b></span><button type="button" data-cfg="table" data-v="1" aria-label="Nächster Tisch"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg></button></div>`
+          : `<div class="on-plate">${t ? `<small>Dein Tisch</small><b>${esc(tb[1])}</b>` : `<small>Online</small><b>Mit Freunden</b>`}</div>`) +
         `<button type="button" class="iconbtn pd-x" data-on="${t ? 'leave' : 'close'}" aria-label="${t ? 'Tisch verlassen' : 'Schließen'}" title="${t ? 'Tisch verlassen' : 'Schließen'}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button></section>` +
     `</main>`;
 }
@@ -428,8 +428,7 @@ function onHashEntry() {
   ON.joinCode = cleanCode(m[1]); history.replaceState(null, '', location.pathname + location.search);
   openOnline(); if (onSignedIn()) setTimeout(() => joinTable(ON.joinCode), 300);
 }
-window.addEventListener('hashchange', onHashEntry);
-setTimeout(onHashEntry, 400);
+// Beitritt per Code oder Link gibt es nicht mehr: nur noch über die Freundesliste (Anfrage an den Gastgeber)
 // Freunde und Einladungen: Verbindung, sobald man angemeldet ist (am PC)
 setTimeout(() => { if (NET_LOCAL) startSocial(); }, 600);
 
@@ -462,6 +461,7 @@ function startOnlineGame() {
       const m = e.data || {};
       if (m.t === 'view') { if (m.seat === ONG.seat) ongApply(m.json); else NET.set(`tables/${ON.code}/view/${m.seat}`, m.json).catch(() => {}); }
       else if (m.t === 'over') { NET.set(`tables/${ON.code}/game/over`, true).catch(() => {}); }
+      else if (m.t === 'to') ONG_TO[m.seat] = (ONG_TO[m.seat] || 0) + 1;
       else if (m.t === 'err') console.error('Tisch:', m.msg);
     };
     w.onerror = e => { console.error('Worker', e.message); toast('Die Online-Partie ist abgestürzt.'); };
@@ -474,7 +474,7 @@ function startOnlineGame() {
 }
 // Gemeinsamer Einstieg für Gastgeber und Gäste: Spieloberfläche im Anzeigemodus öffnen
 function ongBegin(code, seat, cfg, host) {
-  Object.assign(ONG, {active: true, host: !!host, seat, code, lastV: 0, lastFx: 0, over: false, cfg, offState: {}});
+  Object.assign(ONG, {active: true, host: !!host, seat, code, lastV: 0, lastFx: 0, over: false, cfg, offState: {}, shown: false, leftLogged: {}}); Object.keys(ONG_TO).forEach(k => delete ONG_TO[k]);
   SCN = null; STORY_RUN = null; freeMood(cfg.table, cfg.table); applySettings();
   UI.coach = false; UI.open = false; UI.speed = 'normal'; UI.goal = cfg.goal || 10;
   TOKEN++; S = null; UI.prompt = null; UI.sel = null; UI.dview = null;
@@ -535,7 +535,7 @@ function ongApply(json) {
   } else UI.sel = null;
   UI.roll = v.roll || null;
   (v.fx || []).forEach(f => { if (f.n <= ONG.lastFx) return; ONG.lastFx = f.n; if (f.t === 'gameover' || f.t === 'newgame') { if (f.t === 'gameover') ongGameOver(); return; } try { FX_HANDLER(f.t, ongUnpack(f.d)); } catch (e) {} });
-  if (CUR !== 'game') setScreen('game');
+  if (CUR !== 'game' && !ONG.shown) { ONG.shown = true; setScreen('game'); }
   ongMarkAway(true);
   render();
 }
@@ -549,7 +549,8 @@ async function ongQuit() {
   const host = ONG.host;
   const ok = await confirmDialog(host ? 'Partie für alle beenden?' : 'Partie verlassen?', host ? 'Die Online-Partie läuft auf deinem Gerät. Beendest du sie, ist sie für alle am Tisch vorbei.' : 'Du stehst vom Tisch auf. Deine Züge macht ab jetzt das Spiel für dich, bis die Partie vorbei ist.', host ? 'Beenden' : 'Verlassen', 'Weiterspielen');
   if (!ok) return;
-  if (host) { await NET.update('tables/' + ONG.code, {state: 'lobby', game: null, view: null, acts: null}).catch(() => {}); ongEnd(); setScreen('title'); openHubOnline(); }
+  if (host) { await conductWrite(netUid(), {left: true});   // Gastgeber bricht die Partie ab: zählt wie Verlassen
+    await NET.update('tables/' + ONG.code, {state: 'lobby', game: null, view: null, acts: null}).catch(() => {}); ongEnd(); setScreen('title'); openHubOnline(); }
   else { ongEnd(); await leaveTable(); setScreen('title'); openHubOnline(); }
 }
 const _pauseView = SHEET_VIEWS.pause;
@@ -601,15 +602,14 @@ SHEET_VIEWS.online = () => {
   const t = ON.t;
   let body;
   if (!onSignedIn()) body = `<img class="scene" src="art/kachel-online.webp" alt=""><p>Spiel mit deinen Freunden statt gegen Bots. Freie Plätze besetzt du mit Bots.</p><p class="hint">Dafür meldest du dich einmal an. Dann ist auch dein Fortschritt gesichert.</p><div class="acts"><button type="button" class="btn primary" data-acct="open">Anmelden</button></div>`;
-  else if (!t) body = `<div class="on-m"><button type="button" class="btn primary on-go" data-on="create"${ON.busy ? ' disabled' : ''}>Tisch eröffnen</button>` + socPanelsHTML() +
-    `<div class="panel on-p on-codejoin"><h3>Mit Code beitreten</h3><div class="on-join"><input id="on-code" class="on-codein" maxlength="5" autocomplete="off" spellcheck="false" placeholder="CODE" value="${esc(ON.joinCode)}" aria-label="Tisch-Code"><button type="button" class="btn" data-on="join"${ON.busy ? ' disabled' : ''}>Beitreten</button></div></div></div>`;
+  else if (!t) body = `<div class="on-m"><button type="button" class="btn primary on-go" data-on="create"${ON.busy || banActive() ? ' disabled' : ''}>Tisch eröffnen</button>` + socPanelsHTML() + `</div>`;
   else {
     const host = amHost(), seats = Object.values(t.seats || {}).filter(Boolean), humans = seats.filter(x => !x.bot).length;
-    body = `<div class="on-m"><div class="panel on-p"><h3>Am Tisch <span class="on-smallcode">${ON.code}</span></h3><ul class="fr-list ons-list">${[0, 1, 2, 3].map(onSeatRowHTML).join('')}</ul></div>` +
+    body = `<div class="on-m">${reqPanelHTML()}<div class="panel on-p"><h3>Am Tisch</h3><ul class="fr-list ons-list">${[0, 1, 2, 3].map(onSeatRowHTML).join('')}</ul></div>` +
       socInviteHTML() + cfgPanelHTML() +
       (host ? `<button type="button" class="btn primary on-go" data-on="start"${humans < 2 || seats.length < 3 ? ' disabled' : ''}>Partie starten</button><p class="hint">${humans < 2 ? 'Warte, bis sich mindestens ein Freund dazusetzt.' : seats.length < 3 ? 'Es braucht mindestens drei Spieler: Setz einen Bot dazu.' : 'Alle bereit? Dann los!'}</p>`
         : `<div class="panel on-p on-wait"><span class="on-dots"><i></i><i></i><i></i></span>Warte auf den Gastgeber …</div>`) +
-      `<div class="acts"><button type="button" class="btn" data-on="copylink">Link kopieren</button><button type="button" class="btn" data-on="leave">Tisch verlassen</button></div></div>`;
+      `<div class="acts"><button type="button" class="btn" data-on="leave">Tisch verlassen</button></div></div>`;
   }
   if (ON.err) body += `<p class="on-err">${esc(ON.err)}</p>`;
   return {head: h3('Mit Freunden spielen'), body};
