@@ -508,7 +508,7 @@ function storyGo() {
 }
 // Spielen-Knopf unten: startet, was in der Spielauswahl gewählt ist
 function playNow() {
-  if (SET.mode === 'online') { closeAllSheets(); if (mq().pc.matches) openHubOnline(); else openSheet({id: 'online'}); return; }
+  if (SET.mode === 'online') { openOnline(); return; }
   freePlay();
 }
 // Freies Spiel: offene Partie weiterspielen oder eine neue einrichten
@@ -1883,7 +1883,7 @@ function go(a) {
     case 'unlockall': confirmDialog('Alles freischalten?', 'Alle Welten werden gekauft, jede Station gilt mit allen Sternen als geschafft, und alle Decks, Tische, Musikstücke, Titel, Rahmen und Porträts werden freigeschaltet.', 'Freischalten', 'Abbrechen').then(ok => { if (!ok) return; unlockAll(); toast('Alles freigeschaltet'); renderSaveInfo(); renderControls(); }); break;
     case 'buyreset': PURCHASE.worlds = {}; savePurchase(); toast('Käufe zurückgesetzt'); renderSaveInfo(); break;
     case 'shopreroll': { const st = dailyState(); st.shop = rollShop(dayKey(), ':' + Date.now()); st.deal = null; saveDaily(); dailyState(); toast(st.shop.length ? 'Laden neu bestückt' : 'Im Laden gibt es nichts mehr, das du nicht hast'); break; }
-    case 'online': closeAllSheets(); if (mq().pc.matches) openHubOnline(); else openSheet({id: 'online'}); break;
+    case 'online': openOnline(); break;
     case 'setup': freePlay(); break;
     case 'tutorial': closeAllSheets(); startStation('w0s1'); break;
     case 'resetstory': confirmDialog('Storymodus zurücksetzen?', 'Alle Stationen, Sterne, Münzen und Belohnungen aus dem Storymodus gehen verloren.', 'Zurücksetzen', 'Abbrechen').then(ok => { if (ok) { resetStory(); clearStorySave(); toast('Storymodus zurückgesetzt'); } }); break;

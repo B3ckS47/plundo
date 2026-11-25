@@ -113,8 +113,10 @@ async function enterTable(code) {
   ON.unpresence = await NET.presence(`tables/${code}/presence/${netUid()}`);
   // Name, Porträt oder Rahmen geändert, seit man sich gesetzt hat: Platz auffrischen
   try { const t = await NET.get('tables/' + code), s = t && t.seats || {}; for (let i = 0; i < SEATS; i++) if (s[i] && s[i].uid === netUid()) { const d = mySeatData(); if (JSON.stringify(s[i]) !== JSON.stringify(d)) await NET.set(`tables/${code}/seats/${i}`, d); } } catch (e) {}
+  let first = true;
   ON.unwatch = NET.watch('tables/' + code, t => {
     ON.t = t;
+    if (first && t) { first = false; hostRecover(code, t); }
     if (!t || t.state === 'closed') { const wasGuest = t && t.host !== netUid(); dropTable(); if (wasGuest || !t) toast('Der Gastgeber hat den Tisch geschlossen.'); }
     else if (!Object.values(t.seats || {}).some(s => s && s.uid === netUid())) { dropTable(); toast('Du bist nicht mehr an diesem Tisch.'); }
     else ongWatchTable(t);
@@ -167,7 +169,7 @@ const tagKey = t => String(t || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slic
 const myPub = () => { const d = mySeatData(); delete d.uid; d.tag = myTag(); return d; };
 function socRender() { renderOnline(); renderInvBar(); }
 async function startSocial() {
-  if (!mq().pc.matches || !onSignedIn()) return;
+  if (!onSignedIn()) return;
   const uid = netUid(); if (!uid || SOC.uid === uid) return;
   stopSocial(); SOC.uid = uid; SOC.on = true;
   try {
@@ -233,7 +235,7 @@ function answerInv(uid, yes) {
   const inv = SOC.invs[uid]; if (!inv) return;
   delete SOC.invs[uid]; NET.set(`users/${SOC.uid}/inv/${uid}`, null).catch(() => {});
   renderInvBar();
-  if (yes) { if (!HUBON) openHubOnline(); setTimeout(() => joinTable(inv.code), 200); }
+  if (yes) { openOnline(); setTimeout(() => joinTable(inv.code), 200); }
   else renderOnline();
 }
 const friendName = f => (f.pub && f.pub.name) || 'Unbekannt';
@@ -273,7 +275,7 @@ function socInviteHTML() {
 // Einladung oben rechts, egal auf welcher Seite man gerade ist (PC)
 function renderInvBar() {
   let bar = $('#invbar'); const list = Object.entries(SOC.invs).filter(([, x]) => x.code !== ON.code);
-  if (!list.length || !mq().pc.matches) { if (bar) bar.remove(); return; }
+  if (!list.length || ONG.active) { if (bar) bar.remove(); return; }
   if (!bar) { bar = document.createElement('div'); bar.id = 'invbar'; document.body.appendChild(bar); }
   const [u, x] = list[0];
   patch(bar, `${seatFace(x)}<span><b>${esc(x.name)}</b> lädt dich an den Tisch ein</span><button type="button" class="btn primary" data-soc="iyes" data-u="${u}">Beitreten</button><button type="button" class="btn" data-soc="ino" data-u="${u}">Später</button>`);
@@ -286,7 +288,7 @@ document.addEventListener('click', e => {
   else if (a === 'del') removeFriend(u);
   else if (a === 'inv') inviteFriend(u);
   else if (a === 'iyes') answerInv(u, true); else if (a === 'ino') answerInv(u, false);
-  else if (a === 'go') { if (!HUBON) openHubOnline(); joinTable(b.dataset.c); }
+  else if (a === 'go') { openOnline(); joinTable(b.dataset.c); }
   else if (a === 'myid') copyText('#' + myTag(), 'Spieler-ID kopiert');
 });
 document.addEventListener('input', e => { if (e.target.id === 'fr-id') SOC.addId = e.target.value; });
@@ -389,7 +391,7 @@ function hubOnlineHTML() {
         `<button type="button" class="iconbtn pd-x" data-on="${t ? 'leave' : 'close'}" aria-label="${t ? 'Tisch verlassen' : 'Schließen'}" title="${t ? 'Tisch verlassen' : 'Schließen'}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button></section>` +
     `</main>`;
 }
-function renderOnline() { if (HUBON && CUR === 'title') renderHub(); if (onSignedIn() && !SOC.on) startSocial(); }
+function renderOnline() { if (HUBON && CUR === 'title') renderHub(); if (SHEETS.length && topSheet().id === 'online') renderSheet(false); if (onSignedIn() && !SOC.on) startSocial(); }
 function openHubOnline() {
   const hub = $('#t-hub'), sec = $('#t-hub .pd-online'), main = $('#t-hub .pd');
   if (sec && main) { const a = main.getBoundingClientRect(), b = sec.getBoundingClientRect(); hub.style.setProperty('--from', b.height ? Math.round(b.top - a.top) + 'px' : '0px'); }
@@ -422,8 +424,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id
 function onHashEntry() {
   const m = location.hash.match(/tisch=([A-Za-z0-9]{5})/); if (!m) return;
   ON.joinCode = cleanCode(m[1]); history.replaceState(null, '', location.pathname + location.search);
-  if (mq().pc.matches) { openHubOnline(); if (onSignedIn()) setTimeout(() => joinTable(ON.joinCode), 300); }
-  else openSheet({id: 'online'});
+  openOnline(); if (onSignedIn()) setTimeout(() => joinTable(ON.joinCode), 300);
 }
 window.addEventListener('hashchange', onHashEntry);
 setTimeout(onHashEntry, 400);
@@ -564,6 +565,8 @@ setInterval(() => {
   if (!el) { el = document.createElement('div'); el.id = 'ontimer'; document.body.appendChild(el); }
   const left = Math.max(0, Math.ceil((dl - Date.now()) / 1000));
   el.className = left <= 10 ? 'low' : ''; el.innerHTML = `<i></i><b>${left}</b><small>Sek.</small>`;
+  const act = $('#act'), r = act && act.getBoundingClientRect();
+  if (r && r.width) { el.style.left = Math.round(r.right - el.offsetWidth - 12) + 'px'; el.style.top = Math.round(r.top - el.offsetHeight / 2) + 'px'; el.style.right = 'auto'; el.style.bottom = 'auto'; }
 }, 250);
 // Karten-Aktionen und „Verkaufen“ rechnet im Online-Spiel der Tisch: hier nur die Absicht verschicken
 const _cardActionsLocal = cardActions;
@@ -581,3 +584,54 @@ function ongWatchTable(t) {
 // Nach dem Ende der Online-Partie: beim Verlassen der Spielseite aufräumen
 const _setScreenLocal = setScreen;
 setScreen = function (n) { if (n !== 'game' && ONG.active && ONG.over) { if (ONG.host && ONG.code) NET.update('tables/' + ONG.code, {state: 'lobby', game: null, view: null, acts: null}).catch(() => {}); ongEnd(); } return _setScreenLocal(n); };
+
+/* ---------- Handy: „Online spielen“ als Fenster (gleiche Bausteine wie am PC, untereinander) ---------- */
+function openOnline() { if (mq().pc.matches) { if (!HUBON) openHubOnline(); return; } if (!(SHEETS.length && topSheet().id === 'online')) { closeAllSheets(); openSheet({id: 'online'}); } resumeTable(); }
+function onSeatRowHTML(i) {
+  const t = ON.t, s = t && t.seats && t.seats[i], host = amHost();
+  if (!s) return `<li class="ons-row free"><span class="su-face empty"><i>+</i></span><span class="fr-t"><b>Freier Platz</b><small>wartet auf Freunde</small></span>${host ? `<button type="button" class="btn" data-on="bot" data-i="${i}">Bot setzen</button>` : ''}</li>`;
+  const online = s.bot || (t.presence && t.presence[s.uid]);
+  const tag = s.bot ? 'Bot' : i === 0 ? 'Gastgeber' : online ? 'ist dabei' : 'nicht verbunden';
+  return `<li class="ons-row${online ? ' on' : ''}">${seatFace(s)}<span class="fr-t"><b>${esc(s.uid === netUid() ? 'Du' : s.name)}</b><small><i class="fr-dot"></i>${tag}</small></span>${host && i > 0 ? `<button type="button" class="fr-x" data-on="free" data-i="${i}" aria-label="Entfernen">×</button>` : ''}</li>`;
+}
+SHEET_VIEWS.online = () => {
+  const t = ON.t;
+  let body;
+  if (!onSignedIn()) body = `<img class="scene" src="art/kachel-online.webp" alt=""><p>Spiel mit deinen Freunden statt gegen Bots. Freie Plätze besetzt du mit Bots.</p><p class="hint">Dafür meldest du dich einmal an. Dann ist auch dein Fortschritt gesichert.</p><div class="acts"><button type="button" class="btn primary" data-acct="open">Anmelden</button></div>`;
+  else if (!t) body = `<div class="on-m"><button type="button" class="btn primary on-go" data-on="create"${ON.busy ? ' disabled' : ''}>Tisch eröffnen</button>` + socPanelsHTML() +
+    `<div class="panel on-p on-codejoin"><h3>Mit Code beitreten</h3><div class="on-join"><input id="on-code" class="on-codein" maxlength="5" autocomplete="off" spellcheck="false" placeholder="CODE" value="${esc(ON.joinCode)}" aria-label="Tisch-Code"><button type="button" class="btn" data-on="join"${ON.busy ? ' disabled' : ''}>Beitreten</button></div></div></div>`;
+  else {
+    const host = amHost(), seats = Object.values(t.seats || {}).filter(Boolean), humans = seats.filter(x => !x.bot).length;
+    body = `<div class="on-m"><div class="panel on-p"><h3>Am Tisch <span class="on-smallcode">${ON.code}</span></h3><ul class="fr-list ons-list">${[0, 1, 2, 3].map(onSeatRowHTML).join('')}</ul></div>` +
+      socInviteHTML() + cfgPanelHTML() +
+      (host ? `<button type="button" class="btn primary on-go" data-on="start"${humans < 2 || seats.length < 3 ? ' disabled' : ''}>Partie starten</button><p class="hint">${humans < 2 ? 'Warte, bis sich mindestens ein Freund dazusetzt.' : seats.length < 3 ? 'Es braucht mindestens drei Spieler: Setz einen Bot dazu.' : 'Alle bereit? Dann los!'}</p>`
+        : `<div class="panel on-p on-wait"><span class="on-dots"><i></i><i></i><i></i></span>Warte auf den Gastgeber …</div>`) +
+      `<div class="acts"><button type="button" class="btn" data-on="copylink">Link kopieren</button><button type="button" class="btn" data-on="leave">Tisch verlassen</button></div></div>`;
+  }
+  if (ON.err) body += `<p class="on-err">${esc(ON.err)}</p>`;
+  return {head: h3('Mit Freunden spielen'), body};
+};
+// Gastgeber lädt neu, während eine Partie lief: Die Partie lebte in seinem Browser und ist weg. Tisch zurück in die Lobby.
+async function hostRecover(code, t) {
+  if (!t || t.host !== netUid() || t.state !== 'play' || ONG.active) return;
+  try { await NET.update('tables/' + code, {state: 'lobby', game: null, view: null, acts: null}); toast('Die laufende Partie wurde beim Neuladen beendet. Ihr könnt neu starten.'); } catch (e) {}
+}
+// Gäste: Ist der Gastgeber zu lange weg, Hinweis zeigen
+let HOST_AWAY_AT = 0;
+setInterval(() => {
+  if (!ONG.active || ONG.host || ONG.over || !ON.t) { HOST_AWAY_AT = 0; return; }
+  const on = ON.t.presence && ON.t.presence[ON.t.host];
+  if (on) { if (HOST_AWAY_AT) { HOST_AWAY_AT = 0; toast('Der Gastgeber ist wieder da.'); } return; }
+  if (!HOST_AWAY_AT) HOST_AWAY_AT = Date.now();
+  else if (Date.now() - HOST_AWAY_AT > 15000 && Date.now() - HOST_AWAY_AT < 16000) toast('Der Gastgeber hat keine Verbindung. Die Partie wartet auf ihn.');
+}, 1000);
+// Gastgeber: Wer die Verbindung verliert, wird schneller vertreten (Zug nach 20 Sekunden), bis er wieder da ist
+let AWAY_SENT = {};
+setInterval(() => {
+  if (!ONG.active || !ONG.host || !ONG.worker || !ON.t || !ON.t.game) return;
+  Object.entries(ON.t.game.map || {}).forEach(([uid, seat]) => {
+    if (uid === netUid()) return;
+    const away = !(ON.t.presence && ON.t.presence[uid]);
+    if (AWAY_SENT[seat] !== away) { AWAY_SENT[seat] = away; ONG.worker.postMessage({t: 'away', seat, away}); }
+  });
+}, 1500);

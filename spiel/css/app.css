@@ -3403,3 +3403,19 @@ html.wide-any .sheet.bare{width:fit-content}
 #ontimer b{font:800 18px var(--body)}#ontimer small{font-size:11px;color:#e9d3a8}
 #ontimer.low{border-color:#e04040;animation:onLow 1s infinite}
 @keyframes onLow{50%{box-shadow:0 0 0 4px rgba(224,64,64,.35)}}
+/* Online am Handy: Fenster „Mit Freunden spielen“ */
+.on-m{display:flex;flex-direction:column;gap:10px}
+.on-m>.panel.on-p{margin:0;padding:12px 14px;box-shadow:none;background:rgba(120,80,30,.06);border:1px solid rgba(120,80,30,.2)}
+.on-m .on-go{width:100%;min-height:52px;font-size:18px}
+.ons-row{position:relative;display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:12px;background:rgba(120,80,30,.07)}
+.ons-row .su-face{animation:none;position:relative;flex:none}
+.ons-row .su-face img{width:40px;height:40px;border-radius:50%;object-fit:cover;object-position:50% 20%;border:2px solid var(--fc,#d9bf8c);display:block;background:#3a2414}
+.ons-row .su-face.empty{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:2px dashed rgba(120,80,30,.4)}
+.ons-row .su-face.empty i{font:400 22px/1 sans-serif;font-style:normal;color:rgba(120,80,30,.6)}
+.ons-row.on .fr-dot{background:#46a03a}
+.ons-row .btn{width:auto;flex:none;min-height:34px;padding:4px 12px;font-size:14px}
+.ons-row .fr-x{opacity:1}
+.on-m .on-cfg .on-row{grid-template-columns:52px minmax(0,1fr)}
+.on-m .acts{margin-top:2px}
+#invbar{max-width:calc(100vw - 24px)}
+@media (max-width:700px){#invbar{left:12px;right:12px;top:calc(var(--sat,0px) + 10px);flex-wrap:wrap}}

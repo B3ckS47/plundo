@@ -14,7 +14,7 @@ const LAST = {};
 function render() { if (!PUB) PUB = setTimeout(publish, 90); }
 
 /* ---------- Fragen an die Menschen: je Sitz eine Warteschlange ---------- */
-const QUEUE = {};
+const QUEUE = {}, AWAY = {};
 SERVER = {
   prompts: {}, sels: {},
   ask(who, get, ctx, data) {
@@ -32,7 +32,8 @@ function activate(seat) {
   if (job.kind === 'ask') SERVER.prompts[seat] = job; else { SERVER.sels[seat] = job; SERVER.prompts[seat] = SERVER.prompts[seat] || null; }
   job.at = Date.now();
   if (job.timer) clearTimeout(job.timer);
-  if (CFG.turn > 0) { job.deadline = Date.now() + CFG.turn * 1000; job.timer = setTimeout(() => autoAnswer(seat, job.id), CFG.turn * 1000 + 300); }
+  const secs = AWAY[seat] ? Math.min(CFG.turn || 20, 20) : CFG.turn;
+  if (secs > 0) { job.deadline = Date.now() + secs * 1000; job.timer = setTimeout(() => autoAnswer(seat, job.id), secs * 1000 + 300); }
   render();
 }
 function finish(seat, id, v) {
@@ -155,6 +156,7 @@ onmessage = e => {
       });
       render();
     } else if (m.t === 'sell') { asSeat(m.seat, () => { const r = startSell(); if (r && r.catch) r.catch(() => {}); }); render(); }
+    else if (m.t === 'away') { AWAY[m.seat] = !!m.away; const job = QUEUE[m.seat] && QUEUE[m.seat][0]; if (job) { clearTimeout(job.timer); job.timer = null; activate(m.seat); } }
     else if (m.t === 'stop') { TOKEN++; S = null; }
   } catch (err) { console.error(err); postMessage({t: 'err', msg: String(err && err.message || err)}); }
 };
