@@ -1579,8 +1579,9 @@ async function applyCurse(t,c,by){
   log(`Fluch „${c.n}“ trifft ${nmA(t)}: ${c.txt}`,'bad');
   if(t.human) stat('curses');
   fx('curse',{p:t});
-  const was={chill:t.chill,spore:t.spore,sun:t.sun,sand:t.sand};
+  const was={chill:t.chill,spore:t.spore,sun:t.sun,sand:t.sand}, l0=t.lvl;
   applyBad(t,c.eff);
+  fx('cursehit',{p:t,lost:t.lvl<l0});
   // Flüche, die über den Zug hinaus bleiben: merken, welche Karte sie gebracht hat (für die Anzeige am Spieler)
   t.curses=t.curses||{}; ['chill','spore','sun','sand'].forEach(k=>{ if(t[k] && t[k]!==was[k]) t.curses[k]=c.n; });
   discard(c);

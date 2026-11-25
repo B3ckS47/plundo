@@ -3246,3 +3246,12 @@ html.pcg-on #table .stepbtn svg{width:16px;height:16px}
 /* PC: Hinweis („Tür noch geschlossen.“, „… ist am Zug.“) liegt auf der Tür, wie die Hinweise bei aufgedeckten Karten */
 #app.pcg .gdoor{position:relative}
 #app.pcg .gdoor .idle-txt{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:2;margin:0;max-width:none;white-space:nowrap;padding:8px 16px;border-radius:14px;background:rgba(18,10,5,.74);font:500 16px/1.3 var(--body);color:#f6ead0;text-shadow:0 1px 2px #000;pointer-events:none}
+/* PC: Ziehen auf Gegner und Rucksack, Treffer-Blitz am Gegnersitz */
+#wopps .gseat.dz{outline:2px dashed rgba(243,200,115,.8);outline-offset:-4px}
+#wopps .gseat.dzh{outline:3px solid #f3c873;outline-offset:-4px;box-shadow:inset 0 0 40px rgba(243,200,115,.3)}
+#geq .ge-pack.dz{outline:2px dashed rgba(243,200,115,.8);outline-offset:-3px}
+#geq .ge-pack.dzh{outline:3px solid #f3c873;outline-offset:-3px;background-color:rgba(243,200,115,.22)}
+.seatfx{position:fixed;z-index:60;pointer-events:none;border-radius:16px;animation:seatfx .9s ease-out forwards}
+.seatfx.red{background:radial-gradient(ellipse at center,rgba(220,40,40,.25),rgba(200,20,20,.6));box-shadow:0 0 0 3px #e04040,0 0 26px rgba(224,64,64,.8)}
+.seatfx.purple{box-shadow:inset 0 0 0 3px #b06ae8,inset 0 0 30px rgba(160,80,230,.55),0 0 22px rgba(176,106,232,.85)}
+@keyframes seatfx{0%{opacity:0}15%{opacity:1}35%{opacity:.55}55%{opacity:1}100%{opacity:0}}

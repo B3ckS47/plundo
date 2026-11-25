@@ -1300,6 +1300,15 @@ const Particles = (() => {
     if (!running) { running = true; requestAnimationFrame(step); }
   } };
 })();
+// PC: Treffer bei Gegnern als kurzes Aufblitzen über ihrem Bereich (Ebene über dem Sitz, damit ein neues Zeichnen es nicht abbricht)
+function seatFlash(id, kind) {
+  if (UI.reduce || CUR !== 'game' || typeof PCGX !== 'function' || !PCGX()) return;
+  const go = () => { const z = document.querySelector(`#wopps .gseat[data-opp="${id}"]`); if (!z) return; const r = z.getBoundingClientRect(); if (!r.width) return;
+    const f = document.createElement('div'); f.className = 'seatfx ' + kind;
+    Object.assign(f.style, {left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px'});
+    document.body.appendChild(f); setTimeout(() => f.remove(), 1000); };
+  requestAnimationFrame(go);
+}
 function burstAt(sel, n) { const el = $(sel); if (!el) return; const r = el.getBoundingClientRect(); if (!r.width && !r.height) return; Particles.burst(r.left + r.width / 2, r.top + r.height / 2, n); }
 
 FX_HANDLER = (t, d) => {
@@ -1316,6 +1325,7 @@ FX_HANDLER = (t, d) => {
     case 'escape': Snd.sfx('escape'); if (d.p.human) banner('Entkommen!', 'good'); break;
     case 'hurt': Snd.sfx('hurt'); if (d.p.human) { shake(); flash('red'); buzz([60, 40, 60]); } break;
     case 'curse': Snd.sfx('curse'); if (d.p.human) { flash('purple'); buzz(80); banner('Verflucht!', 'bad'); } break;
+    case 'cursehit': if (!d.p.human) seatFlash(d.p.id, d.lost ? 'red' : 'purple'); break;
     case 'death': Snd.sfx('death'); if (d.p.human) { flash('dark'); banner('Tot!', 'bad'); buzz([100, 50, 100]); } break;
     case 'dice': Snd.sfx('dice'); W.diceHideAt = 0; break;
     case 'diceland': Snd.sfx('diceland'); buzz(20); W.diceHideAt = performance.now() + 1500; setTimeout(render, 1550); break;
@@ -2077,8 +2087,8 @@ const Drag = (() => {
     }
     const el = document.elementFromPoint(x, y); if (!el) return null;
     let z;
-    if ((z = el.closest('.oc[data-opp]'))) return {key: 'opp:' + z.dataset.opp, el: z};
-    if ((z = el.closest('#mebar .packbtn'))) return {key: 'pack', el: z};
+    if ((z = el.closest('.oc[data-opp], #wopps .gseat[data-opp]'))) return {key: 'opp:' + z.dataset.opp, el: z};
+    if ((z = el.closest('#mebar .packbtn, #geq .ge-pack:not(.ge-sell)'))) return {key: 'pack', el: z};
     // Ohne geteiltes Feld gehören die beiden Stärke-Anzeigen unten einfach zum Spielfeld
     if (el.closest('#table .side')) return {key: 'table', el: $('#table')};
     if ((z = el.closest('#table .art[data-uid]'))) return {key: 'art:' + z.dataset.uid, el: z, art: true};
@@ -2093,10 +2103,11 @@ const Drag = (() => {
   }
   function zoneEls(key) {
     if (key === 'table') return [$('#table')];
-    if (key === 'pack') return [$('#mebar .packbtn')];
+    const vis = sel => [...document.querySelectorAll(sel)].filter(z => z.getClientRects().length);
+    if (key === 'pack') return vis('#mebar .packbtn, #geq .ge-pack:not(.ge-sell)');
     if (key === 'fighter') return [$('#table .side.me')];
     if (key === 'monside') return [$('#table .side.mon')];
-    if (key.startsWith('opp:')) return [$(`.oc[data-opp="${key.slice(4)}"]`)];
+    if (key.startsWith('opp:')) return vis(`.oc[data-opp="${key.slice(4)}"], #wopps .gseat[data-opp="${key.slice(4)}"]`);
     if (key.startsWith('art:')) return [$(`#table .art[data-uid="${key.slice(4)}"]`)];
     return [];
   }
