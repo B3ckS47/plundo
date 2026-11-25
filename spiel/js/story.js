@@ -67,7 +67,19 @@ const COSMETICS = {
     // Nur aus der Goldtruhe
     truhenbeschlag: {n: 'Truhenbeschlag', c: '#6b4a2b'},
     schluesselbund: {n: 'Schlüsselbund', c: '#c9a227'},
-    edelsteine: {n: 'Edelsteinkranz', c: '#b03a7a'}
+    edelsteine: {n: 'Edelsteinkranz', c: '#b03a7a'},
+    // Krämerladen und Truhen, nach Seltenheit gewichtet
+    strohkranz: {n: 'Strohkranz', c: '#d8b45a'},
+    laugenbrezel: {n: 'Laugenbrezel', c: '#a8561e'},
+    schiffstau: {n: 'Schiffstau', c: '#b9a27a'},
+    hufeisen: {n: 'Hufeisen', c: '#6e6a66'},
+    muschelkranz: {n: 'Muschelkranz', c: '#f1c9b0'},
+    efeuranke: {n: 'Efeuranke', c: '#6f8f4a'},
+    drachenschuppe: {n: 'Drachenschuppe', c: '#a3242a'},
+    eiskristall: {n: 'Eiskristall', c: '#bfe6f5'},
+    geisterflamme: {n: 'Geisterflamme', c: '#63d6c4'},
+    phoenixfeder: {n: 'Phönixfeder', c: '#f0802a'},
+    sternenkranz: {n: 'Sternenkranz', c: '#23356e'}
   },
   portrait: {
     hoppel: {n: 'Hoppel', src: 'icons/portrait-hoppel.png'},   // Easter Egg (siehe hasenfuss)
@@ -106,7 +118,18 @@ const COSMETICS = {
     sternennacht: {n: 'Sternennacht', p: '50% 55%'},
     abendrot: {n: 'Abendrot', p: '50% 55%'},
     // Nur aus der Goldtruhe
-    schatzkammer: {n: 'Schatzkammer', p: '50% 62%'}
+    schatzkammer: {n: 'Schatzkammer', p: '50% 62%'},
+    // Krämerladen und Truhen, nach Seltenheit gewichtet
+    bauernhof: {n: 'Bauernhof', p: '50% 60%'},
+    wochenmarkt: {n: 'Wochenmarkt', p: '50% 55%'},
+    regengasse: {n: 'Regengasse', p: '50% 55%'},
+    winterdorf: {n: 'Winterdorf', p: '50% 55%'},
+    kirschbluetengarten: {n: 'Kirschblütengarten', p: '50% 55%'},
+    sturmkueste: {n: 'Sturmküste', p: '30% 50%'},
+    vulkaninsel: {n: 'Vulkaninsel', p: '35% 55%'},
+    drachenberg: {n: 'Drachenberg', p: '60% 55%'},
+    wolkenschloss: {n: 'Wolkenschloss', p: '60% 50%'},
+    nordlicht: {n: 'Nordlicht', p: '50% 55%'}
   }
 };
 function cosmeticName(id) {
@@ -704,7 +727,16 @@ const SHOP_POOL = [
   {id: 'frame:lavendel', price: 40}, {id: 'frame:perlmutt', price: 50},
   {id: 'title:gluckspilz', price: 30}, {id: 'title:wuerfelkoenig', price: 30}, {id: 'title:kartenhai', price: 30},
   {id: 'title:fruehaufsteher', price: 30}, {id: 'title:nachteule', price: 30}, {id: 'title:schatzsucher', price: 30},
-  {id: 'bg:sternennacht', price: 70}, {id: 'bg:abendrot', price: 70}
+  {id: 'bg:sternennacht', price: 70}, {id: 'bg:abendrot', price: 70},
+  // Neu: Preis nach Seltenheit
+  {id: 'frame:strohkranz', price: 40}, {id: 'frame:laugenbrezel', price: 40}, {id: 'frame:schiffstau', price: 40},
+  {id: 'frame:hufeisen', price: 70}, {id: 'frame:muschelkranz', price: 70}, {id: 'frame:efeuranke', price: 70},
+  {id: 'frame:drachenschuppe', price: 120}, {id: 'frame:eiskristall', price: 120}, {id: 'frame:geisterflamme', price: 120},
+  {id: 'frame:phoenixfeder', price: 200}, {id: 'frame:sternenkranz', price: 200},
+  {id: 'bg:bauernhof', price: 60}, {id: 'bg:wochenmarkt', price: 60}, {id: 'bg:regengasse', price: 60},
+  {id: 'bg:winterdorf', price: 90}, {id: 'bg:kirschbluetengarten', price: 90}, {id: 'bg:sturmkueste', price: 90},
+  {id: 'bg:vulkaninsel', price: 140}, {id: 'bg:drachenberg', price: 140},
+  {id: 'bg:wolkenschloss', price: 220}, {id: 'bg:nordlicht', price: 220}
 ];
 const SHOP_N = 4;
 const STREAK_FRAME = 'frame:wochenstammgast';
@@ -728,6 +760,9 @@ const RAR = {
   'bg:sandstrand': 2, 'bg:hohesee': 2, 'bg:sternennacht': 2, 'bg:abendrot': 2,
   'title:truhenknacker': 2, 'title:gluecksritter': 2, 'title:dauerbrenner': 2, 'title:seebaer': 2, 'title:kaepten': 2,
   'frame:wochenstammgast': 3, 'frame:truhenbeschlag': 3, 'frame:schluesselbund': 3, 'portrait:hilde': 3, 'portrait:klappi': 3, 'portrait:kurt': 3,
+  'frame:hufeisen': 2, 'frame:muschelkranz': 2, 'frame:efeuranke': 2, 'bg:winterdorf': 2, 'bg:kirschbluetengarten': 2, 'bg:sturmkueste': 2,
+  'frame:drachenschuppe': 3, 'frame:eiskristall': 3, 'frame:geisterflamme': 3, 'bg:vulkaninsel': 3, 'bg:drachenberg': 3,
+  'frame:phoenixfeder': 4, 'frame:sternenkranz': 4, 'bg:wolkenschloss': 4, 'bg:nordlicht': 4,
   'frame:edelsteine': 4, 'portrait:minka': 4, 'bg:schatzkammer': 4, 'title:stammtischlegende': 4, 'portrait:hoppel': 4, 'title:hasenfuss': 4
 };
 const rarityOf = id => RAR[id] || 1;
