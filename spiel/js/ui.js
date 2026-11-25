@@ -67,7 +67,7 @@ function botLook(p) {
   const L = BOT_LOOKS[h % BOT_LOOKS.length], fk = L[1 + (h >>> 8) % (L.length - 1)];
   return {bg: ALL_BGS.find(x => x[0] === L[0]) || BACKDROPS[0], frame: ALL_FRAMES.find(x => x[0] === fk) || FRAMES[0]};
 }
-function bgOf(p) { return p.human ? myBg() : botLook(p).bg; }
+function bgOf(p) { return p.human ? myBg() : p.bg ? (ALL_BGS.find(q => q[0] === p.bg) || BACKDROPS[0]) : botLook(p).bg; }
 // Rahmen eines Spielers: [Schlüssel, Name, Farbe]
 function frameOf(p) { return p.human ? (ALL_FRAMES.find(q => q[0] === PROFILE.frame && cosOpen(q)) || FRAMES[0]) : p.fr ? (ALL_FRAMES.find(q => q[0] === p.fr) || FRAMES[0]) : botLook(p).frame; }
 // Porträt mit Rahmengrafik für die großen Köpfe (Profil im Spiel)
@@ -1209,7 +1209,7 @@ function fitNames(root) {
 // Hintergrund als Ware: kleines Gemälde auf der Staffelei (Leinwand ist in der Grafik ausgeschnitten)
 const easel = (key, c, cls = '') => `<span class="easel${cls}"><i style="background-image:url('art/kulisse-${key}-k.webp');background-position:${(c && c.p) || '50% 50%'}"></i></span>`;
 function heroHead(p) {
-  const title = p.human ? myTitle() : '';
+  const title = p.human ? myTitle() : (p.ti && COSMETICS.title[p.ti]) || '';
   return `<div class="sh-hero${bgAttr(bgOf(p))}"><span class="hh-pt">${bigPortrait(p)}<b class="hh-lvl" aria-label="Stufe ${p.lvl}">${p.lvl}</b></span>` +
     `<h3><span class="fitname">${esc(p.human ? myName() : p.name)}</span>${title ? `<em class="sh-title">${esc(title)}</em>` : ''}${p.dead ? '<span class="sh-lvl">tot</span>' : ''}<span class="coins">${coinsHTML(p.lvl)}</span></h3></div>`;
 }

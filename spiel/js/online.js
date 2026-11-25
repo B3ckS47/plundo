@@ -60,7 +60,7 @@ const onSignedIn = () => NET_LOCAL || !!(ACC.user && ACC.user.uid);
 /* ---------- Tisch: eröffnen, beitreten, verlassen ---------- */
 function mySeatData() {
   const pt = (ALL_PORTRAITS.find(q => q[0] === PROFILE.portrait && cosOpen(q)) || PORTRAITS[0])[0];
-  return {uid: netUid(), name: (PROFILE.name || 'Abenteurer').slice(0, 16), pt, fr: myFrameKey(), ti: myTitle() ? PROFILE.title : ''};
+  return {uid: netUid(), name: (PROFILE.name || 'Abenteurer').slice(0, 16), pt, fr: myFrameKey(), ti: myTitle() ? PROFILE.title : '', bg: myBg()[0]};
 }
 const newCode = () => Array.from({length: 5}, () => CODE_ABC[Math.floor(Math.random() * CODE_ABC.length)]).join('');
 const cleanCode = s => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
@@ -449,7 +449,7 @@ function startOnlineGame() {
   const cfg = tCfg(), styles = BOT_STYLES.slice().sort(() => Math.random() - 0.5);
   if (DECK.deck !== cfg.deck || DECK.variant !== cfg.variant) { const d = deckById(cfg.deck); if (d.unlocked()) { DECK.deck = d.id; DECK.variant = cfg.variant; DECK.counts = currentCounts(DECK); } }
   const st = deckStats(DECK.counts), counts = st.ok ? DECK.counts : variantCounts('grund', 'standard');
-  const gs = seats.map((s, i) => s.bot ? {name: s.name, bot: true, face: ptSrc(s.pt), pt: s.pt, style: styles[i % styles.length]} : {name: s.name, uid: s.uid, face: ptSrc(s.pt), pt: s.pt, fr: s.fr, ti: s.ti});
+  const gs = seats.map((s, i) => s.bot ? {name: s.name, bot: true, face: ptSrc(s.pt), pt: s.pt, style: styles[i % styles.length]} : {name: s.name, uid: s.uid, face: ptSrc(s.pt), pt: s.pt, fr: s.fr, ti: s.ti, bg: s.bg || 'keiner'});
   const map = {}; seats.forEach((s, i) => { if (!s.bot) map[s.uid] = i; });
   return onBusy(async () => {
     await NET.update('tables/' + ON.code, {state: 'play', view: null, acts: null, game: {map, n: gs.length, started: NET.now(), cfg}});
@@ -508,6 +508,10 @@ function ongApply(json) {
     scn: 'online', online: false, stats: {}
   });
   S.players.forEach(p => { ['hand', 'eq', 'pack'].forEach(k => { p[k] = p[k] || []; }); });
+  // Derselbe Kampf behält dasselbe Objekt, sonst baut die Oberfläche das Spielfeld bei jeder Änderung neu auf (Flackern beim Würfeln)
+  const ck = c => c ? c.f + ':' + (c.mons && c.mons[0] && c.mons[0].c.uid) : '';
+  if (S.combat && ONG.combat && ck(S.combat) === ck(ONG.combat)) { const oc = ONG.combat; Object.keys(oc).forEach(k => delete oc[k]); Object.assign(oc, S.combat); S.combat = oc; }
+  ONG.combat = S.combat || null;
   ACT = 0;
   const pr = v.prompt;
   if (pr) {

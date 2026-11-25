@@ -134,7 +134,7 @@ function startGame(m) {
   S = {players: [], door: d.door, tr: d.tr, doorDisc: [], trDisc: [], cur: 0, turn: 1, phase: 0, combat: null, reveal: null, log: [], winner: null, scn: null, online: true, draft: true,
     stats: {played: 0, lvlLost: 0, curses: 0, help: 0, ran: 0, bossBy: null, bossHelped: false, fightWon: false}};
   if (CFG.goal && CFG.goal !== 10) S.goal = CFG.goal;
-  m.seats.forEach((s, i) => { const p = newPlayer(i, s.name, !s.bot); Object.assign(p, {face: s.face, uid: s.uid || null, fr: s.fr || null, ti: s.ti || null, pt: s.pt || null}); if (s.style) p.style = s.style; S.players.push(p); });
+  m.seats.forEach((s, i) => { const p = newPlayer(i, s.name, !s.bot); Object.assign(p, {face: s.face, uid: s.uid || null, fr: s.fr || null, ti: s.ti || null, pt: s.pt || null, bg: s.bg || null}); if (s.style) p.style = s.style; S.players.push(p); });
   S.tides = [...S.door, ...S.tr].some(c => c.w === 4);
   buildCatalog(allCards());
   log(`Online-Partie mit Draft. Wer zuerst Stufe ${WINLVL()} erreicht, gewinnt. ${S.players[0].name} beginnt. Zuerst wählt jeder seine Starthand: 4 Türkarten, dann 4 Schatzkarten.`, 'sys');
