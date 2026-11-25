@@ -69,7 +69,7 @@ function botLook(p) {
 }
 function bgOf(p) { return p.human ? myBg() : botLook(p).bg; }
 // Rahmen eines Spielers: [Schlüssel, Name, Farbe]
-function frameOf(p) { return p.human ? (ALL_FRAMES.find(q => q[0] === PROFILE.frame && cosOpen(q)) || FRAMES[0]) : botLook(p).frame; }
+function frameOf(p) { return p.human ? (ALL_FRAMES.find(q => q[0] === PROFILE.frame && cosOpen(q)) || FRAMES[0]) : p.fr ? (ALL_FRAMES.find(q => q[0] === p.fr) || FRAMES[0]) : botLook(p).frame; }
 // Porträt mit Rahmengrafik für die großen Köpfe (Profil im Spiel)
 function bigPortrait(p) {
   const f = frameOf(p), art = frameArt(f[0]), me = p.human ? ' me' : '';
@@ -909,7 +909,8 @@ function renderAct() {
   if (S.winner != null) {
     const w = S.winner >= 0 ? P(S.winner) : null, story = !!S.scn;
     cls += ' your';
-    html = `<div class="cap"><span class="ct">${w && w.human ? 'Du hast gewonnen!' : w ? esc(w.name) + ' gewinnt.' : 'Nicht geschafft.'}</span></div><div class="dbtns"><button type="button" class="btn primary" data-go="again">Nochmal</button><button type="button" class="btn" data-go="${story ? 'storymap' : 'menu'}">${story ? 'Zur Karte' : 'Hauptmenü'}</button></div>`;
+    html = typeof ONG !== 'undefined' && ONG.active ? `<div class="cap"><span class="ct">${w && w.human ? 'Du hast gewonnen!' : w ? esc(w.name) + ' gewinnt.' : 'Partie vorbei.'}</span></div><div class="dbtns"><button type="button" class="btn primary" data-on="backtable">Zurück an den Tisch</button></div>`
+      : `<div class="cap"><span class="ct">${w && w.human ? 'Du hast gewonnen!' : w ? esc(w.name) + ' gewinnt.' : 'Nicht geschafft.'}</span></div><div class="dbtns"><button type="button" class="btn primary" data-go="again">Nochmal</button><button type="button" class="btn" data-go="${story ? 'storymap' : 'menu'}">${story ? 'Zur Karte' : 'Hauptmenü'}</button></div>`;
   } else if (UI.prompt) {
     const q = UI.prompt.get(), ctx = UI.prompt.ctx, data = UI.prompt.data; tutGate(q, ctx); UI.opts = q.opts;
     cls += ' your';
@@ -1169,7 +1170,7 @@ const SHEET_VIEWS = {
     const s = UI.sel; if (!s) return null;
     const p = me(), cands = [];
     [['hand', p.hand], ['eq', p.eq], ['pack', p.pack]].forEach(([w, arr]) => arr.forEach(c => { if (s.filter(c, w)) cands.push([c, w]); }));
-    const picked = [...s.picked].map(findCard).filter(Boolean), err = s.validate ? s.validate(picked) : null;
+    const picked = [...s.picked].map(u => findCard(u)).filter(Boolean), err = s.validate ? s.validate(picked) : null;
     const ok = picked.length >= s.min && picked.length <= s.max && !err;
     const mini = ([c, w]) => cardMini(c, {where: w, extra: (s.picked.has(c.uid) ? 'picked' : '') + (UI.adv && UI.adv.picks && UI.adv.picks.includes(c.uid) ? ' rec' : '') + (w === 'eq' && !usable(p, c) ? ' inactive' : '')});
     const zones = [['eq', 'Ausgerüstet'], ['pack', 'Im Rucksack'], ['hand', 'Auf der Hand']].filter(([w]) => cands.some(x => x[1] === w));
@@ -1913,7 +1914,7 @@ function go(a) {
     case 'log': $$('.endov').forEach(x => x.remove()); openSheet({id: 'log'}); break;
     case 'equip': openSheet({id: 'equip'}); break;
     case 'parts': openSheet({id: 'parts'}); break;
-    case 'sell': startSell(); render(); break;
+    case 'sell': if (typeof ONG !== 'undefined' && ONG.active) { ongSend({t: 'sell'}); break; } startSell(); render(); break;
     case 'sound': { const on = SET.music || SET.sfx; SET.music = !on; SET.sfx = !on; saveSettings(); if (SET.music) { Snd.unlock(); Snd.startMusic(); } toast(on ? 'Ton aus' : 'Ton an'); renderSoundBtn(); if (CUR === 'game') render(); break; }
     case 'delsave': confirmDialog('Spielstand löschen?', 'Das gespeicherte Spiel ist danach weg.', 'Löschen', 'Behalten').then(ok => { if (ok) { clearSave(); if (GAME_ON) { GAME_ON = false; TOKEN++; } renderSaveInfo(); toast('Spielstand gelöscht'); } }); break;
   }

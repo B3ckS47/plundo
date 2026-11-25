@@ -117,6 +117,7 @@ async function enterTable(code) {
     ON.t = t;
     if (!t || t.state === 'closed') { const wasGuest = t && t.host !== netUid(); dropTable(); if (wasGuest || !t) toast('Der Gastgeber hat den Tisch geschlossen.'); }
     else if (!Object.values(t.seats || {}).some(s => s && s.uid === netUid())) { dropTable(); toast('Du bist nicht mehr an diesem Tisch.'); }
+    else ongWatchTable(t);
     renderOnline();
   });
   renderOnline();
@@ -374,7 +375,7 @@ function hubOnlineHTML() {
       `<p class="on-note">Für Freunde, die noch nicht in deiner Liste sind: Code oder Link schicken.</p>` +
       `<div class="on-copy"><button type="button" class="btn" data-on="copycode">Code kopieren</button><button type="button" class="btn" data-on="copylink">Link kopieren</button></div></div>` +
       cfgPanelHTML() +
-      (host ? `<button type="button" class="btn primary su-start on-go" data-on="start"${humans < 2 || filled < 3 ? ' disabled' : ''}>Partie starten</button><p class="on-soon">${humans < 2 ? 'Warte, bis sich mindestens ein Freund an den Tisch gesetzt hat.' : filled < 3 ? 'Es braucht mindestens drei Spieler: Setz einen Bot auf einen freien Platz.' : 'Online-Partien kommen im nächsten Schritt. Die Lobby kannst du schon ausprobieren.'}</p>`
+      (host ? `<button type="button" class="btn primary su-start on-go" data-on="start"${humans < 2 || filled < 3 ? ' disabled' : ''}>Partie starten</button><p class="on-soon">${humans < 2 ? 'Warte, bis sich mindestens ein Freund an den Tisch gesetzt hat.' : filled < 3 ? 'Es braucht mindestens drei Spieler: Setz einen Bot auf einen freien Platz.' : 'Alle bereit? Dann los!'}</p>`
         : `<div class="panel on-p on-wait"><span class="on-dots"><i></i><i></i><i></i></span>Warte auf den Gastgeber …</div>`);
   }
   if (ON.err) side += `<p class="on-err">${esc(ON.err)}</p>`;
@@ -413,7 +414,7 @@ document.addEventListener('click', e => {
   else if (a === 'free') freeSeat(i);
   else if (a === 'copycode') copyText(ON.code, 'Code kopiert');
   else if (a === 'copylink') copyText(tableLink(ON.code), 'Link kopiert');
-  else if (a === 'start') toast('Die Online-Partie selbst kommt im nächsten Schritt.');
+  else if (a === 'start') startOnlineGame();
 });
 document.addEventListener('input', e => { if (e.target.id === 'on-code') { const v = cleanCode(e.target.value); if (v !== e.target.value) e.target.value = v; ON.joinCode = v; } });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'on-code') joinTable(e.target.value); });
@@ -428,3 +429,151 @@ window.addEventListener('hashchange', onHashEntry);
 setTimeout(onHashEntry, 400);
 // Freunde und Einladungen: Verbindung, sobald man angemeldet ist (am PC)
 setTimeout(() => { if (NET_LOCAL) startSocial(); }, 600);
+
+/* ================= Online-Partie =================
+   Gastgeber: startet die Partie in einem Worker (js/tisch-server.js). Der Worker schickt jedem Menschen seinen Spielstand.
+   Den eigenen zeigt der Gastgeber direkt an, die der Gäste schreibt er nach tables/{CODE}/view/{Sitz}.
+   Gäste: lesen ihren Spielstand dort und schicken Entscheidungen nach tables/{CODE}/acts/{uid}.
+   Auf allen Geräten zeigt die normale Spieloberfläche den Stand an; nur rechnet sie nicht selbst. */
+const ONG = {active: false, host: false, seat: -1, code: null, worker: null, lastV: 0, lastFx: 0, offs: [], actSeen: {}, seq: 0, map: {}, cfg: null, over: false};
+function gameSeats(t) {
+  const out = [];
+  for (let i = 0; i < SEATS; i++) { const s = t.seats && t.seats[i]; if (s) out.push(Object.assign({tseat: i}, s)); }
+  return out;
+}
+const ptSrc = k => (ALL_PORTRAITS.find(q => q[0] === k) || PORTRAITS[0])[2];
+function startOnlineGame() {
+  const t = ON.t; if (!amHost() || !t || ONG.active) return;
+  const seats = gameSeats(t), humans = seats.filter(s => !s.bot);
+  if (humans.length < 2 || seats.length < 3) return;
+  const cfg = tCfg(), styles = BOT_STYLES.slice().sort(() => Math.random() - 0.5);
+  if (DECK.deck !== cfg.deck || DECK.variant !== cfg.variant) { const d = deckById(cfg.deck); if (d.unlocked()) { DECK.deck = d.id; DECK.variant = cfg.variant; DECK.counts = currentCounts(DECK); } }
+  const st = deckStats(DECK.counts), counts = st.ok ? DECK.counts : variantCounts('grund', 'standard');
+  const gs = seats.map((s, i) => s.bot ? {name: s.name, bot: true, face: ptSrc(s.pt), pt: s.pt, style: styles[i % styles.length]} : {name: s.name, uid: s.uid, face: ptSrc(s.pt), pt: s.pt, fr: s.fr, ti: s.ti});
+  const map = {}; seats.forEach((s, i) => { if (!s.bot) map[s.uid] = i; });
+  return onBusy(async () => {
+    await NET.update('tables/' + ON.code, {state: 'play', view: null, acts: null, game: {map, n: gs.length, started: NET.now(), cfg}});
+    const w = new Worker('js/tisch-server.js');
+    ONG.worker = w; ONG.host = true;
+    w.onmessage = e => {
+      const m = e.data || {};
+      if (m.t === 'view') { if (m.seat === ONG.seat) ongApply(m.json); else NET.set(`tables/${ON.code}/view/${m.seat}`, m.json).catch(() => {}); }
+      else if (m.t === 'over') { NET.set(`tables/${ON.code}/game/over`, true).catch(() => {}); }
+      else if (m.t === 'err') console.error('Tisch:', m.msg);
+    };
+    w.onerror = e => { console.error('Worker', e.message); toast('Die Online-Partie ist abgestürzt.'); };
+    ongBegin(ON.code, map[netUid()], cfg, true);
+    // Entscheidungen der Gäste an den Worker weiterreichen
+    humans.forEach(s => { if (s.uid === netUid()) return; const seat = map[s.uid];
+      ONG.offs.push(NET.watch(`tables/${ON.code}/acts/${s.uid}`, a => { if (!a || !a.n || ONG.actSeen[s.uid] >= a.n) return; ONG.actSeen[s.uid] = a.n; const m = Object.assign({}, a, {seat}); delete m.n; w.postMessage(m); })); });
+    w.postMessage({t: 'start', seats: gs, cfg, counts});
+  });
+}
+// Gemeinsamer Einstieg für Gastgeber und Gäste: Spieloberfläche im Anzeigemodus öffnen
+function ongBegin(code, seat, cfg, host) {
+  Object.assign(ONG, {active: true, host: !!host, seat, code, lastV: 0, lastFx: 0, over: false, cfg});
+  SCN = null; STORY_RUN = null; freeMood(cfg.table, cfg.table); applySettings();
+  UI.coach = false; UI.open = false; UI.speed = 'normal'; UI.goal = cfg.goal || 10;
+  TOKEN++; S = null; UI.prompt = null; UI.sel = null; UI.dview = null;
+  buildCatalog(cardPool().map(x => mk(Object.assign({}, x.tpl), x.deck)));
+  W.reset(); GAME_ON = true; STACK.length = 0; STACK.push('title');
+  closeAllSheets(); HUBON = false;
+  if (!host) ONG.offs.push(NET.watch(`tables/${code}/view/${seat}`, json => { if (json) ongApply(json); }));
+}
+function ongEnd() {
+  ONG.offs.forEach(f => { try { f(); } catch (e) {} }); ONG.offs = [];
+  if (ONG.worker) { ONG.worker.terminate(); ONG.worker = null; }
+  ONG.active = false; ONG.seat = -1; UI.prompt = null; UI.resolve = null; UI.sel = null;
+}
+function ongSend(m) {
+  if (!ONG.active) return;
+  if (ONG.host && ONG.worker) ONG.worker.postMessage(Object.assign({}, m, {seat: ONG.seat}));
+  else NET.set(`tables/${ONG.code}/acts/${netUid()}`, Object.assign({}, m, {n: ++ONG.seq + Date.now() * 10})).catch(e => toast(onErr(e)));
+}
+const hiddenCards = n => Array.from({length: Math.max(0, n || 0)}, (_, i) => ({uid: -(i + 1), k: 'monster', n: '?', hidden: true}));
+function ongUnpack(d) {
+  if (d == null || typeof d !== 'object') return d;
+  if (Array.isArray(d)) return d.map(ongUnpack);
+  if (d.$p != null) return S.players[d.$p];
+  const o = {}; Object.keys(d).forEach(k => { o[k] = ongUnpack(d[k]); }); return o;
+}
+function ongApply(json) {
+  let v; try { v = JSON.parse(json); } catch (e) { return; }
+  if (!ONG.active || v.v <= ONG.lastV) return;
+  ONG.lastV = v.v;
+  const Sv = v.S, dd = Sv.doorDiscN || 0, td = Sv.trDiscN || 0;
+  S = Object.assign({}, Sv, {
+    door: hiddenCards(Sv.door), tr: hiddenCards(Sv.tr),
+    doorDisc: [...hiddenCards(dd - (Sv.doorDisc || []).length), ...(Sv.doorDisc || [])], trDisc: [...hiddenCards(td - (Sv.trDisc || []).length), ...(Sv.trDisc || [])],
+    scn: 'online', online: false, stats: {}
+  });
+  S.players.forEach(p => { ['hand', 'eq', 'pack'].forEach(k => { p[k] = p[k] || []; }); });
+  ACT = 0;
+  const pr = v.prompt;
+  if (pr) {
+    const data = ongUnpack(pr.data);
+    UI.prompt = {get: () => pr.q, ctx: pr.ctx, data, deadline: pr.deadline};
+    UI.resolve = val => { UI.prompt = null; UI.resolve = null; ongSend({t: 'ans', id: pr.id, v: val}); render(); };
+    UI.dview = data && data.draft ? Object.assign({}, data, {phase: 'pick'}) : null;
+  } else { UI.prompt = null; UI.resolve = null; UI.dview = null; }
+  const sl = v.sel;
+  if (sl) {
+    if (!UI.sel || UI.sel.netId !== sl.id) {
+      const ok = new Set(sl.allowed || []);
+      UI.sel = {netId: sl.id, ctx: sl.ctx, title: sl.title, text: sl.text, min: sl.min, max: sl.max, cancel: sl.cancel, optional: sl.optional, deadline: sl.deadline,
+        filter: c => ok.has(c.uid), picked: new Set((sl.pre || []).filter(u => ok.has(u))), confirm: () => sl.confirm || 'Bestätigen',
+        extra: sl.ctx === 'sell' ? cs => { const p = me(), s2 = sellValue(p, cs); return `Summe: <b>${fmt(s2.sum)} Gold</b>`; } : null,
+        done: uids => { UI.sel = null; ongSend({t: 'sel', id: sl.id, uids: uids || null}); render(); }, reject: () => {}};
+    }
+  } else UI.sel = null;
+  UI.roll = v.roll || null;
+  (v.fx || []).forEach(f => { if (f.n <= ONG.lastFx) return; ONG.lastFx = f.n; if (f.t === 'gameover' || f.t === 'newgame') { if (f.t === 'gameover') ongGameOver(); return; } try { FX_HANDLER(f.t, ongUnpack(f.d)); } catch (e) {} });
+  if (CUR !== 'game') setScreen('game');
+  render();
+}
+function ongGameOver() {
+  if (ONG.over) return; ONG.over = true;
+  setTimeout(() => { if (!S) return; showEnd(S.winner); const b = $('.endov [data-go="again"]'); if (b) { b.removeAttribute('data-go'); b.dataset.on = 'backtable'; b.textContent = 'Zurück an den Tisch'; } }, 1000);
+}
+// Partie verlassen: Gastgeber beendet sie für alle, Gäste stehen vom Tisch auf
+async function ongQuit() {
+  closeAllSheets();
+  const host = ONG.host;
+  const ok = await confirmDialog(host ? 'Partie für alle beenden?' : 'Partie verlassen?', host ? 'Die Online-Partie läuft auf deinem Gerät. Beendest du sie, ist sie für alle am Tisch vorbei.' : 'Du stehst vom Tisch auf. Deine Züge macht ab jetzt das Spiel für dich, bis die Partie vorbei ist.', host ? 'Beenden' : 'Verlassen', 'Weiterspielen');
+  if (!ok) return;
+  if (host) { await NET.update('tables/' + ONG.code, {state: 'lobby', game: null, view: null, acts: null}).catch(() => {}); ongEnd(); setScreen('title'); openHubOnline(); }
+  else { ongEnd(); await leaveTable(); setScreen('title'); openHubOnline(); }
+}
+const _pauseView = SHEET_VIEWS.pause;
+SHEET_VIEWS.pause = s => ONG.active ? {head: h3('Online-Partie'), body: `<p>${ONG.host ? 'Die Partie läuft auf deinem Gerät. Bleib bitte dabei, bis sie vorbei ist.' : 'Die Partie läuft beim Gastgeber.'}</p><div class="acts"><button type="button" class="btn primary" data-go="resume">Weiterspielen</button><button type="button" class="btn" data-go="settings">Optionen</button><button type="button" class="btn danger" data-on="quitgame">${ONG.host ? 'Partie für alle beenden' : 'Partie verlassen'}</button></div>`} : _pauseView(s);
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-on="backtable"], [data-on="quitgame"]'); if (!b) return;
+  if (b.dataset.on === 'quitgame') { ongQuit(); return; }
+  $$('.endov').forEach(x => x.remove()); const host = ONG.host, code = ONG.code; ongEnd();
+  if (host && code) NET.update('tables/' + code, {state: 'lobby', game: null, view: null, acts: null}).catch(() => {});
+  setScreen('title'); openHubOnline();
+});
+// Zugzeit sichtbar machen: kleine Uhr am Aktionsfeld
+setInterval(() => {
+  let el = $('#ontimer'); const dl = ONG.active && CUR === 'game' ? ((UI.sel && UI.sel.deadline) || (UI.prompt && UI.prompt.deadline) || 0) : 0;
+  if (!dl) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.id = 'ontimer'; document.body.appendChild(el); }
+  const left = Math.max(0, Math.ceil((dl - Date.now()) / 1000));
+  el.className = left <= 10 ? 'low' : ''; el.innerHTML = `<i></i><b>${left}</b><small>Sek.</small>`;
+}, 250);
+// Karten-Aktionen und „Verkaufen“ rechnet im Online-Spiel der Tisch: hier nur die Absicht verschicken
+const _cardActionsLocal = cardActions;
+cardActions = function (c, where) {
+  const A = _cardActionsLocal(c, where);
+  if (!ONG.active) return A;
+  return A.map(a => a.fn ? Object.assign({}, a, {fn: () => ongSend({t: 'act', uid: c.uid, where, label: a.l})}) : a);
+};
+// Gäste: Partie beginnt, sobald der Gastgeber startet
+function ongWatchTable(t) {
+  if (t && ONG.active && !ONG.host && t.state === 'lobby' && !ONG.over) { ongEnd(); closeAllSheets(); setScreen('title'); openHubOnline(); toast('Der Gastgeber hat die Partie beendet.'); return; }
+  if (!t || ONG.active || amHost()) return;
+  if (t.state === 'play' && t.game && !t.game.over && t.game.map && t.game.map[netUid()] != null) ongBegin(ON.code, t.game.map[netUid()], t.game.cfg || tCfg(), false);
+}
+// Nach dem Ende der Online-Partie: beim Verlassen der Spielseite aufräumen
+const _setScreenLocal = setScreen;
+setScreen = function (n) { if (n !== 'game' && ONG.active && ONG.over) { if (ONG.host && ONG.code) NET.update('tables/' + ONG.code, {state: 'lobby', game: null, view: null, acts: null}).catch(() => {}); ongEnd(); } return _setScreenLocal(n); };

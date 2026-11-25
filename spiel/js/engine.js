@@ -538,7 +538,8 @@ const spd = (f=1) => HEADLESS ? 0 : UI.speed==='manuell' ? (S && S.players[S.cur
 
 function stepWait(t){ return new Promise((res,rej)=>{ UI.step=()=>{ UI.step=null; if(typeof showStep==='function') showStep(); if(t!==TOKEN) return rej(STALE); res(); }; if(typeof showStep==='function') showStep(); }); }
 function sleep(ms){ const t=TOKEN; if(ms===MANUAL && !HEADLESS) return stepWait(t); if(ms<0) ms=0; return new Promise((res,rej)=>{ const done=()=>{ if(t!==TOKEN) return rej(STALE); if(UI.paused && !HEADLESS) return setTimeout(done,150); res(); }; setTimeout(done, HEADLESS?0:ms); }); }
-function ask(get, ctx, data){
+function ask(get, ctx, data, who){
+  if(SERVER) return SERVER.ask(who||me(), get, ctx, data);
   const t=TOKEN;
   return new Promise((res,rej)=>{
     UI.prompt={get, ctx, data};
@@ -547,7 +548,8 @@ function ask(get, ctx, data){
     render();
   });
 }
-function selectCards(o){
+function selectCards(o, who){
+  if(SERVER) return SERVER.sel(who||me(), o);
   const t=TOKEN;
   return new Promise((res,rej)=>{
     UI.menu=null;
@@ -559,11 +561,20 @@ function selectCards(o){
 }
 
 const P = i => S.players[i];
-const me = () => S.players[0];
-const nm = p => p.human ? 'Du' : p.name;
-const nmA = p => p.human ? 'dich' : p.name;
-const nmD = p => p.human ? 'dir' : p.name;
-const V = (p, du, er) => p.human ? du : er;
+// ACT: der Sitz, aus dessen Sicht gerade gespielt wird (allein immer 0). SERVER: Online-Tisch, dann laufen Fragen über das Netz.
+let ACT = 0, SERVER = null;
+const me = () => S.players[ACT];
+// loc: der Mensch an diesem Gerät. Online schreibt der Tisch alles in der 3. Person, weil alle dasselbe Protokoll lesen.
+const loc = p => !!(p && p.human && !(S && S.online));
+const nm = p => loc(p) ? 'Du' : p.name;
+const nmA = p => loc(p) ? 'dich' : p.name;
+const nmD = p => loc(p) ? 'dir' : p.name;
+const V = (p, du, er) => loc(p) ? du : er;
+const curPrompt = () => SERVER ? SERVER.prompts[ACT] || null : UI.prompt;
+const curSel = () => SERVER ? SERVER.sels[ACT] || null : UI.sel;
+// Frage an einen bestimmten Spieler; danach wieder aus seiner Sicht weiterrechnen
+async function askAs(p, get, ctx, data){ const v=await ask(get, ctx, data, p); ACT=p.id; return v; }
+async function selAs(p, o){ const v=await selectCards(o, p); ACT=p.id; return v; }
 const hasRace = (p,r) => !!(p.race && p.race.r===r);
 const hasCls = (p,c) => !!(p.cls && p.cls.c===c);
 const handLimit = p => 5;
@@ -819,11 +830,11 @@ async function draftLoot(f,h,cards,deal){
     let pick;
     if(who.human){
       const v=await ask(()=>({title:'Beute wählen', text: who===h ? `Du hast geholfen und wählst zuerst. Noch ${needH} ${pl(needH,'Schatz','Schätze')} für dich.` : `Du bist dran. ${h.name} bekommt noch ${needH} ${pl(needH,'Schatz','Schätze')}, der Rest gehört dir.`,
-        hint:['Der Helfer wählt zuerst, dann abwechselnd, bis er die abgemachte Zahl hat. Der Rest gehört dem Kämpfer.'], opts:pool.map((c,i)=>({l:c.n,v:i,kind:'primary'}))}), 'loot', {pool, f, h, fGot, hGot, needH});
+        hint:['Der Helfer wählt zuerst, dann abwechselnd, bis er die abgemachte Zahl hat. Der Rest gehört dem Kämpfer.'], opts:pool.map((c,i)=>({l:c.n,v:i,kind:'primary'}))}), 'loot', {pool, f, h, fGot, hGot, needH}, who);
       pick=pool[v];
     } else pick=pool.slice().sort((a,b)=>keepValue(who,b)-keepValue(who,a))[0];
     pool.splice(pool.indexOf(pick),1); (who===f?fGot:hGot).push(pick);
-    if(!who.human) log(`${who.name} wählt ${pick.n}.`);
+    if(!loc(who)) log(`${who.name} wählt ${pick.n}.`);
     hTurn = who===f;
   }
   return {fGot,hGot};
@@ -922,6 +933,20 @@ function draftValue(p,c){
   if(c.k==='class') return p.hand.some(x=>x.k==='class') ? 1 : 6;
   return keepValue(p,c);
 }
+// Online: alle Menschen wählen gleichzeitig aus ihrem Päckchen
+async function draftRoundServer(packs, lbl, k, pick, to, dir){
+  const jobs=[];
+  S.players.forEach((p,i)=>{ const pool=packs[i]; if(!pool.length) return;
+    const takeC=c=>{ pool.splice(pool.indexOf(c),1); p.hand.push(c); };
+    if(p.human && pool.length>1){
+      const view={pool, draft:true, kind:lbl, deck:k, pick, to:to(i), side: pick===1 ? 'top' : dir>0 ? 'right' : 'left', exit: dir>0 ? 'left' : 'right', phase:'pick'};
+      jobs.push(ask(()=>({title:'Draft', text:`${lbl}: Nimm eine Karte. Die übrigen ${pool.length-1} gehen an ${to(i).name}.`,
+        hint:['Beim Draft wählt jeder aus seinem Päckchen eine Karte und gibt den Rest weiter. Türkarten wandern im Uhrzeigersinn, Schatzkarten in die andere Richtung.'],
+        opts:pool.map((c,j)=>({l:c.n,v:j,kind:'primary'}))}), 'loot', view, p).then(v=>takeC(pool[v]||pool[0])));
+    } else takeC(pool.length===1 ? pool[0] : pool.slice().sort((a,b)=>draftValue(p,b)-draftValue(p,a))[0]);
+  });
+  await Promise.all(jobs); render();
+}
 async function draftStart(t){
   const N=S.players.length;
   for(const [k,dir,lbl] of [['door',1,'Türkarten'],['tr',-1,'Schatzkarten']]){
@@ -929,7 +954,8 @@ async function draftStart(t){
     const to=i=>P((i+dir+N)%N);
     log(`Draft: ${lbl}. Nimm eine Karte, den Rest bekommt ${to(0).name}.`,'sys');
     for(let pick=1; packs.some(a=>a.length); pick++){
-      for(let i=0;i<N;i++){
+      if(SERVER){ await draftRoundServer(packs, lbl, k, pick, to, dir); }
+      else for(let i=0;i<N;i++){
         const p=P(i), pool=packs[i]; if(!pool.length) continue;
         let c;
         if(p.human){
@@ -1002,33 +1028,34 @@ function resumeGame(data){
 function revive(p){
   p.dead=false;
   for(let i=0;i<4;i++){ const a=drawDoor(), b=drawTr(); if(a) p.hand.push(a); if(b) p.hand.push(b); }
-  log(`${p.human?'Du kehrst':p.name+' kehrt'} zurück und ${V(p,'ziehst','zieht')} 4 Tür- und 4 Schatzkarten.`,'sys');
+  log(`${loc(p)?'Du kehrst':p.name+' kehrt'} zurück und ${V(p,'ziehst','zieht')} 4 Tür- und 4 Schatzkarten.`,'sys');
 }
 
 /* ================= Dein Zug ================= */
-function isFree(){ return S && S.cur===0 && me().human && !S.combat && UI.prompt && !UI.sel && S.winner==null; }
+function isFree(){ return S && S.cur===ACT && me().human && !S.combat && curPrompt() && !curSel() && S.winner==null; }
 
 async function humanTurn(p){
+  ACT=p.id;
   if(p.dead) revive(p);
   p.soldDouble=false;
   S.phase=1;
-  log(`Dein Zug · Runde ${S.turn}`,'turn');
+  log(loc(p) ? `Dein Zug · Runde ${S.turn}` : `${p.name} ist am Zug · Runde ${S.turn}`,'turn');
   fx('turn',{p});
   if(CHECKPOINT_HANDLER){ try{ CHECKPOINT_HANDLER(); }catch(e){} }
-  await ask(()=>({title:'Phase 1 · Tür öffnen', text:'Bereite dich vor, dann öffne die Tür.', hint:hintStart(p), opts:[{l:'Tür öffnen',v:'kick',kind:'primary'}]}), 'kick');
+  await askAs(p, ()=>({title:'Phase 1 · Tür öffnen', text:'Bereite dich vor, dann öffne die Tür.', hint:hintStart(p), opts:[{l:'Tür öffnen',v:'kick',kind:'primary'}]}), 'kick');
   const c=luckyDoor(p);
   let fought=false;
   if(c){
     S.reveal=c;
-    log(`Du öffnest die Tür: <b>${cardLabel(c)}</b>.`);
-    if(c.k==='monster'){ ruleOnce('openmon','Ein offen aufgedecktes Monster musst du sofort bekämpfen.'); S.reveal=null; await combat(0,[c]); fought=true; }
+    log(`${nm(p)} ${V(p,'öffnest','öffnet')} die Tür: <b>${cardLabel(c)}</b>.`);
+    if(c.k==='monster'){ ruleOnce('openmon','Ein offen aufgedecktes Monster musst du sofort bekämpfen.'); S.reveal=null; await combat(p.id,[c]); fought=true; }
     else if(c.k==='curse'){ ruleOnce('doorcurse','Einen Fluch, den du beim Öffnen der Tür aufdeckst, bekommst du selbst ab.'); await sleep(1100); S.reveal=null; await applyCurse(p,c,null); }
-    else { await sleep(1000); S.reveal=null; p.hand.push(c); log(`${c.n} kommt auf deine Hand.`); if(c.k==='race'||c.k==='class') ruleOnce('rcplay','Völker und Klassen darfst du im eigenen Zug jederzeit ausspielen. Zieh die Karte aufs Spielfeld oder tippe sie an.'); }
+    else { await sleep(1000); S.reveal=null; p.hand.push(c); log(`${c.n} kommt auf ${loc(p)?'deine':p.name+'s'} Hand.`); if(c.k==='race'||c.k==='class') ruleOnce('rcplay','Völker und Klassen darfst du im eigenen Zug jederzeit ausspielen. Zieh die Karte aufs Spielfeld oder tippe sie an.'); }
   }
   if(S.winner!=null) return;
   if(!fought && !p.dead){
     S.phase=2;
-    const v=await ask(()=>{
+    const v=await askAs(p, ()=>{
       const mons=p.hand.filter(x=>x.k==='monster');
       return {title:'Phase 2 · Monster herausfordern – oder Phase 3 · Raum durchsuchen', text:'Kein Monster hinter der Tür. Willst du eins von deiner Hand bekämpfen?', hint:hintTrouble(p,mons),
         opts:[...mons.map(m=>({l:`Herausfordern: ${m.n} (Stufe ${m.lvl})`,v:'m'+m.uid,kind:power(p)>m.lvl?'':'danger'})),{l:'Raum durchsuchen',v:'loot',kind:'primary'}]};
@@ -1040,41 +1067,41 @@ async function humanTurn(p){
         if(d2){
           // Wie beim Draft: beide Karten fliegen verdeckt von rechts ein, drehen sich um; nach der Wahl geht eine auf die Hand, die andere fliegt nach links weg
           const view={pool:[d,d2], draft:true, kind:'elf', title:'Elf · Scharfe Augen', sub:'Behalte eine Karte, die andere kommt auf den Ablagestapel', deck:watt?'tr':'door', pick:`${S.turn}-${d.uid}`, side:'right', exit:'left', vals:['a','b'], a:d, b:d2, phase:'in'};
-          UI.dview=view; render(); await sleep(UI.reduce ? 0 : 800);
+          if(!SERVER){ UI.dview=view; render(); await sleep(UI.reduce ? 0 : 800); }
           view.phase='pick';
-          const keep=await ask(()=>({title:'Elf: Scharfe Augen', text:'Du ziehst 2 Karten. Welche behältst du?', hint:['Die andere kommt auf den Ablagestapel.'], opts:[{l:cardLabel(d),v:'a',kind:'primary'},{l:cardLabel(d2),v:'b',kind:'primary'}]}), 'elfpick', view);
-          view.phase='out'; view.picked=(keep==='b' ? d2 : d).uid; render(); await sleep(UI.reduce ? 0 : 820); UI.dview=null;
+          const keep=await askAs(p, ()=>({title:'Elf: Scharfe Augen', text:'Du ziehst 2 Karten. Welche behältst du?', hint:['Die andere kommt auf den Ablagestapel.'], opts:[{l:cardLabel(d),v:'a',kind:'primary'},{l:cardLabel(d2),v:'b',kind:'primary'}]}), 'elfpick', view);
+          view.phase='out'; view.picked=(keep==='b' ? d2 : d).uid; if(!SERVER){ render(); await sleep(UI.reduce ? 0 : 820); UI.dview=null; }
           if(keep==='b'){ discard(d); d=d2; } else discard(d2);
           ruleOnce('elfloot','Elfen ziehen beim Durchsuchen 2 Karten und behalten 1.'); } }
-      if(d && watt){ p.hand.push(d); log(`Ebbe: Du suchst im Watt und findest <b>${cardLabel(d)}</b>.`,'good'); }
-      else if(d){ p.hand.push(d); log(`Du durchsuchst den Raum und ziehst verdeckt: <b>${cardLabel(d)}</b>.`);
+      if(d && watt){ p.hand.push(d); log(loc(p) ? `Ebbe: Du suchst im Watt und findest <b>${cardLabel(d)}</b>.` : `Ebbe: ${p.name} sucht im Watt und findet einen Schatz.`,'good'); }
+      else if(d){ p.hand.push(d); log(loc(p) ? `Du durchsuchst den Raum und ziehst verdeckt: <b>${cardLabel(d)}</b>.` : `${p.name} durchsucht den Raum und zieht verdeckt eine Karte.`);
         if(d.k==='curse') ruleOnce('hiddencurse','Verdeckt gezogene Flüche wirken nicht auf dich. Du kannst sie später jederzeit auf jemanden spielen.');
         if(d.k==='monster') ruleOnce('handmon','Ein Monster auf der Hand nutzt du nächsten Zug für „Monster herausfordern“ oder mit „Hinterhalt“ in fremden Kämpfen.'); }
     } else {
       const m=p.hand.find(x=>'m'+x.uid===v);
-      if(m){ take(p,m); log(`Du forderst <b>${m.n}</b> von deiner Hand heraus.`); await combat(0,[m]); }
+      if(m){ take(p,m); log(`${nm(p)} ${V(p,'forderst','fordert')} <b>${m.n}</b> von der Hand heraus.`); await combat(p.id,[m]); }
     }
   }
   if(S.winner!=null) return;
   S.phase=4;
   while(true){
-    const v=await ask(()=>{ const over=p.hand.length-handLimit(p);
+    const v=await askAs(p, ()=>{ const over=p.hand.length-handLimit(p);
       return {title:'Phase 4 · Abgabe', text: over>0 ? `Du hast ${p.hand.length} Karten, erlaubt sind ${handLimit(p)}.` : 'Dein Zug ist fast vorbei. Lege noch aus, was du brauchst.', hint:hintCharity(p),
         opts: over>0 ? [...(stashable(p).length ? [{l:'In den Rucksack',v:'stash'}] : []), {l:`${over} ${pl(over,'Karte','Karten')} abgeben`,v:'give',kind:'primary'}] : [{l:'Zug beenden',v:'end',kind:'primary'}]}; }, 'charity');
     if(v==='end') break;
     if(v==='stash'){
       const ok=stashable(p);
-      const sel=await selectCards({ctx:'stash', title:'In den Rucksack', text:'Wähle Gegenstände von deiner Hand. Im Rucksack zählen sie nicht als Handkarten, bringen aber keinen Bonus.', min:1, max:ok.length, cancel:true,
+      const sel=await selAs(p, {ctx:'stash', title:'In den Rucksack', text:'Wähle Gegenstände von deiner Hand. Im Rucksack zählen sie nicht als Handkarten, bringen aber keinen Bonus.', min:1, max:ok.length, cancel:true,
         filter:(c,w)=>w==='hand' && ok.includes(c), confirm:()=> 'In den Rucksack'});
-      if(sel) sel.map(findCard).filter(Boolean).forEach(stashItem);
+      if(sel) sel.map(u=>findCard(u,p)).filter(Boolean).forEach(stashItem);
       continue;
     }
     const over=p.hand.length-handLimit(p);
     if(over<=0) continue;
-    const sel=await selectCards({ctx:'charity', title:'Abgabe', text:`Wähle ${over} ${pl(over,'Karte','Karten')}, die du abgibst.`, min:over, max:over, cancel:true,
+    const sel=await selAs(p, {ctx:'charity', title:'Abgabe', text:`Wähle ${over} ${pl(over,'Karte','Karten')}, die du abgibst.`, min:over, max:over, cancel:true,
       filter:(c,w)=>w==='hand' && !(SCN && SCN.keep && SCN.keep.includes(c.n) && p.hand.length-over>0), confirm:()=> 'Abgeben'});   // Einführung: wichtige Karte bleibt
     if(!sel) continue;
-    doCharity(p, sel.map(findCard).filter(Boolean));
+    doCharity(p, sel.map(u=>findCard(u,p)).filter(Boolean));
   }
 }
 function hintStart(p){
@@ -1119,7 +1146,7 @@ function doCharity(p,cards){
   if(!cards.length) return;
   const t=charityTargets(p);
   if(!t){ cards.forEach(c=>{ take(p,c); discard(c); }); log(`${nm(p)} ${V(p,'legst','legt')} ${cards.length} ${pl(cards.length,'Karte','Karten')} ab.`); ruleOnce('charself','Abgabe: Wer selbst (mit) die niedrigste Stufe hat, legt die überzähligen Karten ab.'); }
-  else { const toMe=[]; cards.forEach((c,i)=>{ take(p,c); const r=t[i%t.length]; r.hand.push(c); if(r.human) toMe.push(c); });
+  else { const toMe=[]; cards.forEach((c,i)=>{ take(p,c); const r=t[i%t.length]; r.hand.push(c); if(loc(r)) toMe.push(c); });
     log(`${nm(p)} ${V(p,'gibst','gibt')} ${cards.length} ${pl(cards.length,'Karte','Karten')} an ${t.map(nmA).join(' und ')} ab.${toMe.length?` Du bekommst: ${toMe.map(c=>`<b>${cardLabel(c)}</b>`).join(', ')}.`:''}`);
     ruleOnce('charity','Abgabe: Überzählige Handkarten gehen an den Spieler mit der niedrigsten Stufe.'); }
 }
@@ -1238,7 +1265,7 @@ async function combat(fid, cards, preEnh){
   if(f.human) await humanFight(C); else await botFight(C);
   C.resolved=true;
   const r=evalCombat(C);
-  if(r.win) [f, C.h!=null?P(C.h):null].forEach(q=>{ if(q && q.spore){ q.spore=0; log(`Die Sporenwolke um ${nmA(q)} verzieht sich.`,'good'); } if(q && q.sun){ q.sun=0; log(`Der Sonnenbrand ${q.human?'auf deiner Haut':'von '+q.name} klingt ab.`,'good'); } });
+  if(r.win) [f, C.h!=null?P(C.h):null].forEach(q=>{ if(q && q.spore){ q.spore=0; log(`Die Sporenwolke um ${nmA(q)} verzieht sich.`,'good'); } if(q && q.sun){ q.sun=0; log(`Der Sonnenbrand ${loc(q)?'auf deiner Haut':'von '+q.name} klingt ab.`,'good'); } });
   if(SCN && SCN.fight){
     S.stats.fightWon=r.win;
     if(r.win){ fx('win',{p:f, mine:true}); log(`Du besiegst ${monNames(C)}! Rätsel gelöst.`,'good'); }
@@ -1269,42 +1296,42 @@ function combatPrompt(C){
   }
   const opts=[];
   opts.push(r.win ? {l:'Fertig: Monster besiegen',v:'done',kind:'primary'} : {l: SCN && SCN.fight ? 'Aufgeben' : 'Aufgeben und weglaufen',v:'run',kind:'danger'});
-  if(C.h==null && !noHelpMon(C) && S.players.some(x=>!x.human && !x.dead && !C.asked[x.id])) opts.push({l:'Um Hilfe bitten',v:'help'});
-  if(hasCls(p,'zauberer') && C.f===0 && !C.counter && p.hand.length>=2 && counterTargets(C).length) opts.push({l:'Zauberer: Gegenzauber (2 Karten)',v:'counter'});
+  if(C.h==null && !noHelpMon(C) && S.players.some(x=>x.id!==ACT && !x.dead && !C.asked[x.id])) opts.push({l:'Um Hilfe bitten',v:'help'});
+  if(hasCls(p,'zauberer') && C.f===ACT && !C.counter && p.hand.length>=2 && counterTargets(C).length) opts.push({l:'Zauberer: Gegenzauber (2 Karten)',v:'counter'});
   return {title:`Kampf · ${r.a} gegen ${r.b}`, text: r.win ? 'Du gewinnst diesen Kampf gerade.' : (r.a===r.b ? 'Gleichstand. Das reicht nicht, du verlierst gerade.' : 'Du verlierst diesen Kampf gerade.'), hint:h, opts};
 }
 async function humanFight(C){
-  const p=me();
+  const p=P(C.f); ACT=p.id;
   while(true){
-    const v=await ask(()=>combatPrompt(C), 'fight');
+    const v=await askAs(p, ()=>combatPrompt(C), 'fight');
     if(v==='help'){ await humanAskHelp(C); continue; }
     if(v==='counter'){
       const ts=counterTargets(C); if(!ts.length) continue;
-      const pick=await ask(()=>({title:'Gegenzauber', text:'Was hebst du auf? Danach wirfst du 2 Karten ab.', hint:['Einmal pro Kampf. Aufheben kannst du Launen und Einmal-Gegenstände, die andere gegen dich gespielt haben.'],
+      const pick=await askAs(p, ()=>({title:'Gegenzauber', text:'Was hebst du auf? Danach wirfst du 2 Karten ab.', hint:['Einmal pro Kampf. Aufheben kannst du Launen und Einmal-Gegenstände, die andere gegen dich gespielt haben.'],
         opts:[...ts.map((t,i)=>({l:`${t.l} (${sign(t.v)})`,v:i,kind:i===0?'primary':''})),{l:'Abbrechen',v:'x',kind:'ghost'}]}), 'counter');
       if(pick==='x') continue;
-      const sel=await selectCards({ctx:'counter', title:'Gegenzauber', text:'Wirf 2 Karten ab.', min:2, max:2, cancel:true, filter:(c,w)=>w==='hand', confirm:()=>'Abwerfen'});
+      const sel=await selAs(p, {ctx:'counter', title:'Gegenzauber', text:'Wirf 2 Karten ab.', min:2, max:2, cancel:true, filter:(c,w)=>w==='hand', confirm:()=>'Abwerfen'});
       if(!sel || sel.length<2) continue;
-      sel.map(findCard).forEach(c=>{ take(p,c); discard(c); }); stat('discarded',2);
+      sel.map(u=>findCard(u,p)).filter(Boolean).forEach(c=>{ take(p,c); discard(c); }); stat('discarded',2);
       const t=ts[pick]; applyCounter(C,t); log(`Gegenzauber: ${t.l} ist aufgehoben.`,'good');
       ruleOnce('counter','Zauberer: Einmal pro Kampf hebt der Gegenzauber eine Laune oder einen Einmal-Gegenstand auf, den jemand gegen ihn gespielt hat.');
       continue;
     }
     if(v==='berserk' || v==='turn'){
       const used = v==='berserk' ? C.berserk : C.turning, per = v==='berserk'?1:3, max=Math.min(3-used,p.hand.length);
-      const sel=await selectCards({ctx:v, title: v==='berserk'?'Krieger-Fähigkeit':'Priester gegen Untote', text:`Wirf bis zu ${max} ${pl(max,'Karte','Karten')} ab. Jede bringt +${per}.`, min:1, max, cancel:true, filter:(c,w)=>w==='hand', confirm:cs=>`${cs.length} abwerfen (+${cs.length*per})`});
-      if(sel && sel.length){ sel.map(findCard).forEach(c=>{ take(p,c); discard(c); }); stat('discarded', sel.length);
+      const sel=await selAs(p, {ctx:v, title: v==='berserk'?'Krieger-Fähigkeit':'Priester gegen Untote', text:`Wirf bis zu ${max} ${pl(max,'Karte','Karten')} ab. Jede bringt +${per}.`, min:1, max, cancel:true, filter:(c,w)=>w==='hand', confirm:cs=>`${cs.length} abwerfen (+${cs.length*per})`});
+      if(sel && sel.length){ sel.map(u=>findCard(u,p)).filter(Boolean).forEach(c=>{ take(p,c); discard(c); }); stat('discarded', sel.length);
         if(v==='berserk'){ C.berserk+=sel.length; C.pB.push({l:`Krieger-Fähigkeit (${sel.length} ${pl(sel.length,'Karte','Karten')})`,v:sel.length}); }
         else { C.turning+=sel.length; C.pB.push({l:`Priester gegen Untote (${sel.length} ${pl(sel.length,'Karte','Karten')})`,v:3*sel.length}); }
-        log(`Du wirfst ${sel.length} ${pl(sel.length,'Karte','Karten')} ab und bekommst +${sel.length*per}.`); }
+        log(`${nm(p)} ${V(p,'wirfst','wirft')} ${sel.length} ${pl(sel.length,'Karte','Karten')} ab und ${V(p,'bekommst','bekommt')} +${sel.length*per}.`); }
       continue;
     }
     if(v==='run') return;
     if(v==='done'){
       if(!evalCombat(C).win) return;
-      log('Du sagst: „Fertig!“ Die anderen dürfen jetzt noch eingreifen …','sys');
+      log(`${nm(p)} ${V(p,'sagst','sagt')}: „Fertig!“ Die anderen dürfen jetzt noch eingreifen …`,'sys');
       await sleep(spd(0.6));
-      const any=await botsInterfere(C);
+      let any=await botsInterfere(C); if(await humansInterfere(C)) any=true; ACT=p.id;
       if(any){ ruleOnce('respond','Nach einem Eingriff darfst du reagieren: mehr Einmal-Gegenstände, Hilfe holen oder aufgeben.'); continue; }
       log('Niemand greift ein.','sys');
       return;
@@ -1312,21 +1339,35 @@ async function humanFight(C){
   }
 }
 async function humanAskHelp(C){
-  const cands=S.players.filter(x=>!x.human && !x.dead && !C.asked[x.id]);
+  const f=me(), cands=S.players.filter(x=>x.id!==ACT && !x.dead && !C.asked[x.id]);
   const total=treasuresOf(C);
-  const v=await ask(()=>({title:'Um Hilfe bitten', text:'Wen fragst du? Nur 1 Mitspieler darf helfen.', hint:['Die Kampfstärke des Helfers wird zu deiner addiert. Bietest du Schätze an, sagt er eher Ja.','Niemand hilft gern jemandem, der damit das Spiel gewinnt.'],
+  const v=await askAs(f, ()=>({title:'Um Hilfe bitten', text:'Wen fragst du? Nur 1 Mitspieler darf helfen.', hint:['Die Kampfstärke des Helfers wird zu deiner addiert. Bietest du Schätze an, sagt er eher Ja.','Niemand hilft gern jemandem, der damit das Spiel gewinnt.'],
     opts:[...cands.map(b=>({l:`${b.name} (Kampfstärke ${power(b)})`,v:b.id})),{l:'Abbrechen',v:'x',kind:'ghost'}]}), 'helpWho');
   if(v==='x') return;
   const b=P(v);
-  const offer=await ask(()=>({title:`Angebot an ${b.name}`, text:`Wie viele der ${total} ${pl(total,'Schatz','Schätze')} bietest du an?`, hint:['Mit Helfer werden die Schätze offen gezogen. Der Helfer bekommt, was vereinbart ist.'],
+  const offer=await askAs(f, ()=>({title:`Angebot an ${b.name}`, text:`Wie viele der ${total} ${pl(total,'Schatz','Schätze')} bietest du an?`, hint:['Mit Helfer werden die Schätze offen gezogen. Der Helfer bekommt, was vereinbart ist.'],
     opts:[...Array.from({length:total+1},(_,i)=>({l:`${i} ${pl(i,'Schatz','Schätze')}`,v:i})),{l:'Abbrechen',v:'x',kind:'ghost'}]}), 'helpOffer', {b});
   if(offer==='x') return;
   C.asked[b.id]=true;
-  log(`Du bittest ${b.name} um Hilfe und bietest ${offer} ${pl(offer,'Schatz','Schätze')}.`);
+  log(`${nm(f)} ${V(f,'bittest','bittet')} ${b.name} um Hilfe und ${V(f,'bietest','bietet')} ${offer} ${pl(offer,'Schatz','Schätze')}.`);
   await sleep(spd(0.6));
-  const ans=botAcceptHelp(b,C,offer);
-  if(ans.yes){ C.h=b.id; C.deal=offer; stat('help'); log(`${b.name}: „${ans.why}“ ${b.name} hilft dir.`,'good'); ruleOnce('helper','Mit Helfer zählen beide Kampfstärken. Verliert ihr, müssen beide einzeln weglaufen.'); }
-  else log(`${b.name} lehnt ab: „${ans.why}“`,'bad');
+  const ans=b.human ? await humanAnswerHelp(b,C,offer) : botAcceptHelp(b,C,offer); ACT=f.id;
+  if(ans.yes){ C.h=b.id; C.deal=offer; stat('help'); log(ans.why ? `${b.name}: „${ans.why}“ ${b.name} ${V(f,'hilft dir','hilft '+f.name)}.` : `${b.name} ${V(f,'hilft dir','hilft '+f.name)}.`,'good'); ruleOnce('helper','Mit Helfer zählen beide Kampfstärken. Verliert ihr, müssen beide einzeln weglaufen.'); }
+  else log(ans.why ? `${b.name} lehnt ab: „${ans.why}“` : `${b.name} lehnt ab.`,'bad');
+}
+// Online: ein anderer Mensch wird um Hilfe gebeten
+async function humanAnswerHelp(b,C,offer){
+  const f=P(C.f), r=evalCombat(C), total=treasuresOf(C);
+  const v=await askAs(b, ()=>({title:`${f.name} bittet dich um Hilfe`, text:`${f.name} kämpft gegen ${monNames(C)} und steht bei ${r.a} gegen ${r.b}. Mit dir wären es ${r.a+power(b)}. Angebot: ${offer} von ${total} ${pl(total,'Schatz','Schätzen')}.`,
+    hint:['Verliert ihr trotzdem (z. B. weil jemand eingreift), musst du auch weglaufen.'], opts:[{l:`Helfen (für ${offer} ${pl(offer,'Schatz','Schätze')})`,v:'yes',kind:'primary'},{l:'Ablehnen',v:'no'}]}), 'botHelp', {b:f, offer});
+  return {yes: v==='yes', why:''};
+}
+// Online: alle anderen Menschen am Tisch dürfen nacheinander eingreifen (allein gibt es keine weiteren)
+async function humansInterfere(C){
+  const keep=ACT; let any=false;
+  for(const q of S.players){ if(!q.human || q.dead || q.id===C.f) continue;
+    ACT=q.id; if(await humanInterfereWindow(C)) any=true; }
+  ACT=keep; return any;
 }
 function botAcceptHelp(b,C,offer){
   const f=P(C.f), total=treasuresOf(C), st=styleOf(b);
@@ -1354,7 +1395,7 @@ function humanCanInterfere(C){
     (p.hand.some(c=>c.k==='wander') && p.hand.some(c=>c.k==='monster'));
 }
 function interferePrompt(C){
-  const f=P(C.f), p=me(), r=evalCombat(C), helper=C.h===0, h=[];
+  const f=P(C.f), p=me(), r=evalCombat(C), helper=C.h===ACT, h=[];
   if(helper){ h.push('Du hilfst. Mit Einmal-Gegenständen kannst du eure Seite stärken.'); }
   else if(r.win){
     if(f.lvl+levelsGained(C)>=WINLVL()) h.push(`Achtung: Gewinnt ${f.name} diesen Kampf, ist das Spiel vorbei!`);
@@ -1371,15 +1412,15 @@ function interferePrompt(C){
 }
 async function humanInterfereWindow(C){
   const p=me(); if(!p.human || p.dead) return false;
-  const r=evalCombat(C), helper=C.h===0;
+  const r=evalCombat(C), helper=C.h===p.id;
   if(helper){ if(!p.hand.some(c=>c.k==='oneshot' && c.b)) return false; }
   else if(!r.win || !humanCanInterfere(C)) return false;
   C.hchg=false;
   while(true){
-    const v=await ask(()=>interferePrompt(C), 'interfere');
+    const v=await askAs(p, ()=>interferePrompt(C), 'interfere');
     if(v==='stab'){
-      const sel=await selectCards({ctx:'stab', title:'Dieb: in den Rücken fallen', text:'Wirf 1 Karte ab. Die kämpfende Seite bekommt −2.', min:1, max:1, cancel:true, filter:(c,w)=>w==='hand', confirm:()=>'Abwerfen'});
-      if(sel && sel.length){ const c=findCard(sel[0]); take(p,c); discard(c); C.stabbed[0]=true; C.pB.push({l:'Dieb: du fällst in den Rücken',v:-2}); C.hchg=true; C.asked[0]=true; track('intf'); log(`Du fällst ${P(C.f).name} in den Rücken: −2.`,'bad'); }
+      const sel=await selAs(p, {ctx:'stab', title:'Dieb: in den Rücken fallen', text:'Wirf 1 Karte ab. Die kämpfende Seite bekommt −2.', min:1, max:1, cancel:true, filter:(c,w)=>w==='hand', confirm:()=>'Abwerfen'});
+      if(sel && sel.length){ const c=findCard(sel[0],p); take(p,c); discard(c); C.stabbed[p.id]=true; C.pB.push({l:`Dieb: ${loc(p)?'du fällst':p.name+' fällt'} in den Rücken`,v:-2}); C.hchg=true; C.asked[p.id]=true; track('intf'); log(`${nm(p)} ${V(p,'fällst','fällt')} ${P(C.f).name} in den Rücken: −2.`,'bad'); }
       continue;
     }
     break;
@@ -1394,7 +1435,7 @@ async function botFight(C){
   let guard=0;
   while(guard++<8){
     let changed=false;
-    if(await humanInterfereWindow(C)) changed=true;
+    if(await humansInterfere(C)) changed=true;
     if(await botsInterfere(C)) changed=true;
     if(!changed) break;
     await sleep(spd(0.5));
@@ -1438,12 +1479,13 @@ async function botSeekHelp(b,C){
     C.asked[p.id]=true;
     const offer=total>0 ? Math.max(1,Math.floor(total/2)) : 0;
     if(p.human){
-      const r=evalCombat(C);
-      const v=await ask(()=>({title:`${b.name} bittet dich um Hilfe`, text:`${b.name} kämpft gegen ${monNames(C)} und steht bei ${r.a} gegen ${r.b}. Mit dir wären es ${r.a+power(p)}. Angebot: ${offer} von ${total} ${pl(total,'Schatz','Schätzen')}.`,
+      const r=evalCombat(C), keep=ACT;
+      const v=await askAs(p, ()=>({title:`${b.name} bittet dich um Hilfe`, text:`${b.name} kämpft gegen ${monNames(C)} und steht bei ${r.a} gegen ${r.b}. Mit dir wären es ${r.a+power(p)}. Angebot: ${offer} von ${total} ${pl(total,'Schatz','Schätzen')}.`,
         hint:[`Hilfst du, steigt ${b.name} auf Stufe ${Math.min(10,b.lvl+levelsGained(C))}.`,'Verliert ihr trotzdem (z. B. weil jemand eingreift), musst du auch weglaufen.'],
         opts:[{l:`Helfen (für ${offer} ${pl(offer,'Schatz','Schätze')})`,v:'yes',kind:'primary'},{l:'Ablehnen',v:'no'}]}), 'botHelp', {b, offer});
-      if(v==='yes'){ C.h=0; C.deal=offer; log(`Du hilfst ${b.name} für ${offer} ${pl(offer,'Schatz','Schätze')}.`,'good'); ruleOnce('helper','Mit Helfer zählen beide Kampfstärken. Verliert ihr, müssen beide einzeln weglaufen.'); return; }
-      log(`Du lehnst ab.`);
+      ACT=keep;
+      if(v==='yes'){ C.h=p.id; C.deal=offer; log(`${nm(p)} ${V(p,'hilfst','hilft')} ${b.name} für ${offer} ${pl(offer,'Schatz','Schätze')}.`,'good'); ruleOnce('helper','Mit Helfer zählen beide Kampfstärken. Verliert ihr, müssen beide einzeln weglaufen.'); return; }
+      log(`${nm(p)} ${V(p,'lehnst','lehnt')} ab.`);
     } else {
       const ans=botAcceptHelp(p,C,offer);
       log(`${b.name} bittet ${p.name} um Hilfe (${offer} ${pl(offer,'Schatz','Schätze')}).`);
@@ -1463,7 +1505,7 @@ async function botsInterfere(C){
     if((C.intf[b.id]||0) >= (threat?2:1)) continue;
     const others=S.players.filter(x=>x.id!==f.id);
     const leading=styleOf(b).envy ? f.lvl>b.lvl : f.lvl>=Math.max(...others.map(x=>x.lvl));
-    const mine=C.f===0 || C.h===0;
+    const mine=C.f===ACT || C.h===ACT;
     const chance=(threat?1:Math.min(1,(leading?0.45:0.15)*diffF()*(styleOf(b).intf||1))) * (mine ? 1-LUCK()*0.7 : 1);
     if(Math.random()>chance) continue;
     if(botPlayAgainst(b,C,threat)){ C.intf[b.id]=(C.intf[b.id]||0)+1; any=true; await sleep(spd()); }
@@ -1502,12 +1544,12 @@ async function winCombat(C){
   if(boss){
     if(f.lvl>WINLVL()) f.lvl=WINLVL();
     S.stats.bossBy=f.id; S.stats.bossHelped=!!h; S.winner=f.id;
-    log(f.human ? `Du besiegst ${boss.c.n}${h?` mit Hilfe von ${nmD(h)}`:''} und gewinnst!` : `${f.name} besiegt ${boss.c.n} und gewinnt das Spiel.`, f.human?'good':'bad');
+    log(loc(f) ? `Du besiegst ${boss.c.n}${h?` mit Hilfe von ${nmD(h)}`:''} und gewinnst!` : `${f.name} besiegt ${boss.c.n} und gewinnt das Spiel.`, f.human?'good':'bad');
     render(); return;
   }
   log(`${nm(f)} ${V(f,'besiegst','besiegt')} ${monNames(C)}${h?` mit Hilfe von ${nmD(h)}`:''} und ${V(f,'steigst','steigt')} ${lv} ${pl(lv,'Stufe','Stufen')} auf: Stufe ${Math.min(f.lvl,WINLVL())}.`,'good');
   if(!f.human && SCN && SCN.tut && !SCN.tutFree && f.lvl>=WINLVL()) f.lvl=WINLVL()-1;   // Einführung: Bots gewinnen nie
-  if(f.lvl>=WINLVL()){ f.lvl=WINLVL(); S.winner=f.id; log(f.human ? `Stufe ${WINLVL()}! Du hast gewonnen!` : `${f.name} erreicht Stufe ${WINLVL()} und gewinnt das Spiel.`, f.human?'good':'bad'); render(); return; }
+  if(f.lvl>=WINLVL()){ f.lvl=WINLVL(); S.winner=f.id; log(loc(f) ? `Stufe ${WINLVL()}! Du hast gewonnen!` : `${f.name} erreicht Stufe ${WINLVL()} und gewinnt das Spiel.`, f.human?'good':'bad'); render(); return; }
   const loot=!h && hasCls(f,'pirat') ? 1 : 0, n=treasuresOf(C)+loot, drawn=[];
   if(loot){ log(`Plündern: ${nm(f)} ${V(f,'ziehst','zieht')} als Pirat 1 Schatz mehr.`,'good'); ruleOnce('pirat','Piraten teilen nicht gern: Wer als Pirat ohne Helfer gewinnt, zieht 1 Schatz mehr.'); }
   for(let i=0;i<n;i++){ const t=(f.human || (h && h.human)) ? luckyTr() : drawTr(); if(t) drawn.push(t); }
@@ -1519,7 +1561,7 @@ async function winCombat(C){
     log(`${nm(h)} ${V(h,'bekommst','bekommt')} ${hGot.length ? hGot.map(c=>c.n).join(', ') : 'nichts'}, ${nm(f)} ${V(f,'bekommst','bekommt')} ${fGot.length ? fGot.map(c=>c.n).join(', ') : 'nichts'}.`);
   } else {
     f.hand.push(...drawn);
-    if(f.human) log(`Du ziehst ${n} ${pl(n,'Schatz','Schätze')} verdeckt: ${drawn.map(c=>`<b>${c.n}</b>`).join(', ')||'keine'}.`,'good');
+    if(loc(f)) log(`Du ziehst ${n} ${pl(n,'Schatz','Schätze')} verdeckt: ${drawn.map(c=>`<b>${c.n}</b>`).join(', ')||'keine'}.`,'good');
     else log(`${f.name} zieht ${n} ${pl(n,'Schatz','Schätze')} verdeckt.`);
     ruleOnce('hidtr','Allein gewonnen: Die Schätze werden verdeckt gezogen.');
   }
@@ -1546,18 +1588,22 @@ async function runAway(p,m,i=0,n=1){
   const nebel=p.hand.find(c=>c.escape);
   if(p.human){
     const parts=[]; p.eq.forEach(i=>{ if(i.run && usable(p,i)) parts.push(`${i.n} +${i.run}`); if(isFlut() && i.flutRun && usable(p,i)) parts.push(`${i.n} bei Flut +${i.flutRun}`); }); if(isFlut()) parts.push('Flut +1'); if(p.sand) parts.push('Sand in der Badehose −2'); if(deep) parts.push('Tiefsee −1'); if(m.c.run) parts.push(`${m.c.n} ${sign(m.c.run)}`);
-    const v=await ask(()=>({title:`Weglaufen vor ${m.c.n}${n>1?` (Monster ${i+1} von ${n})`:''}`, text: need<=1 ? 'Mit deinen Boni klappt die Flucht auf jeden Fall.' : need>6 ? 'Mit diesen Mali schaffst du es nur mit Hilfe von Karten.' : `Du brauchst eine ${need}${need<6?' oder mehr':''}. Grundwert 5${parts.length?', '+parts.join(', '):''}.`,
+    const keep=ACT; ACT=p.id;
+    const v=await askAs(p, ()=>({title:`Weglaufen vor ${m.c.n}${n>1?` (Monster ${i+1} von ${n})`:''}`, text: need<=1 ? 'Mit deinen Boni klappt die Flucht auf jeden Fall.' : need>6 ? 'Mit diesen Mali schaffst du es nur mit Hilfe von Karten.' : `Du brauchst eine ${need}${need<6?' oder mehr':''}. Grundwert 5${parts.length?', '+parts.join(', '):''}.`,
       hint:[`Misslingt es: ${m.c.badTxt}`, ...(n>1?['Bei mehreren Monstern läufst du vor jedem einzeln weg.']:[]), ...(nebel?[left>1?`Mit ${nebel.n} entkommst du sicher, und zwar vor allen ${left} übrigen Monstern.`:`Mit ${nebel.n} entkommst du sicher.`]:[])],
       opts:[{l:'Würfeln',v:'roll',kind:'primary'}, ...(nebel?[{l:`${nebel.n} einsetzen`,v:'nebel'}]:[])]}), 'run', {m, left});
-    if(v==='nebel'){ take(p,nebel); discard(nebel); track('escape'); log(nebel.n==='Kompass' ? `Der Kompass zeigt dir den Weg: Du entkommst${left>1?' allen übrigen Monstern':''}!` : `Du verschwindest im Nebelpulver und entkommst${left>1?' allen übrigen Monstern':''}!`,'good'); return 'all'; }
+    ACT=keep;
+    if(v==='nebel'){ take(p,nebel); discard(nebel); track('escape'); log(!loc(p) ? `${p.name} ${nebel.n==='Kompass'?'folgt dem Kompass':'verschwindet im Nebelpulver'} und entkommt${left>1?' allen übrigen Monstern':''}.` : nebel.n==='Kompass' ? `Der Kompass zeigt dir den Weg: Du entkommst${left>1?' allen übrigen Monstern':''}!` : `Du verschwindest im Nebelpulver und entkommst${left>1?' allen übrigen Monstern':''}!`,'good'); return 'all'; }
   } else if(nebel && (severe(m.c.bad) || left>1)){ take(p,nebel); discard(nebel); log(nebel.n==='Kompass' ? `${p.name} folgt dem Kompass und entkommt${left>1?' allen übrigen Monstern':''}.` : `${p.name} verschwindet im Nebelpulver und entkommt${left>1?' allen übrigen Monstern':''}.`,'good'); return 'all'; }
   let roll=await rollDie(p), total=roll+mod;
   log(`${nm(p)} ${V(p,'würfelst','würfelt')} eine ${roll}${mod?` (${sign(mod)} = ${total})`:''}.`);
   if(total<5 && hasCls(p,'zauberer') && p.hand.length>=5-total && 5-total<=3){
     const k=5-total;
     if(p.human){
-      const sel=await selectCards({ctx:'zauberer', title:'Zauberer: Fluchtzauber', text:`Wirf ${k} ${pl(k,'Karte','Karten')} ab, um den Wurf auf 5 zu bringen (je +1).`, min:k, max:k, optional:true, filter:(c,w)=>w==='hand', confirm:()=>'Abwerfen'});
-      if(sel && sel.length){ sel.map(findCard).forEach(c=>{ take(p,c); discard(c); }); total+=k; log(`Du wirfst ${k} ${pl(k,'Karte','Karten')} ab: Der Wurf zählt jetzt ${total}.`); }
+      const keep=ACT; ACT=p.id;
+      const sel=await selectCards({ctx:'zauberer', title:'Zauberer: Fluchtzauber', text:`Wirf ${k} ${pl(k,'Karte','Karten')} ab, um den Wurf auf 5 zu bringen (je +1).`, min:k, max:k, optional:true, filter:(c,w)=>w==='hand', confirm:()=>'Abwerfen'}, p);
+      ACT=keep;
+      if(sel && sel.length){ sel.map(u=>findCard(u,p)).filter(Boolean).forEach(c=>{ take(p,c); discard(c); }); total+=k; log(`${nm(p)} ${V(p,'wirfst','wirft')} ${k} ${pl(k,'Karte','Karten')} ab: Der Wurf zählt jetzt ${total}.`); }
     } else if(severe(m.c.bad) || k===1){ const cs=p.hand.slice().sort((x,y)=>keepValue(p,x)-keepValue(p,y)).slice(0,k); cs.forEach(c=>{ take(p,c); discard(c); }); total+=k; log(`${p.name} wirft als Zauberer ${k} ${pl(k,'Karte','Karten')} ab: Der Wurf zählt ${total}.`); }
   }
   if(total>=5){ if(p.human) track('escape'); log(`${nm(p)} ${V(p,'entkommst','entkommt')}!`,'good'); fx('escape',{p}); }
@@ -1580,7 +1626,7 @@ async function applyCurse(t,c,by){
   const am=t.hand.find(x=>x.k==='amulet');
   if(am){
     let use=true;
-    if(t.human){ const v=await ask(()=>({title:`Fluch: ${c.n}`, text:`${c.txt} Du hast ein Glücksamulett.`, hint:['Das Amulett hebt den Fluch auf. Danach ist es weg.'], opts:[{l:'Glücksamulett einsetzen',v:'yes',kind:'primary'},{l:'Fluch hinnehmen',v:'no'}]}), 'amulet', {c}); use=v==='yes'; }
+    if(t.human){ const v=await ask(()=>({title:`Fluch: ${c.n}`, text:`${c.txt} Du hast ein Glücksamulett.`, hint:['Das Amulett hebt den Fluch auf. Danach ist es weg.'], opts:[{l:'Glücksamulett einsetzen',v:'yes',kind:'primary'},{l:'Fluch hinnehmen',v:'no'}]}), 'amulet', {c}, t); use=v==='yes'; }
     if(use){ take(t,am); discard(am); discard(c); log(`${nm(t)} ${V(t,'wehrst','wehrt')} den Fluch mit dem Glücksamulett ab.`,'good'); return; }
   }
   S.lastCursed=t.id;
@@ -1633,30 +1679,31 @@ function kill(p){
   fx('death',{p});
   ruleOnce('death','Tod: Stufe, Volk und Klasse bleiben. Handkarten sind weg, von deinen Gegenständen nimmt sich jeder andere einen, der Rest wird abgelegt. Im nächsten Zug gibt es neue 4 + 4 Karten.');
   const loot=shuffle([...p.eq,...p.pack]); p.eq=[]; p.pack=[];
-  if(p.human && p.hand.length) log(`Deine Handkarten kommen in die Ablage: ${p.hand.map(c=>`<b>${cardLabel(c)}</b>`).join(', ')}.`,'bad');
+  if(loc(p) && p.hand.length) log(`Deine Handkarten kommen in die Ablage: ${p.hand.map(c=>`<b>${cardLabel(c)}</b>`).join(', ')}.`,'bad');
   p.hand.forEach(discard); p.hand=[];
   const others=S.players.filter(o=>o.id!==p.id).sort((a,b)=>b.lvl-a.lvl);
-  for(const o of others){ if(!loot.length) break; const it=loot.pop(); o.hand.push(it); log(`${o.human?'Du nimmst dir':o.name+' nimmt sich'}: ${it.n}.`); }
+  for(const o of others){ if(!loot.length) break; const it=loot.pop(); o.hand.push(it); log(`${loc(o)?'Du nimmst dir':o.name+' nimmt sich'}: ${it.n}.`); }
   loot.forEach(discard);
   p.dead=true;
 }
 
 /* ================= Deine Kartenaktionen ================= */
-function findCard(uid){
+function findCard(uid, p){
   if(!S) return null;
-  const p=me();
+  p=p||me();
   const pools=[p.hand,p.eq,p.pack];
   for(const a of pools){ const c=a.find(x=>x.uid===uid); if(c) return c; }
   if(p.race && p.race.uid===uid) return p.race;
   if(p.cls && p.cls.uid===uid) return p.cls;
   if(S.reveal && S.reveal.uid===uid) return S.reveal;
-  if(UI.prompt && UI.prompt.data && UI.prompt.data.pool && (UI.prompt.ctx==='loot' || UI.prompt.data.draft)){ const c=UI.prompt.data.pool.find(x=>x.uid===uid); if(c) return c; }
-  const o=ownerOf(uid); if(o) return o.c;
+  const pr=curPrompt(); if(pr && pr.data && pr.data.pool && (pr.ctx==='loot' || pr.data.draft)){ const c=pr.data.pool.find(x=>x.uid===uid); if(c) return c; }
+  const o=ownerOf(uid, p); if(o) return o.c;
   if(S.combat){ for(const m of S.combat.mons){ if(m.c.uid===uid) return m.c; const e=m.enh.find(x=>x.uid===uid); if(e) return e; } }
   return null;
 }
-function ownerOf(uid){
-  for(const q of S.players){ if(q.human) continue;
+function ownerOf(uid, skip){
+  skip=skip||me();
+  for(const q of S.players){ if(q===skip) continue;
     let c=q.eq.find(x=>x.uid===uid); if(c) return {q,c,z:'eq'};
     c=q.pack.find(x=>x.uid===uid); if(c) return {q,c,z:'pack'};
     if(q.race && q.race.uid===uid) return {q,c:q.race,z:'rc'};
@@ -1665,10 +1712,10 @@ function ownerOf(uid){
 }
 function cardActions(c, where){
   const p=me(), C=S.combat, A=[];
-  if(!UI.prompt || S.winner!=null || UI.sel) return [{info:'Warte, bis du wieder an der Reihe bist oder gefragt wirst.'}];
-  const myTurn=S.cur===0, free=isFree();
+  if(!curPrompt() || S.winner!=null || curSel()) return [{info:'Warte, bis du wieder an der Reihe bist oder gefragt wirst.'}];
+  const myTurn=S.cur===ACT, free=isFree();
   const live=C && !C.resolved;
-  const inMine=live && (C.f===0 || C.h===0);
+  const inMine=live && (C.f===ACT || C.h===ACT);
   const sellAct = () => { if(free && sellable(p,c)) A.push(sellBlock(p) ? {l:'Verkaufen', fn:()=>{}, dis:sellBlock(p)} : {l:`Verkaufen (${fmt(goldOf(p,c))} Gold)`, fn:()=>startSell(c.uid)}); };
   if(where==='hand'){
     switch(c.k){
@@ -1709,7 +1756,7 @@ function cardActions(c, where){
       case 'monster': A.push({info: myTurn && S.phase===2 && !C ? 'Zieh das Monster aufs Spielfeld oder tippe unten auf „Monster herausfordern“.' : 'Monster von der Hand spielst du bei „Monster herausfordern“ oder mit „Hinterhalt“ in fremde Kämpfe.'}); break;
       case 'curse': {
         if(c.eff.t==='seegang'){ A.push({l:'Seegang auslösen: alle geben 1 Karte weiter', fn:()=>playSeegang(c), kind:'primary'}); break; }
-        S.players.filter(x=>!x.human).forEach(t=>A.push({l:`Auf ${t.name} spielen`, fn:()=>playCurseOn(c,t)}));
+        S.players.filter(x=>x.id!==ACT).forEach(t=>A.push({l:`Auf ${t.name} spielen`, fn:()=>playCurseOn(c,t)}));
         A.push({info:'Flüche von der Hand gehen jederzeit, auf jeden.'}); sellAct(); break;
       }
       case 'levelup': A.push({l:'Benutzen: +1 Stufe', fn:()=>useLevelUp(c), kind:'primary', dis: !free ? 'Stufenkarten spielst du im eigenen Zug außerhalb von Kämpfen.' : p.lvl>=WINLVL()-1 ? `Stufe ${WINLVL()} gibt es nur für einen Monstersieg.` : false}); break;
@@ -1722,7 +1769,7 @@ function cardActions(c, where){
     if(free){ const ce=canEquip(p,c); A.push({l:'Anlegen', fn:()=>doEquip(c), dis: ce.ok?false:ce.why, kind:'primary'}); sellAct(); }
     else A.push({info:'Aus dem Rucksack holst du Dinge nur im eigenen Zug außerhalb von Kämpfen.'});
   } else if(where==='race' || where==='cls'){
-    A.push({l:'Ablegen', fn:()=>{ if(where==='race'){ discard(p.race); p.race=null; } else { discard(p.cls); p.cls=null; } log(`Du legst ${c.n} ab.`); ruleOnce('droprc','Völker und Klassen kannst du jederzeit ablegen. Gegenstände, die sie voraussetzen, werden dann inaktiv.'); }});
+    A.push({l:'Ablegen', fn:()=>{ if(where==='race'){ discard(p.race); p.race=null; } else { discard(p.cls); p.cls=null; } log(`${nm(p)} ${V(p,'legst','legt')} ${c.n} ab.`); ruleOnce('droprc','Völker und Klassen kannst du jederzeit ablegen. Gegenstände, die sie voraussetzen, werden dann inaktiv.'); }});
   }
   return A;
 }
@@ -1730,50 +1777,50 @@ function doEquip(c){
   const p=me(); const ce=canEquip(p,c); if(!ce.ok){ log(ce.why,'sys'); return; }
   const moved=equip(p,c);
   const inPack=moved.filter(m=>p.pack.includes(m)), toHand=moved.filter(m=>p.hand.includes(m));
-  log(`Du rüstest ${c.n} aus.${inPack.length?` ${names(inPack)} ${pl(inPack.length,'kommt','kommen')} in den Rucksack.`:''}${toHand.length?` Der Rucksack ist voll: ${names(toHand)} ${pl(toHand.length,'kommt','kommen')} auf die Hand.`:''}`);
+  log(`${nm(p)} ${V(p,'rüstest','rüstet')} ${c.n} aus.${inPack.length?` ${names(inPack)} ${pl(inPack.length,'kommt','kommen')} in den Rucksack.`:''}${toHand.length?` Der Rucksack ist voll: ${names(toHand)} ${pl(toHand.length,'kommt','kommen')} auf die Hand.`:''}`);
   if(moved.length) ruleOnce('pack',`Was du nicht gleichzeitig nutzen kannst, kommt in den Rucksack (höchstens ${packLimit(p)} Gegenstände). Dort zählt es nicht zu den Handkarten, bringt aber auch keinen Bonus.`);
   if(c.big) ruleOnce('big','Sperrige Gegenstände: Davon darfst du nur einen haben, außer du bist Zwerg.');
 }
 function playRC(c){
   const p=me(); take(p,c); if(S.combat) stat('played');
   if(c.k==='race'){ if(p.race){ discard(p.race); } p.race=c; } else { if(p.cls){ discard(p.cls); } p.cls=c; }
-  log(`Du bist jetzt ${c.n}: ${c.txt}`,'good');
+  log(loc(p) ? `Du bist jetzt ${c.n}: ${c.txt}` : `${p.name} ist jetzt ${c.n}.`,'good');
   ruleOnce('onerc','Du hast höchstens 1 Volk und 1 Klasse. Eine neue Karte ersetzt die alte.');
 }
-function markIntf(){ const C=S.combat; if(C && C.f!==0){ C.hchg=true; } fx('play',{}); }
+function markIntf(){ const C=S.combat; if(C && C.f!==ACT){ C.hchg=true; } fx('play',{}); }
 // Sonnencreme außerhalb von Kämpfen: nur den Sonnenbrand loswerden
 function useCream(p,c){ if(!p.sun) return; take(p,c); discard(c); p.sun=0; if(p.human){ stat('played'); track('oneshot'); } log(`${nm(p)} ${V(p,'cremst dich','cremt sich')} mit ${c.n} ein. Der Sonnenbrand ist weg.`,'good'); render(); }
 function playOneShot(c,side){
-  const p=me(), C=S.combat; take(p,c); C.used.push(c); stat('played'); stat('os'); track('oneshot'); if(C.f!==0 && C.h!==0) track('intf');
-  if(c.cream && side==='p' && p.sun && (C.f===0 || C.h===0)){ p.sun=0; log('Die Sonnencreme kühlt: Dein Sonnenbrand ist weg.','good'); }
-  if(side==='p'){ const v=osP(c,C); C.pB.push({l:`${c.n} (von dir)`,v}); log(`Du setzt ${c.n} für ${C.f===0||C.h===0?'eure Seite':P(C.f).name} ein (+${v}).`,'good'); }
-  else { C.mB.push({l:`${c.n} (von dir)`,v:c.b,by:0}); log(`Du setzt ${c.n} für das Monster ein (+${c.b}).`); if(C.f!==0 && C.h!==0) C.asked[0]=true; }
+  const p=me(), C=S.combat, A=ACT, von=loc(p)?'von dir':'von '+p.name; take(p,c); C.used.push(c); stat('played'); stat('os'); track('oneshot'); if(C.f!==A && C.h!==A) track('intf');
+  if(c.cream && side==='p' && p.sun && (C.f===A || C.h===A)){ p.sun=0; log(loc(p) ? 'Die Sonnencreme kühlt: Dein Sonnenbrand ist weg.' : `Die Sonnencreme kühlt: Der Sonnenbrand von ${p.name} ist weg.`,'good'); }
+  if(side==='p'){ const v=osP(c,C); C.pB.push({l:`${c.n} (${von})`,v}); log(`${nm(p)} ${V(p,'setzt','setzt')} ${c.n} für ${C.f===A||C.h===A?(loc(p)?'eure Seite':'die eigene Seite'):P(C.f).name} ein (+${v}).`,'good'); }
+  else { C.mB.push({l:`${c.n} (${von})`,v:c.b,by:A}); log(`${nm(p)} ${V(p,'setzt','setzt')} ${c.n} für das Monster ein (+${c.b}).`); if(C.f!==A && C.h!==A) C.asked[A]=true; }
   markIntf();
 }
 function playEnh(c,m){
-  const p=me(), C=S.combat; take(p,c); m.enh.push(c); if(C.played) C.played[c.uid]=0; stat('played'); if(C.f!==0 && C.h!==0) track('intf');
-  log(`Du spielst „${c.n}“ (${sign(c.v)}) auf ${m.c.n}.`);
+  const p=me(), C=S.combat, A=ACT; take(p,c); m.enh.push(c); if(C.played) C.played[c.uid]=A; stat('played'); if(C.f!==A && C.h!==A) track('intf');
+  log(`${nm(p)} ${V(p,'spielst','spielt')} „${c.n}“ (${sign(c.v)}) auf ${m.c.n}.`);
   ruleOnce('enh','Launen darf jeder in jeden Kampf spielen. Sie verändern auch die Zahl der Schätze.');
-  if(C.f!==0 && C.h!==0 && c.v>0) C.asked[0]=true;
+  if(C.f!==A && C.h!==A && c.v>0) C.asked[A]=true;
   markIntf();
 }
 function playWander(w,m){
   const p=me(), C=S.combat; take(p,w); take(p,m); discard(w); C.mons.push({c:m,enh:[]}); stat('played'); track('intf');
-  log(`Du spielst „Hinterhalt“: <b>${m.n}</b> (Stufe ${m.lvl}) mischt mit!`);
+  log(`${nm(p)} ${V(p,'spielst','spielt')} „Hinterhalt“: <b>${m.n}</b> (Stufe ${m.lvl}) mischt mit!`);
   ruleOnce('wander','Bei mehreren Monstern zählen alle zusammen. Bei einer Niederlage wird vor jedem einzeln weggelaufen.');
-  C.asked[0]=true; markIntf();
+  C.asked[ACT]=true; markIntf();
 }
-function playSeegang(c){ const p=me(); take(p,c); discard(c); stat('played'); log('Du löst Seegang aus.'); seegang(); }
+function playSeegang(c){ const p=me(); take(p,c); discard(c); stat('played'); log(`${nm(p)} ${V(p,'löst','löst')} Seegang aus.`); seegang(); }
 function playCurseOn(c,t){
   const p=me(); take(p,c); track('curse');
-  log(`Du spielst den Fluch „${c.n}“ auf ${t.name}.`);
+  log(`${nm(p)} ${V(p,'spielst','spielt')} den Fluch „${c.n}“ auf ${nmA(t)}.`);
   ruleOnce('cursehand','Flüche von der Hand darf man jederzeit auf jeden Spieler spielen.');
-  if(S.combat && !S.combat.resolved) { markIntf(); if(S.combat.f===t.id) S.combat.asked[0]=true; }
+  if(S.combat && !S.combat.resolved) { markIntf(); if(S.combat.f===t.id) S.combat.asked[ACT]=true; }
   applyCurse(t,c,p).catch(e=>{ if(e!==STALE) console.error(e); });
 }
 function useLevelUp(c){
   const p=me(); if(p.lvl>=WINLVL()-1 || !isFree()) return; take(p,c); discard(c); p.lvl++;
-  log(`Du spielst „${c.n}“: Stufe ${p.lvl}.`,'good');
+  log(`${nm(p)} ${V(p,'spielst','spielt')} „${c.n}“: Stufe ${p.lvl}.`,'good');
   ruleOnce('levelup',`Stufenkarten spielt man im eigenen Zug außerhalb von Kämpfen, aber nie für die Siegstufe ${WINLVL()}.`);
 }
 // Auf der vorletzten Stufe bringt Verkaufen nichts mehr: Die Siegstufe gibt es nur für einen Monstersieg
@@ -1782,15 +1829,15 @@ async function startSell(pre){
   const p=me(); if(!isFree()) return;
   if(sellBlock(p)){ if(typeof toast==='function') toast(sellBlock(p)); return; }
   try{
-    const sel=await selectCards({ctx:'sell', title:'Gegenstände verkaufen', text:'Wähle, was du verkaufen willst. Je 1.000 Gold gibt es 1 Stufe, der Rest kommt in deinen Goldbeutel.', min:1, max:99, pre: Array.isArray(pre)?pre:(pre?[pre]:[]), cancel:true,
+    const sel=await selAs(p, {ctx:'sell', title:'Gegenstände verkaufen', text:'Wähle, was du verkaufen willst. Je 1.000 Gold gibt es 1 Stufe, der Rest kommt in deinen Goldbeutel.', min:1, max:99, pre: Array.isArray(pre)?pre:(pre?[pre]:[]), cancel:true,
       filter:(c,w)=> sellable(p,c) && ['hand','eq','pack'].includes(w) && (typeof tutSellOk!=='function' || tutSellOk(c)),
       extra:cs=>{ const v=sellValue(p,cs), lv=Math.min(v.lv,WINLVL()-1-p.lvl), rest=v.sum-lv*1000; return `Summe: <b>${fmt(v.sum)} Gold</b>${v.purse?` (davon ${fmt(v.purse)} aus dem Goldbeutel)`:''}${v.bonus?' · Kobold: +200 Gold':''} · ergibt <b>${lv} ${pl(lv,'Stufe','Stufen')}</b>${rest>0&&cs.length?` · ${fmt(rest)} Gold bleiben im Beutel`:''}`; },
       validate:cs=>null,
       confirm:()=>'Verkaufen'});
     if(!sel || !sel.length) return;
-    const cs=sel.map(findCard).filter(Boolean); if(!cs.length) return;
+    const cs=sel.map(u=>findCard(u,p)).filter(Boolean); if(!cs.length) return;
     const {v,lv}=doSell(p,cs); track('gold', v.raw+v.bonus);
-    log(`Du verkaufst ${cs.map(c=>c.n).join(', ')} für ${fmt(v.raw+v.bonus)} Gold${v.bonus?' (als Kobold mit 200 Gold Aufschlag)':''}${lv?`: Stufe ${p.lvl}`:''}.${p.gold?` Im Goldbeutel: ${fmt(p.gold)} Gold.`:''}`,'good');
+    log(`${nm(p)} ${V(p,'verkaufst','verkauft')} ${cs.map(c=>c.n).join(', ')} für ${fmt(v.raw+v.bonus)} Gold${v.bonus?' (als Kobold mit 200 Gold Aufschlag)':''}${lv?`: Stufe ${p.lvl}`:''}.${p.gold?` Im Goldbeutel: ${fmt(p.gold)} Gold.`:''}`,'good');
     if(v.bonus) ruleOnce('halbsell','Kobold: Einmal pro Zug bringt ein Verkauf 200 Gold extra.');
     ruleOnce('sell','Verkaufen: Je 1.000 Gold gibt es 1 Stufe. Was übrig bleibt, kommt in den Goldbeutel und zählt beim nächsten Verkauf mit.');
   }catch(e){ if(e!==STALE) throw e; }
@@ -2012,7 +2059,7 @@ function applyAdvice(){
     if(!a.picks) return;
     const ok=a.picks.filter(u=>{ const c=findCard(u); return c && UI.sel.filter(c,zoneOf(u)); }).slice(0,UI.sel.max);
     UI.sel.picked=new Set(ok);
-    const cs=ok.map(findCard), valid=ok.length>=UI.sel.min && !(UI.sel.validate && UI.sel.validate(cs));
+    const cs=ok.map(u=>findCard(u)), valid=ok.length>=UI.sel.min && !(UI.sel.validate && UI.sel.validate(cs));
     if(valid) UI.sel.done(ok); else render();
     return;
   }

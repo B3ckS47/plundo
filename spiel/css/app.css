@@ -3398,3 +3398,8 @@ html.wide-any .sheet.bare{width:fit-content}
 .on-arr:hover{border-color:#e08a2c}
 .on-cfg .on-note{margin:4px 0 0}
 .on-plate b{font-family:var(--display);font-weight:700;letter-spacing:0}
+/* Online: Zugzeit */
+#ontimer{position:fixed;right:calc(var(--cr,24px) + 26px);bottom:calc(var(--sab,0px) + 196px);z-index:45;display:flex;align-items:baseline;gap:3px;padding:6px 12px;border-radius:999px;background:rgba(20,12,6,.88);border:2px solid #f3c873;color:#fbefd6;box-shadow:0 6px 16px rgba(0,0,0,.5);pointer-events:none}
+#ontimer b{font:800 18px var(--body)}#ontimer small{font-size:11px;color:#e9d3a8}
+#ontimer.low{border-color:#e04040;animation:onLow 1s infinite}
+@keyframes onLow{50%{box-shadow:0 0 0 4px rgba(224,64,64,.35)}}
