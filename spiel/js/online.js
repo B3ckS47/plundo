@@ -321,6 +321,8 @@ function cfgPanelHTML() {
     `<div class="on-row"><span class="lbl">Länge</span>${seg('goal', GOAL_OPTS, c.goal)}</div>` +
     `<div class="on-row"><span class="lbl">Deck</span><div class="on-deck">${host && unl > 1 ? `<button type="button" class="on-arr" data-cfg="deck" data-v="-1" aria-label="Voriges Deck">‹</button>` : ''}<span class="on-dk"><img src="${ART[d.icon]}" alt=""><span><b>${esc(d.name)}</b><small>${esc((c.deckName || '').split(' · ')[1] || 'Standard')}</small></span></span>${host && unl > 1 ? `<button type="button" class="on-arr" data-cfg="deck" data-v="1" aria-label="Nächstes Deck">›</button>` : ''}</div></div>` +
     (vars ? `<div class="on-row"><span class="lbl"></span>${vars}</div>` : '') +
+    (!mq().pc.matches ? (() => { const tb = TABLES.find(x => x[0] === c.table) || TABLES[0], many = TABLES.filter(x => moodOk(x[0])).length > 1;
+      return `<div class="on-row"><span class="lbl">Tisch</span><div class="on-deck">${host && many ? `<button type="button" class="on-arr" data-cfg="table" data-v="-1" aria-label="Voriger Tisch">‹</button>` : ''}<span class="on-dk on-tb"><img src="${tb[2]}" alt=""><span><b>${esc(tb[1])}</b><small>Spieltisch</small></span></span>${host && many ? `<button type="button" class="on-arr" data-cfg="table" data-v="1" aria-label="Nächster Tisch">›</button>` : ''}</div></div>`; })() : '') +
     `<div class="on-row"><span class="lbl">Zugzeit</span>${seg('turn', TURN_OPTS, c.turn)}</div>` +
     `<div class="on-row"><span class="lbl">Bots</span>${seg('diff', DIFF_OPTS, c.diff)}</div>` +
     `<p class="on-note">${host ? 'Gekaufte Welten aus deinem Konto dürfen alle am Tisch mitspielen. ' : ''}Läuft die Zugzeit ab, macht das Spiel den empfohlenen Zug. Zug-Empfehlung und Tipps sind online aus.</p></div>`;

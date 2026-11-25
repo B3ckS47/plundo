@@ -3419,3 +3419,4 @@ html.wide-any .sheet.bare{width:fit-content}
 .on-m .acts{margin-top:2px}
 #invbar{max-width:calc(100vw - 24px)}
 @media (max-width:700px){#invbar{left:12px;right:12px;top:calc(var(--sat,0px) + 10px);flex-wrap:wrap}}
+.on-tb img{object-fit:cover;width:56px}
