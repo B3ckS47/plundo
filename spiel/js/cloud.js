@@ -226,7 +226,7 @@ function renderAcctCard() {
     ? `${esc((ACC.user && ACC.user.email) || CLOUD.email || 'Angemeldet')} · ${esc(acctStatus())}`
     : 'Melde dich an, dann ist dein Spielstand sicher und auf allen Geräten dabei.'}</span></span>`); });
 }
-function acctRefresh() { renderAcctCard(); if (SHEETS.length && topSheet().id === 'acct') renderSheet(false); if (typeof renderOnline === 'function') renderOnline(); }
+function acctRefresh() { renderAcctCard(); if (SHEETS.length && topSheet().id === 'acct') renderSheet(false); if (typeof renderOnline === 'function') renderOnline(); if (typeof SOC !== 'undefined' && SOC.on && (!ACC.user || ACC.user.uid !== SOC.uid)) { stopSocial(); renderOnline(); } }
 const accInput = (id, type, val, ph, ac) => `<input id="${id}" class="pf-input acc-in" type="${type}" value="${esc(val)}" placeholder="${ph}" autocomplete="${ac}" autocapitalize="off" spellcheck="false"${ACC.busy ? ' disabled' : ''}>`;
 const accBtn = (act, label, cls = '') => `<button type="button" class="btn ${cls}" data-acct="${act}"${ACC.busy ? ' disabled' : ''}>${label}</button>`;
 SHEET_VIEWS.acct = () => {

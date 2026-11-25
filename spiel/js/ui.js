@@ -182,7 +182,7 @@ function renderProfilePC() {
   box.querySelectorAll('[data-frame]').forEach(b => b.dataset.src = pfSrcLabel(key['f' + b.dataset.frame]));
   box.querySelectorAll('[data-bg]').forEach(b => b.dataset.src = pfSrcLabel(key['b' + b.dataset.bg]));
   let idb = box.querySelector('.pf-idbox'); if (!idb) { idb = document.createElement('div'); idb.className = 'panel pf-idbox'; $('#pf-hero').after(idb); }
-  patch(idb, `<span><small>Spieler-ID</small><b>#${playerTag()}</b><em>Damit finden dich Freunde, sobald der Online-Modus da ist.</em></span><button type="button" class="pf-copy" data-copyid aria-label="Spieler-ID kopieren" title="Kopieren"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button>`);
+  patch(idb, `<span><small>Spieler-ID</small><b>#${playerTag()}</b><em>Damit fügen dich Freunde unter „Spielen“ → „Mit Freunden spielen“ hinzu.</em></span><button type="button" class="pf-copy" data-copyid aria-label="Spieler-ID kopieren" title="Kopieren"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button>`);
   let right = box.querySelector('.pf-right'); if (!right) { right = document.createElement('div'); right.className = 'pf-right'; box.appendChild(right); }
   const st = PROFILE.stats || {}, n = k => fmt(st[k] || 0), days = v => `${v} ${v === 1 ? 'Tag' : 'Tage'}`;
   const cell = (ic, v, l, art) => `<div class="pfs-c"><img${art ? ' class="art"' : ''} src="${ic}" alt=""><b>${v}</b><span>${l}</span></div>`;
