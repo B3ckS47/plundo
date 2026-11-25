@@ -3420,3 +3420,16 @@ html.wide-any .sheet.bare{width:fit-content}
 #invbar{max-width:calc(100vw - 24px)}
 @media (max-width:700px){#invbar{left:12px;right:12px;top:calc(var(--sat,0px) + 10px);flex-wrap:wrap}}
 .on-tb img{object-fit:cover;width:56px}
+/* PC Charakter: Rahmen als Kacheln mit eigenem Porträt */
+html.pcnav #scr-profile #pf-frames{grid-template-columns:repeat(5,minmax(0,1fr));gap:14px 10px}
+.pf-frt{appearance:none;border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink);font:700 12px var(--body);cursor:pointer}
+.pf-frt span:not(.frt-pv){max-width:100%;text-align:center;line-height:1.15}
+.frt-pv{position:relative;display:block;width:96px;height:96px;margin:6px 0 4px}
+.frt-pv img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 20%;border:5px solid var(--c);background:var(--paper);box-shadow:0 4px 10px -4px rgba(0,0,0,.5);transition:transform .12s}
+.frt-pv.fa img{border-color:transparent}
+.frt-pv.fa::after{content:'';position:absolute;inset:-10px;background:var(--fimg) center/contain no-repeat;pointer-events:none}
+.frt-pv svg{position:absolute;left:50%;top:50%;width:26px;height:26px;transform:translate(-50%,-50%);fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;z-index:2;filter:drop-shadow(0 1px 2px #000)}
+.pf-frt.locked .frt-pv img{filter:grayscale(1) brightness(.6)}
+.pf-frt.locked .frt-pv.fa::after{opacity:.85}
+.pf-frt[aria-pressed="true"] .frt-pv img{transform:scale(1.04);box-shadow:0 0 0 3px #ff8a1f}
+.pf-frt[aria-pressed="true"] span:not(.frt-pv){color:#c2560c}
