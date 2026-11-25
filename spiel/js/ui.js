@@ -348,10 +348,31 @@ function renderDeckPanel() {
   const check = `<div class="dk-check"><p class="dk-st ${st.ok ? 'ok' : 'bad'}">${st.ok ? 'Spielbereit' : 'Noch nicht spielbereit'}</p><p class="dk-need">Damit ein Deck spielbereit ist, braucht es:</p><ul class="dk-req">` +
     row(st.okDoor, 'mindestens 30 Türkarten', st.door) + row(st.okTr, 'mindestens 25 Schatzkarten', st.tr) + row(st.okMons, 'mindestens 12 Monster, die 30 % der Türkarten ausmachen', `${st.mons} · ${Math.round(st.share * 100)} %`) +
     `</ul>${st.warnings.map(w => `<p class="dk-warn">${esc(w)}</p>`).join('')}</div>`;
+  if (mq().pc.matches) {
+    patch($('#deck-panel'), `<div class="dk-lbl">Deck</div><div class="dk-decks">${tiles}</div>` +
+      `<div class="dk-lbl">Variante</div><div class="dk-var">${vars}</div><p class="dk-desc">${esc(v ? v[2] : 'Deine eigene Zusammenstellung. Ändere rechts die Anzahl der Karten.')}</p>` + deckSumPC(st, d) +
+      `<p class="hint">Mit − und + legst du fest, wie oft eine Karte im Deck ist (0 bis ${DECK_MAX}). Jede Änderung speichert die Mischung unter „Eigenes“.${GAME_ON && S && S.winner == null ? ' Änderungen gelten ab dem nächsten Spiel.' : ''}</p>`);
+    return;
+  }
   patch($('#deck-panel'), `<div class="dk-head"><b>Dein Deck</b></div>` +
     `<div class="dk-lbl">Deck</div><div class="dk-decks">${tiles}</div><p class="dk-desc">${esc(d.desc)}</p>` +
     `<div class="dk-lbl">Variante</div><div class="dk-var">${vars}</div><p class="dk-desc">${esc(v ? v[2] : 'Deine eigene Zusammenstellung. Ändere unten die Anzahl der Karten.')}</p>` + check +
     `<p class="hint">Mit − und + legst du fest, wie oft eine Karte im Deck ist (0 bis ${DECK_MAX}). Jede Änderung speichert die Mischung unter „Eigenes“.${GAME_ON && S && S.winner == null ? ' Änderungen gelten ab dem nächsten Spiel.' : ''}</p>`);
+}
+// PC: Zusammenfassung als drei Kartenstapel (Tür, Schatz, Monster) statt Checkliste
+const DOOR_BACK = {keller: 'art/ruecken-tuer-keller.webp', wald: 'art/ruecken-tuer-wald.webp', strand: 'art/ruecken-tuer-strand.webp', schiff: 'art/ruecken-tuer-schiff.webp'};
+function deckSumPC(st, d) {
+  const door = DOOR_BACK[d.mood] || 'art/ruecken-tuer.webp';
+  const mons = POOL.filter(p => p.tpl.k === 'monster' && (DECK.counts[p.tpl.n] || 0) > 0 && ART[p.tpl.n]).sort((a, b) => (DECK.counts[b.tpl.n] - DECK.counts[a.tpl.n]) || (b.tpl.lvl - a.tpl.lvl)).slice(0, 3);
+  const stack = imgs => `<span class="dks-stack">${imgs.map((src, i) => `<img src="${src}" alt="" style="--i:${i}" draggable="false">`).join('')}</span>`;
+  const tile = (ok, imgs, n, label, need, cls) => `<div class="dks-t${ok ? ' ok' : ' bad'}${cls ? ' ' + cls : ''}">${stack(imgs)}<span class="dks-tx"><b>${n}</b><small>${label}</small><em>${need}</em></span><i class="dks-mk" aria-hidden="true">${ok ? '✓' : '✗'}</i></div>`;
+  const pct = Math.round(st.share * 100);
+  return `<div class="dks">` +
+    tile(st.okDoor, [door, door, door], st.door, 'Türkarten', 'mindestens 30') +
+    tile(st.okTr, ['art/ruecken-schatz.webp', 'art/ruecken-schatz.webp', 'art/ruecken-schatz.webp'], st.tr, 'Schatzkarten', 'mindestens 25') +
+    tile(st.okMons, mons.length ? mons.map(p => ART[p.tpl.n]).reverse() : [door], st.mons, 'Monster', `mindestens 12</em><span class="dks-bar${st.share >= 0.3 ? ' ok' : ''}" title="Anteil an den Türkarten: ${pct} %, nötig sind 30 %"><i style="width:${Math.min(100, pct / 0.6)}%"></i><u></u></span><em>${pct} % (ab 30 %)`, 'mon') +
+    `</div><div class="dks-st ${st.ok ? 'ok' : 'bad'}">${st.ok ? '<img src="icons/stempel-erledigt.webp" alt="">' : ''}<b>${st.ok ? 'Spielbereit' : 'Noch nicht spielbereit'}</b></div>` +
+    st.warnings.map(w => `<p class="dk-warn">${esc(w)}</p>`).join('');
 }
 function selectDeck(id) {
   if (id === 'soon') { toast('Neue Decks schaltest du später im Storymodus frei.'); return; }
@@ -978,7 +999,7 @@ function renderSheet(fresh) {
   if (!SHEETS.length) { wrap.classList.remove('open'); wrap.setAttribute('aria-hidden', 'true'); el.innerHTML = ''; el.__h = ''; dockSheet(); return; }
   const s = topSheet(), view = SHEET_VIEWS[s.id](s);
   if (!view) { SHEETS.pop(); renderSheet(true); return; }
-  wrap.classList.add('open'); wrap.setAttribute('aria-hidden', 'false'); el.dataset.sid = s.id; dockSheet();
+  wrap.classList.add('open'); wrap.setAttribute('aria-hidden', 'false'); el.dataset.sid = s.id; el.classList.toggle('bare', !!view.bare); dockSheet();
   const canClose = s.id !== 'sel';
   const html = `<div class="grab"><i></i></div><div class="sh-head${view.hero ? ' has-hero' : ''}">${SHEETS.length > 1 && canClose ? '<button type="button" class="iconbtn" data-sheetback aria-label="Zurück"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></svg></button>' : ''}${view.head || ''}${canClose ? '<button type="button" class="iconbtn" data-sheetclose aria-label="Schließen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg></button>' : ''}</div><div class="sh-body">${view.body}</div>`;
   const body = el.querySelector('.sh-body'), st = body && !fresh ? body.scrollTop : 0;
@@ -1096,6 +1117,8 @@ const SHEET_VIEWS = {
     const swap = live && (s.where === 'hand' || s.where === 'pack') ? equipInfoHTML(me(), c) : '';
     const info = (meaning ? `<p class="meaning">${meaning}</p>` : '') + (wh.length ? `<ul class="wherenow">${wh.map(x => `<li>${x}</li>`).join('')}</ul>` : ''), actBox = actHTML ? `<div class="acts">${actHTML}</div>` : '';
     /* Beim Ausrüsten stehen Slot-Info und Knopf direkt unter der Karte, die Erklärung danach */
+    // PC, Kartenansicht (Karten-Seite, Regeln, Laden): nur die große Karte, ohne Rahmen und Erklärtext
+    if (s.cname && mq().pc.matches && !(PCGX() && CUR === 'game')) return {head: h3(''), body: cardBig(c), bare: true};
     if (PCGX() && CUR === 'game') {
       // PC: Karte links, rechts die Aktionen kompakt. Hauptaktionen groß, alles andere als kleine Knöpfe nebeneinander,
       // Ziele („Auf Nyra spielen“) mit dem Porträt des Spielers.
@@ -1387,10 +1410,15 @@ function updFilterStuck() {
 }
 function renderCards() {
   renderDeckPanel(); requestAnimationFrame(updFilterStuck);
-  const f = UI.kfilter || 'alle';
-  patch($('#card-filter'), KFILTERS.map(([k, l]) => `<button type="button" class="chip" data-kf="${k}" aria-pressed="${f === k}">${l}</button>`).join(''));
+  const f = UI.kfilter || 'alle', PCk = mq().pc.matches, cf = $('#card-filter');
+  // PC: Suchfeld über den Filtern (eigener Knoten, damit Tippen nicht durch Neuzeichnen unterbrochen wird)
+  if (PCk && !cf.querySelector('.cf-chips')) { cf.__h = ''; cf.innerHTML = '<label class="cf-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg><input type="search" id="card-q" placeholder="Karten suchen: Name oder Kartentext" autocomplete="off" spellcheck="false"></label><div class="cf-chips"></div>'; cf.querySelector('#card-q').value = UI.kq || ''; }
+  if (!PCk && cf.querySelector('.cf-chips')) { cf.innerHTML = ''; cf.__h = ''; UI.kq = ''; }
+  const q = PCk ? (UI.kq || '').trim().toLowerCase() : '';
+  const hit = c => !q || [c.n, c.txt, c.badTxt].some(t => t && String(t).toLowerCase().includes(q));
+  patch(PCk ? cf.querySelector('.cf-chips') : cf, KFILTERS.map(([k, l]) => `<button type="button" class="chip" data-kf="${k}" aria-pressed="${f === k}">${l}</button>`).join(''));
   const show = k => f === 'alle' || f === k || (f === 'rc' && (k === 'race' || k === 'class')) || (f === 'misc' && ['enh', 'wander', 'oneshot', 'levelup', 'amulet'].includes(k));
-  const all = POOL.map((p, i) => [p.tpl, i]).filter(([c]) => cardOpen(c));
+  const all = POOL.map((p, i) => [p.tpl, i]).filter(([c]) => cardOpen(c) && hit(c));
   const sorter = {monster: (a, b) => a.lvl - b.lvl, item: (a, b) => SLOT_ORDER.indexOf(a.slot) - SLOT_ORDER.indexOf(b.slot) || (a.hands || 0) - (b.hands || 0) || a.b - b.b, oneshot: (a, b) => (a.b || 0) - (b.b || 0), enh: (a, b) => a.v - b.v};
   let html = '';
   KGROUPS.forEach(([k, label]) => {
@@ -1403,8 +1431,10 @@ function renderCards() {
       return `<div class="dk${n ? '' : ' off'}">${cardMini(c, {cname: true, size: 'grid'})}<div class="stp"><button type="button" data-dk="${i}" data-d="-1" aria-label="${esc(c.n)} einmal weniger" ${n ? '' : 'disabled'}>−</button><b>${n}×</b><button type="button" data-dk="${i}" data-d="1" aria-label="${esc(c.n)} einmal mehr" ${n >= DECK_MAX ? 'disabled' : ''}>+</button></div></div>`;
     }).join('');
   });
+  if (!html && q) html = `<p class="cg-none">Keine Karte gefunden für „${esc(UI.kq.trim())}“.</p>`;
   patch($('#card-grid'), html);
 }
+document.addEventListener('input', e => { if (e.target && e.target.id === 'card-q') { UI.kq = e.target.value; renderCards(); } });
 function renderQuiz() {
   const Q = UI.q || (UI.q = {i: 0, ans: []});
   const el = $('#quiz');
@@ -1983,7 +2013,7 @@ document.addEventListener('click', e => {
   }
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { back(); return; }
+  if (e.key === 'Escape') { if (e.target && e.target.id === 'card-q' && e.target.value) { e.target.value = ''; UI.kq = ''; renderCards(); return; } back(); return; }
   // Breite Ansicht mit Tastatur: Leertaste oder Enter drückt den Hauptknopf der Aktionsleiste
   if ((e.key === ' ' || e.key === 'Enter') && LAYOUT && CUR === 'game' && !SHEETS.length && !/INPUT|TEXTAREA|SELECT|BUTTON/.test((e.target && e.target.tagName) || '')) {
     const b = $('#act .rec:not([disabled])') || $('#act .btn.primary:not([disabled])'); if (b) { e.preventDefault(); b.click(); }

@@ -3261,3 +3261,43 @@ html.pcg-on #table .stepbtn svg{width:16px;height:16px}
 @keyframes deathfx{0%{opacity:0}14%{opacity:1}75%{opacity:1}100%{opacity:0}}
 .seatfx.dead{-webkit-backdrop-filter:grayscale(1) brightness(.6);backdrop-filter:grayscale(1) brightness(.6);background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.55));box-shadow:inset 0 0 0 3px rgba(150,20,20,.9),0 0 20px rgba(0,0,0,.8);animation:seatdead 2.1s ease-in-out forwards}
 @keyframes seatdead{0%{opacity:0}15%{opacity:1}75%{opacity:1}100%{opacity:0}}
+/* PC Karten-Seite: Suche über den Filtern */
+html.pcnav #scr-cards .cfilter{display:flex;flex-direction:column;gap:10px}
+html.pcnav #scr-cards .cf-chips{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+html.pcnav .cf-search{position:relative;display:block}
+html.pcnav .cf-search svg{position:absolute;left:14px;top:50%;width:20px;height:20px;transform:translateY(-50%);fill:none;stroke:#e9d3a8;stroke-width:2.2;stroke-linecap:round;pointer-events:none}
+html.pcnav .cf-search input{width:100%;height:42px;padding:0 14px 0 44px;border-radius:12px;border:2px solid rgba(233,211,168,.35);background:rgba(251,239,214,.08);color:#fbefd6;font:500 16px var(--ui,inherit);outline:none}
+html.pcnav .cf-search input::placeholder{color:rgba(251,239,214,.55)}
+html.pcnav .cf-search input:focus{border-color:#f3c873;background:rgba(251,239,214,.13)}
+html.pcnav #scr-cards .cg-none{grid-column:1/-1;margin:30px 0;text-align:center;color:#e9d3a8;font-size:17px}
+/* PC: Deck-Zusammenfassung als Kartenstapel */
+.dks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.dks-t{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 6px 10px;border-radius:14px;background:rgba(120,80,30,.09);border:2px solid rgba(120,80,30,.22);text-align:center}
+.dks-t.bad{background:rgba(180,40,30,.08);border-color:rgba(180,40,30,.55)}
+.dks-stack{position:relative;display:block;width:78px;height:92px}
+.dks-stack img{position:absolute;top:6px;left:50%;width:56px;height:80px;object-fit:cover;border-radius:6px;border:2px solid #3a2414;box-shadow:0 3px 8px rgba(0,0,0,.35);transform:translateX(-50%) translateX(calc((var(--i) - 1) * 10px)) rotate(calc((var(--i) - 1) * 8deg))}
+.dks-t.mon .dks-stack img{border-color:#9a2a1e;object-position:50% 30%}
+.dks-tx{display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.dks-tx b{font:700 30px/1 var(--display);color:var(--ink)}
+.dks-t.bad .dks-tx b{color:var(--red)}
+.dks-tx small{margin-top:2px;font-weight:800;font-size:14px;color:var(--ink)}
+.dks-tx em{margin-top:4px;font-style:normal;font-size:12px;color:var(--muted);line-height:1.25}
+.dks-mk{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:800 13px/1 sans-serif;font-style:normal;color:#fff;background:#3f7a2a}
+.dks-t.bad .dks-mk{background:var(--red)}
+.dks-st{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px;min-height:40px}
+.dks-st img{width:44px;height:44px;transform:rotate(-12deg)}
+.dks-st b{font:700 22px var(--display);color:#2b4d1d}
+.dks-st.bad b{color:var(--red)}
+/* PC: Karte groß ohne Rahmen drumherum (Karten-Seite, Regeln, Laden) */
+html.wide-any .sheet.bare{width:auto;background:none;border:0;box-shadow:none;overflow:visible}
+html.wide-any .sheet.bare .grab{display:none}
+html.wide-any .sheet.bare .sh-head{position:absolute;top:-6px;right:-58px;padding:0;z-index:2}
+html.wide-any .sheet.bare .sh-head h3{display:none}
+html.wide-any .sheet.bare .sh-body{padding:0;overflow:visible}
+html.wide-any .sheet.bare .bc{width:380px;margin:0;box-shadow:0 30px 80px rgba(0,0,0,.7)}
+.dks-bar{position:relative;display:block;width:78%;height:7px;margin-top:6px;border-radius:4px;background:rgba(120,80,30,.2);overflow:visible}
+.dks-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--red)}
+.dks-bar.ok i{background:#3f7a2a}
+.dks-bar u{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:#3a2414;border-radius:1px}
+.dks-stack{height:84px}
+html.wide-any .sheet.bare{width:fit-content}

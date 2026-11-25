@@ -382,6 +382,7 @@ const ART = {
   "Kanal-Krokodil Klaus":"art/monster-kanal-krokodil-klaus.webp",
   "Moorgeist mit Mundgeruch":"art/monster-moorgeist-mit-mundgeruch.webp",
   "Sandwurm mit Sonnenbrand":"art/monster-sandwurm-mit-sonnenbrand.webp",
+  "Inselschildkröte Ilse":"art/monster-inselschildkroete-ilse.webp",
   "Kellerkälte":"art/fluch-kellerkaelte.webp",
   "Licht aus!":"art/fluch-licht-aus.webp",
   "Kellerlaterne":"art/gegenstand-kellerlaterne.webp",
