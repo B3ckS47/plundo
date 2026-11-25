@@ -223,7 +223,7 @@ document.addEventListener('input', e => {
 });
 
 /* ================= Einstellungen und Speicher ================= */
-let HUBBOT = false, HUBST = false, HUBW = 0, HUBPG = '', HUBSEL = null;   // Entwurf: Storykarte auf der Seite „Spielen“ (PC): offen, Weltseite, Blätterrichtung, gewählte Station
+let HUBON = false, HUBBOT = false, HUBST = false, HUBW = 0, HUBPG = '', HUBSEL = null;   // Entwurf: Storykarte auf der Seite „Spielen“ (PC): offen, Weltseite, Blätterrichtung, gewählte Station
 const K_SET = 'loota.settings', K_SAVE = 'loota.save';
 function load(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
 function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
@@ -508,7 +508,7 @@ function storyGo() {
 }
 // Spielen-Knopf unten: startet, was in der Spielauswahl gewählt ist
 function playNow() {
-  if (SET.mode === 'online') { closeAllSheets(); openSheet({id: 'online'}); return; }
+  if (SET.mode === 'online') { closeAllSheets(); if (mq().pc.matches) openHubOnline(); else openSheet({id: 'online'}); return; }
   freePlay();
 }
 // Freies Spiel: offene Partie weiterspielen oder eine neue einrichten
@@ -1882,12 +1882,12 @@ function go(a) {
     case 'unlockall': confirmDialog('Alles freischalten?', 'Alle Welten werden gekauft, jede Station gilt mit allen Sternen als geschafft, und alle Decks, Tische, Musikstücke, Titel, Rahmen und Porträts werden freigeschaltet.', 'Freischalten', 'Abbrechen').then(ok => { if (!ok) return; unlockAll(); toast('Alles freigeschaltet'); renderSaveInfo(); renderControls(); }); break;
     case 'buyreset': PURCHASE.worlds = {}; savePurchase(); toast('Käufe zurückgesetzt'); renderSaveInfo(); break;
     case 'shopreroll': { const st = dailyState(); st.shop = rollShop(dayKey(), ':' + Date.now()); st.deal = null; saveDaily(); dailyState(); toast(st.shop.length ? 'Laden neu bestückt' : 'Im Laden gibt es nichts mehr, das du nicht hast'); break; }
-    case 'online': closeAllSheets(); openSheet({id: 'online'}); break;
+    case 'online': closeAllSheets(); if (mq().pc.matches) openHubOnline(); else openSheet({id: 'online'}); break;
     case 'setup': freePlay(); break;
     case 'tutorial': closeAllSheets(); startStation('w0s1'); break;
     case 'resetstory': confirmDialog('Storymodus zurücksetzen?', 'Alle Stationen, Sterne, Münzen und Belohnungen aus dem Storymodus gehen verloren.', 'Zurücksetzen', 'Abbrechen').then(ok => { if (ok) { resetStory(); clearStorySave(); toast('Storymodus zurückgesetzt'); } }); break;
     case 'reroll': ROSTER = rollRoster(); renderFoes(); Snd.sfx('deal'); break;
-    case 'home': if (HUBBOT) { closeHubBots(); break; } if (HUBST) { closeHubStory(); break; } closeAllSheets(); STACK.length = 0; setScreen('title'); break;
+    case 'home': if (HUBON) { closeHubOnline(); break; } if (HUBBOT) { closeHubBots(); break; } if (HUBST) { closeHubStory(); break; } closeAllSheets(); STACK.length = 0; setScreen('title'); break;
     case 'story': if (HUBST_ON()) openHubStory(); else show('story'); break;
     case 'storymap': $$('.endov').forEach(x => x.remove()); closeAllSheets(); if (GAME_ON && S && S.scn && S.winner == null) { TOKEN++; } if (S && S.scn) GAME_ON = false; STACK.length = 0; if (HUBST_ON()) { openHubStory(); break; } STACK.push('title'); setScreen('story'); break;
     case 'start': startNewGame(); break;
@@ -3043,14 +3043,15 @@ function pcNavHTML() {
 function pcPlayHTML(cw, nx, st, sk, dn, wait, ay, fg) {
   const play = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" /></svg>';
   const soon = (ic, kind, title, txt, msg) => `<button type="button" class="pd-card" data-soon="${esc(msg)}"><img class="pd-ic" src="${ic}" alt=""><span><small>${kind}</small><b>${title}</b><em>${txt}</em></span><span class="pd-bald">Bald</span></button>`;
+  if (HUBON) return hubOnlineHTML() + pcSideHTML(st, sk, dn, wait);
   if (HUBBOT) return hubBotsHTML() + pcSideHTML(st, sk, dn, wait);
   if (HUBST) return hubStoryHTML(cw) + pcSideHTML(st, sk, dn, wait);
   return `<main class="pp-modes pd">` +
-      `<section class="pd-online"><img src="art/kachel-online.webp" alt=""><span class="tc-badge pd-badge">Bald</span>` +
+      `<section class="pd-online"><img src="art/kachel-online.webp" alt=""><span class="tc-badge pd-badge">Neu</span>` +
         `<div class="pd-on-txt"><span class="pp-mode">Online</span>` +
           `<div class="pd-league"><span class="pd-crest"><b>?</b></span><div class="pd-lg"><b>Ligen und Saisons</b><small>Spiel gegen andere, steig in höhere Ligen auf und gewinne Rahmen, Titel und Hintergründe, die es nur hier gibt.</small></div></div>` +
-          `<div class="pd-modesel"><button type="button" class="on" data-go="online"><b>Klassisch</b><small>3 bis 4 Spieler</small></button><button type="button" data-go="online"><b>2 gegen 2</b><small>Im Team</small></button></div>` +
-          `<div class="pp-acts"><button type="button" class="t-cta pd-off" data-go="online">${play}<span>Spiel suchen</span></button><button type="button" class="btn pp-map" data-go="online">Mit Freunden spielen</button></div>` +
+          `<div class="pd-modesel"><button type="button" class="on" data-soon="Gegen Fremde spielst du, sobald es genug Spieler gibt. Mit Freunden geht es schon jetzt."><b>Klassisch</b><small>3 bis 4 Spieler</small></button><button type="button" data-soon="2 gegen 2 kommt später dazu."><b>2 gegen 2</b><small>Im Team</small></button></div>` +
+          `<div class="pp-acts"><button type="button" class="btn pp-map pd-off" data-soon="Gegen Fremde spielst du, sobald es genug Spieler gibt. Mit Freunden geht es schon jetzt.">Spiel suchen <small>bald</small></button><button type="button" class="t-cta" data-go="online">${play}<span>Mit Freunden spielen</span></button></div>` +
         `</div></section>` +
       `<div class="pd-row3">` +
         soon('icons/truhe-gold-zu.png', 'Turnier', 'Jeden 2. Sonntag', 'Mit besonderen Preisen', 'Das Sonntagsturnier startet zusammen mit dem Online-Modus.') +
@@ -3178,7 +3179,7 @@ function openHubBots() {
   const hub = $('#t-hub'), tile = $$('#t-hub .pd-solo-row .pd-tile')[1], main = $('#t-hub .pd');
   if (tile && main) { const a = main.getBoundingClientRect(), b = tile.getBoundingClientRect(); hub.style.setProperty('--from', b.height ? Math.round(b.top - a.top) + 'px' : '100%'); }
   closeAllSheets(); if (!ROSTER && SET.foes !== 'stammtisch') ROSTER = rollRoster();
-  HUBST = false; HUBSEL = null; HUBBOT = 'open';
+  HUBST = false; HUBSEL = null; HUBON = false; HUBBOT = 'open';
   if (CUR !== 'title') setScreen('title'); else renderHub();
   setupPrep(); HUBBOT = true;
 }
@@ -3210,7 +3211,7 @@ function hubStoryHTML(cw) {
 function openHubStory(stId, noAuto) {
   const hub = $('#t-hub'), tile = $('#t-hub .pd-solo-row .pd-tile'), main = $('#t-hub .pd');
   if (tile && main) { const a = main.getBoundingClientRect(), b = tile.getBoundingClientRect(); hub.style.setProperty('--from', b.height ? Math.round(b.top - a.top) + 'px' : '100%'); }
-  closeAllSheets(); if (HUBBOT) hubBotsOff(); HUBST = 'open'; HUBPG = ''; HUBSEL = null;
+  closeAllSheets(); if (HUBBOT) hubBotsOff(); HUBON = false; HUBST = 'open'; HUBPG = ''; HUBSEL = null;
   { const sid = stId || (storyNext() || {}).id, stw = sid && stationById(sid), k = stw ? hubPages().findIndex(q => q.w && q.w.id === stw.world) : -1; HUBW = k >= 0 ? k : hubPages().findIndex(q => q.w === currentWorld()); }
   if (CUR !== 'title') setScreen('title'); else renderHub();
   HUBST = true;

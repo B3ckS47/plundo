@@ -3301,3 +3301,48 @@ html.wide-any .sheet.bare .bc{width:380px;margin:0;box-shadow:0 30px 80px rgba(0
 .dks-bar u{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:#3a2414;border-radius:1px}
 .dks-stack{height:84px}
 html.wide-any .sheet.bare{width:fit-content}
+/* ===== Online: Tisch mit Freunden (PC, Seite „Spielen“) ===== */
+.on-side>.panel.on-p{display:block;padding:14px 18px}
+.on-p h3{margin:0 0 6px;font:700 21px var(--display);color:var(--ink)}
+.on-p p{margin:0 0 10px;font-size:14.5px;line-height:1.4;color:var(--ink)}
+.on-p .on-note{font-size:13px;color:var(--muted)}
+.on-p .acts{margin-top:4px}
+.on-go{width:100%;margin-top:4px}
+.on-join{display:flex;gap:10px}
+.on-codein{flex:1;min-width:0;height:52px;padding:0 14px;border-radius:12px;border:2px solid rgba(120,80,30,.35);background:#fffaf0;color:var(--ink);font:700 26px/1 var(--display);letter-spacing:.32em;text-transform:uppercase;text-align:center;outline:none}
+.on-codein:focus{border-color:#e08a2c;box-shadow:0 0 0 3px rgba(224,138,44,.2)}
+.on-codein::placeholder{color:rgba(120,80,30,.35);letter-spacing:.2em}
+.on-join .btn{min-height:52px;padding:0 20px}
+.on-bigcode{display:flex;gap:8px;justify-content:center;margin:6px 0 12px}
+.on-bigcode span{display:grid;place-items:center;width:52px;height:62px;border-radius:10px;background:#2a1a0e;color:#f6d77b;font:700 34px/1 var(--display);box-shadow:inset 0 0 0 2px rgba(243,200,115,.45),0 4px 10px -4px rgba(0,0,0,.6)}
+.on-copy{display:flex;gap:10px}.on-copy .btn{flex:1}
+.on-facts{list-style:none;margin:0 0 10px;padding:0;display:flex;gap:8px}
+.on-facts li{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:12px;background:rgba(120,80,30,.09);font-size:12.5px;color:var(--muted);text-align:center}
+.on-facts b{font:700 26px/1 var(--display);color:var(--ink)}
+.on-soon{margin:6px 2px 0;font-size:13px;line-height:1.35;color:#ecd9b4;text-align:center;text-shadow:0 1px 3px #000}
+.on-wait{display:flex!important;align-items:center;justify-content:center;gap:12px;font:700 18px var(--display);color:var(--ink);min-height:58px}
+.on-dots{display:inline-flex;gap:5px}.on-dots i{width:8px;height:8px;border-radius:50%;background:#e08a2c;animation:onDot 1.2s infinite ease-in-out}
+.on-dots i:nth-child(2){animation-delay:.15s}.on-dots i:nth-child(3){animation-delay:.3s}
+@keyframes onDot{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}
+.on-err{margin:0;padding:10px 14px;border-radius:12px;background:#fbe3dc;color:#8a2a1a;font-size:14px;font-weight:700}
+.on-table .su-face{position:relative}
+.on-table .su-face img{border-color:var(--fc,#d9bf8c)}
+.on-table .su-face.fa::after{content:'';position:absolute;inset:-9px;background:var(--fimg) center/contain no-repeat;pointer-events:none}
+.on-table .su-face.empty{display:grid;place-items:center;width:clamp(70px,calc(6 * var(--vw)),92px);height:clamp(70px,calc(6 * var(--vw)),92px);border-radius:50%;border:3px dashed rgba(243,220,170,.55);background:rgba(20,12,6,.45);animation:none}
+.on-table .su-face.empty i{font:400 40px/1 sans-serif;font-style:normal;color:rgba(243,220,170,.7)}
+.on-seat.free b{color:#e9d3a8}
+.on-seat em{font-style:normal;font-size:12px;color:#f6d77b;text-shadow:0 1px 3px #000}
+.on-seat.away .su-face img{filter:grayscale(.8) brightness(.7)}
+.on-seat.bot small{color:#cdb894}
+.on-sbtns{margin-top:4px;display:flex;gap:6px}
+.on-sbtns .btn{min-height:32px;padding:4px 14px;font-size:14px;width:auto}
+.on-seat .on-x{position:absolute;top:-6px;right:14px;width:28px;height:28px;border-radius:50%;border:1px solid rgba(243,200,115,.6);background:rgba(20,12,6,.85);color:#fbefd6;font:700 18px/1 sans-serif;cursor:pointer;opacity:0;transition:opacity .15s}
+.on-seat:hover .on-x,.on-seat .on-x:focus-visible{opacity:1}
+.on-plate{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;padding:6px 22px;border-radius:999px;background:rgba(20,12,6,.82);border:1px solid rgba(243,200,115,.45);color:#fbefd6;line-height:1.1}
+.on-plate small{font:800 10px var(--body);letter-spacing:.14em;text-transform:uppercase;color:#e9d3a8}
+.on-plate b{font:700 18px var(--display);letter-spacing:.08em}
+.on-join .on-codein{flex:1 1 auto;width:auto}
+.on-join .btn{flex:0 0 auto;width:auto}
+.on-bigcode span,.on-codein,.on-plate b{font-family:var(--body);font-weight:800}
+.on-bigcode span{font-size:30px}
+.on-codein{font-size:24px}

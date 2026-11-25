@@ -10,7 +10,8 @@ const FB_CONFIG = {
   projectId: 'plundo-5eeaa',
   storageBucket: 'plundo-5eeaa.firebasestorage.app',
   messagingSenderId: '680447601239',
-  appId: '1:680447601239:web:054343a29fdddfb4635112'
+  appId: '1:680447601239:web:054343a29fdddfb4635112',
+  databaseURL: 'https://plundo-5eeaa-default-rtdb.europe-west1.firebasedatabase.app'
 };
 const K_CLOUD = 'loota.cloud', K_MAIL = 'loota.mail';
 const SYNC_KEYS = [K_PROFILE, K_STORY, K_DAILY, K_SET, K_DECK, K_BUY];
@@ -37,7 +38,7 @@ function fbLoad() {
       const F = window.FBX, app = F.initializeApp(FB_CONFIG);
       const auth = F.initializeAuth(app, {persistence: [F.indexedDBLocalPersistence, F.browserLocalPersistence], popupRedirectResolver: F.browserPopupRedirectResolver});
       auth.languageCode = 'de';
-      const fb = {F, auth, db: F.getFirestore(app)};
+      const fb = {F, app, auth, db: F.getFirestore(app)};
       F.onAuthStateChanged(auth, u => onUser(u));
       res(fb);
     };
@@ -225,7 +226,7 @@ function renderAcctCard() {
     ? `${esc((ACC.user && ACC.user.email) || CLOUD.email || 'Angemeldet')} · ${esc(acctStatus())}`
     : 'Melde dich an, dann ist dein Spielstand sicher und auf allen Geräten dabei.'}</span></span>`); });
 }
-function acctRefresh() { renderAcctCard(); if (SHEETS.length && topSheet().id === 'acct') renderSheet(false); }
+function acctRefresh() { renderAcctCard(); if (SHEETS.length && topSheet().id === 'acct') renderSheet(false); if (typeof renderOnline === 'function') renderOnline(); }
 const accInput = (id, type, val, ph, ac) => `<input id="${id}" class="pf-input acc-in" type="${type}" value="${esc(val)}" placeholder="${ph}" autocomplete="${ac}" autocapitalize="off" spellcheck="false"${ACC.busy ? ' disabled' : ''}>`;
 const accBtn = (act, label, cls = '') => `<button type="button" class="btn ${cls}" data-acct="${act}"${ACC.busy ? ' disabled' : ''}>${label}</button>`;
 SHEET_VIEWS.acct = () => {
