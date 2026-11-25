@@ -179,7 +179,7 @@ async function startSocial() {
     const tk = tagKey(myTag()); if (tk.length === 8) await NET.tx('tags/' + tk, cur => !cur || cur === uid ? uid : undefined);
     SOC.offs.push(await NET.presence(`users/${uid}/online`));
     SOC.offs.push(NET.watch(`users/${uid}/friends`, v => { syncFriends(Object.keys(v || {})); socRender(); }));
-    SOC.offs.push(NET.watch(`users/${uid}/req`, v => { SOC.reqs = v || {}; socRender(); }));
+    SOC.offs.push(NET.watch(`users/${uid}/req`, v => { SOC.reqs = v || {}; noticeFriendReqs(); socRender(); }));
     SOC.offs.push(NET.watch(`users/${uid}/inv`, v => { const now = Date.now(); SOC.invs = Object.fromEntries(Object.entries(v || {}).filter(([, x]) => x && now - (x.at || 0) < 30 * 60000)); socRender(); }));
   } catch (e) { console.warn('Freunde', e); }
 }
@@ -267,15 +267,20 @@ function socPanelsHTML() {
   h += openU.length ? `<ul class="fr-list">${openU.map(f => friendRowHTML(f, 'open')).join('')}</ul>` : (invs.length ? '' : `<p class="on-note">Gerade hat keiner deiner Freunde einen offenen Tisch. Eröffne selbst einen und lade sie ein.</p>`);
   h += `</div>`;
   h += `<div class="panel on-p"><h3>Freunde${fl.length ? ` <small class="fr-n">${fl.filter(f => f.mutual && f.online).length} online</small>` : ''}</h3>`;
-  if (reqs.length) h += `<p class="fr-sub">Anfragen</p><ul class="fr-list">${reqs.map(([u, x]) => `<li class="fr-row req">${seatFace(x)}<span class="fr-t"><b>${esc(x.name)}</b><small>#${esc(x.tag || '')} möchte mit dir befreundet sein</small></span><button type="button" class="btn primary" data-soc="ryes" data-u="${u}">Annehmen</button><button type="button" class="fr-x" data-soc="rno" data-u="${u}" aria-label="Ablehnen" title="Ablehnen">×</button></li>`).join('')}</ul>`;
+  h += friendReqsHTML();
   h += fl.length ? `<ul class="fr-list">${fl.map(f => friendRowHTML(f, 'list')).join('')}</ul>` : `<p class="on-note">Noch keine Freunde. Gib unten die Spieler-ID eines Freundes ein. Seine ID steht bei ihm unter „Dein Charakter“.</p>`;
   h += `<div class="on-join fr-add"><input id="fr-id" class="on-codein fr-in" maxlength="12" autocomplete="off" spellcheck="false" placeholder="#ABCD-1234" value="${esc(SOC.addId)}" aria-label="Spieler-ID"><button type="button" class="btn" data-soc="add"${ON.busy ? ' disabled' : ''}>Hinzufügen</button></div>` +
     `<p class="fr-me">Deine Spieler-ID: <b>#${esc(myTag())}</b> <button type="button" class="fr-copy" data-soc="myid">kopieren</button></p>${adminBtnHTML()}</div>`;
   return h;
 }
+// Offene Freundschaftsanfragen (in der Freundesliste und am Tisch)
+function friendReqsHTML() {
+  const reqs = Object.entries(SOC.reqs); if (!reqs.length) return '';
+  return `<p class="fr-sub">Anfragen</p><ul class="fr-list">${reqs.map(([u, x]) => `<li class="fr-row req">${seatFace(x)}<span class="fr-t"><b>${esc(x.name)}</b><small>#${esc(x.tag || '')} möchte mit dir befreundet sein</small></span><button type="button" class="btn primary" data-soc="ryes" data-u="${u}">Annehmen</button><button type="button" class="fr-x" data-soc="rno" data-u="${u}" aria-label="Ablehnen" title="Ablehnen">×</button></li>`).join('')}</ul>`;
+}
 function socInviteHTML() {
   const fl = friendsSorted().filter(f => f.mutual);
-  return `<div class="panel on-p"><h3>Freunde einladen</h3>` + (fl.length ? `<ul class="fr-list">${fl.map(f => friendRowHTML(f, 'lobby')).join('')}</ul>` : `<p class="on-note">Füge zuerst Freunde hinzu, dann kannst du sie hier mit einem Klick einladen.</p>`) + `</div>`;
+  return `<div class="panel on-p"><h3>Freunde einladen</h3>` + friendReqsHTML() + (fl.length ? `<ul class="fr-list">${fl.map(f => friendRowHTML(f, 'lobby')).join('')}</ul>` : `<p class="on-note">Füge zuerst Freunde hinzu, dann kannst du sie hier mit einem Klick einladen.</p>`) + `</div>`;
 }
 // Einladung oben rechts, egal auf welcher Seite man gerade ist (PC)
 function renderInvBar() {
@@ -653,3 +658,22 @@ function ongMarkAway(notify) {
   });
 }
 setInterval(() => { if (ONG.active && CUR === 'game' && S) { const before = JSON.stringify(ONG.offState || {}); ongMarkAway(true); if (JSON.stringify(ONG.offState) !== before) render(); } }, 1000);
+
+// Freundschaftsanfragen nicht verpassen: Hinweis beim Öffnen und wenn eine neue kommt, Zahl am Knopf „Mit Freunden spielen“
+const SEEN_FREQ = {};
+function noticeFriendReqs() {
+  const fresh = Object.entries(SOC.reqs).filter(([u, x]) => x && SEEN_FREQ[u] !== x.at);
+  fresh.forEach(([u, x]) => { SEEN_FREQ[u] = x.at; });
+  if (!fresh.length) return;
+  const msg = fresh.length === 1 ? `${esc(fresh[0][1].name)} möchte mit dir befreundet sein. Annehmen unter „Mit Freunden spielen“.` : `${fresh.length} neue Freundschaftsanfragen unter „Mit Freunden spielen“.`;
+  setTimeout(() => { toast(msg); Snd.sfx('coin'); }, 900);
+}
+setInterval(() => {
+  const n = Object.keys(SOC.reqs || {}).length;
+  document.querySelectorAll('[data-go="online"]').forEach(b => {
+    let i = b.querySelector('.rq-badge');
+    if (!n) { if (i) i.remove(); return; }
+    if (!i) { i = document.createElement('b'); i.className = 'rq-badge'; b.appendChild(i); }
+    if (i.textContent !== String(n)) { i.textContent = n; i.title = n === 1 ? '1 Freundschaftsanfrage' : `${n} Freundschaftsanfragen`; }
+  });
+}, 800);
