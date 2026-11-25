@@ -3433,3 +3433,13 @@ html.pcnav #scr-profile #pf-frames{grid-template-columns:repeat(5,minmax(0,1fr))
 .pf-frt.locked .frt-pv.fa::after{opacity:.85}
 .pf-frt[aria-pressed="true"] .frt-pv img{transform:scale(1.04);box-shadow:0 0 0 3px #ff8a1f}
 .pf-frt[aria-pressed="true"] span:not(.frt-pv){color:#c2560c}
+/* Online: keine Verbindung / gegangen */
+.offb{position:absolute;left:-5px;top:-4px;z-index:3;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#7a1f16;border:2px solid #fbefd6;box-shadow:0 2px 6px rgba(0,0,0,.6)}
+.offb svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round}
+.offb svg circle{fill:#fff;stroke:none}
+.offb.left{background:#4a3a2c}
+.gs-pt .offb{width:28px;height:28px;left:-4px;top:-4px}
+.gs-pt .offb svg{width:16px;height:16px}
+.oc .pt .offb{width:18px;height:18px;left:-6px;top:-5px;border-width:1.5px}
+.oc .pt .offb svg{width:11px;height:11px}
+.gseat:has(.offb) .gs-pt img,.oc:has(.offb) .pt img{filter:grayscale(.7) brightness(.8)}

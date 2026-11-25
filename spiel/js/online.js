@@ -474,7 +474,7 @@ function startOnlineGame() {
 }
 // Gemeinsamer Einstieg für Gastgeber und Gäste: Spieloberfläche im Anzeigemodus öffnen
 function ongBegin(code, seat, cfg, host) {
-  Object.assign(ONG, {active: true, host: !!host, seat, code, lastV: 0, lastFx: 0, over: false, cfg});
+  Object.assign(ONG, {active: true, host: !!host, seat, code, lastV: 0, lastFx: 0, over: false, cfg, offState: {}});
   SCN = null; STORY_RUN = null; freeMood(cfg.table, cfg.table); applySettings();
   UI.coach = false; UI.open = false; UI.speed = 'normal'; UI.goal = cfg.goal || 10;
   TOKEN++; S = null; UI.prompt = null; UI.sel = null; UI.dview = null;
@@ -536,6 +536,7 @@ function ongApply(json) {
   UI.roll = v.roll || null;
   (v.fx || []).forEach(f => { if (f.n <= ONG.lastFx) return; ONG.lastFx = f.n; if (f.t === 'gameover' || f.t === 'newgame') { if (f.t === 'gameover') ongGameOver(); return; } try { FX_HANDLER(f.t, ongUnpack(f.d)); } catch (e) {} });
   if (CUR !== 'game') setScreen('game');
+  ongMarkAway(true);
   render();
 }
 function ongGameOver() {
@@ -637,3 +638,18 @@ setInterval(() => {
     if (AWAY_SENT[seat] !== away) { AWAY_SENT[seat] = away; ONG.worker.postMessage({t: 'away', seat, away}); }
   });
 }, 1500);
+
+// Online: Wer hat keine Verbindung oder ist gegangen? Kennzeichen am Porträt und kurzer Hinweis für alle
+function ongMarkAway(notify) {
+  if (!ONG.active || !S || !ON.t || !ON.t.game) return;
+  const map = ON.t.game.map || {}, n = S.players.length, seats = Object.values(ON.t.seats || {}).filter(Boolean);
+  ONG.offState = ONG.offState || {};
+  Object.entries(map).forEach(([uid, gs]) => {
+    const ci = (gs - ONG.seat + n) % n, p = S.players[ci]; if (!p || ci === 0) return;
+    const left = !seats.some(x => x.uid === uid), st = left ? 'left' : (ON.t.presence && ON.t.presence[uid]) ? null : 'off';
+    const was = ONG.offState[uid];
+    if (notify && was !== undefined && was !== st && !ONG.over) toast(st === 'left' ? `${esc(p.name)} hat die Partie verlassen. Das Spiel macht ab jetzt die Züge.` : st === 'off' ? `${esc(p.name)} hat keine Verbindung mehr. Das Spiel macht die Züge, bis ${p.name} zurück ist.` : `${esc(p.name)} ist wieder da.`);
+    ONG.offState[uid] = st; p.off = st;
+  });
+}
+setInterval(() => { if (ONG.active && CUR === 'game' && S) { const before = JSON.stringify(ONG.offState || {}); ongMarkAway(true); if (JSON.stringify(ONG.offState) !== before) render(); } }, 1000);

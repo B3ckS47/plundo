@@ -724,7 +724,7 @@ function renderOpps() {
     const role = C && (C.f === p.id ? 'kämpft' : C.h === p.id ? 'hilft' : ''), turn = S.cur === p.id && S.winner == null;
     return `<button type="button" class="oc${turn ? ' turn' : ''}${p.dead ? ' dead' : ''}${bgAttr(bgOf(p), true) || '" style="'};--fc:${frameOf(p)[2]}" data-opp="${p.id}" aria-label="${esc(p.name)}, Stufe ${p.lvl}">` +
       (role ? `<span class="tag red">${role}</span>` : p.dead ? '<span class="tag">tot</span>' : turn ? '<span class="tag">am Zug</span>' : '') +
-      `<span class="pt"><img src="${portrait(p)}" alt=""><span class="lvb">${p.lvl}</span></span>` +
+      `<span class="pt"><img src="${portrait(p)}" alt=""><span class="lvb">${p.lvl}</span>${offBadge(p)}</span>` +
       `<span class="ot"><span class="on">${esc(p.name)}</span><span class="os"><span><img src="${ICON.kampf}" alt="">${power(p)}</span><span><img src="${ICON.run}" alt="">${sign(runBonus(p))}</span>${many ? '' : `<span><img src="${ICON.hand}" alt="">${p.hand.length}</span>`}${p.spore ? `<span class="neg" title="Sporenwolke"><img class="spi" src="${ART['Sporenwolke']}" alt="">−${p.spore}</span>` : ''}</span></span></button>`;
   }).join('');
   const ob = $('#opps'); ob.classList.toggle('few', S.players.length <= 3);   // ein oder zwei Gegner: höhere Kacheln
@@ -2765,13 +2765,16 @@ function renderWide() {
    und den Stapeln rechts, am unteren Tischrand deine Ausrüstung. Rechts Notizen, Kampfrechnung und die Knöpfe; unten dein Schild und die Hand. */
 const PCG_ON = () => true;   // neue Partie am PC (früher nur mit ?entwurf)
 const PCGX = () => { const a = document.getElementById('app'); return !!a && a.classList.contains('pcg'); };
+// Online: Mitspieler ohne Verbindung oder schon gegangen (Kennzeichen oben links am Porträt, gegenüber der Stufe)
+const WIFI_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M8.6 16.4a5 5 0 0 1 6.8 0M5.2 12.9a10 10 0 0 1 4.6-2.5M18.8 12.9a10 10 0 0 0-1.9-1.4M2 8.9a15 15 0 0 1 4.4-2.7M22 8.9A15 15 0 0 0 10.8 5.1" /><circle cx="12" cy="20" r="1.2" /></svg>';
+const offBadge = p => p.off ? `<b class="offb${p.off === 'left' ? ' left' : ''}" title="${p.off === 'left' ? 'Hat die Partie verlassen' : 'Keine Verbindung'}">${WIFI_OFF}</b>` : '';
 function seatHTML(p) {
   const C = S.combat, role = C && (C.f === p.id ? 'kämpft' : C.h === p.id ? 'hilft' : ''), turn = S.cur === p.id && S.winner == null, bx = bgOf(p);
   const tag = role ? `<span class="gs-tag red">${role}</span>` : p.dead ? '<span class="gs-tag">tot</span>' : turn ? '<span class="gs-tag">am Zug</span>' : '';
   const bgu = bx && bx[2] ? new URL(bgSrc(bx), document.baseURI).href : p.human ? new URL('art/kulisse-staedtchen.webp', document.baseURI).href : '';
   const style = `--fc:${frameOf(p)[2]}${bgu ? `;--bg:url('${bgu}');--bgp:${(bx && bx[2] && bx[4]) || '50% 50%'}` : ''}`;
   return `<button type="button" class="gseat${turn ? ' turn' : ''}${p.dead ? ' dead' : ''}${p.human ? ' me' : ''}" ${p.human ? 'data-go="equip"' : `data-opp="${p.id}"`} style="${style}" aria-label="${p.human ? 'Du' : esc(p.name)}, Stufe ${p.lvl}">` +
-    `<span class="gs-pt">${bigPortrait(p)}<i>${p.lvl}</i></span>` +
+    `<span class="gs-pt">${bigPortrait(p)}<i>${p.lvl}</i>${offBadge(p)}</span>` +
     (lastingCurses(p).length ? `<span class="gs-curse" data-cursetip="${p.id}">Verflucht</span>` : '') +
     `<span class="gs-t"><span class="gs-n"><b>${p.human ? 'Du' : esc(p.name)}</b>${tag}</span>` +
     `<span class="gs-st"><span title="Kampfstärke"><img src="${ICON.kampf}" alt="">${power(p)}</span><span title="Weglaufen"><img src="${ICON.run}" alt="">${sign(runBonus(p))}</span>` +
