@@ -2124,6 +2124,8 @@ const Drag = (() => {
     const g = st.el.cloneNode(true);
     g.classList.remove('new', 'can', 'rec'); g.classList.add('ghost'); g.removeAttribute('data-uid');
     g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
+    // PC: Karte startet genau dort, wo sie gegriffen wurde, und folgt der Maus ohne Verzögerung
+    if (typeof PCGX === 'function' && PCGX()) { g.style.transition = 'none'; g.style.transform = `translate(${r.left}px, ${r.top}px) scale(1.08)`; }
     const lab = document.createElement('span'); lab.className = 'dlabel'; document.body.appendChild(lab);
     document.body.appendChild(g); st.g = g; st.lab = lab; st.r = r;
     st.el.classList.add('lifted');
