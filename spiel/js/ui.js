@@ -281,13 +281,13 @@ const DECK_MAX = 4;
    Grund-Stückzahlen (base), ein ikonisches Bild (icon) und eine Freischaltung (unlocked). */
 const DECKS = [
   {id: 'grund', name: 'Grunddeck', icon: 'Wütender Gartenzwerg', mood: 'taverne', desc: 'Die Karten, mit denen alles begann. Gespielt wird in der Taverne.', base: p => p.def, unlocked: () => true},
-  {id: 'keller', name: 'Keller-Deck', icon: 'Rattenkönig Rüdiger', desc: 'Staubmäuse, Spukgeister und der Rattenkönig: 18 Kellerkarten plus alles aus dem Grunddeck, was in einen Keller passt. Mit Kellergewölbe und Kellermusik.', mood: 'keller',
+  {id: 'keller', name: 'Keller-Deck', icon: 'Rattenkönig Rüdiger', desc: 'Staubmäuse, Spukgeister und der Rattenkönig: 19 Kellerkarten plus alles aus dem Grunddeck, was in einen Keller passt. Mit Kellergewölbe und Kellermusik.', mood: 'keller',
     base: kellerCount, unlocked: () => !!STORY.worlds.w2, lockTxt: 'Das Keller-Deck schaltest du frei, wenn du im Storymodus Welt 2 abschließt.'},
-  {id: 'wald', name: 'Pilzwald-Deck', icon: 'Pilzkönigin Morchella', desc: 'Bovisten, Hexenringe und die Pilzkönigin: 20 Waldkarten plus alles aus dem Grunddeck, was in einen Wald passt. Mit Waldboden und Waldmusik.', mood: 'wald',
+  {id: 'wald', name: 'Pilzwald-Deck', icon: 'Pilzkönigin Morchella', desc: 'Bovisten, Hexenringe und die Pilzkönigin: 21 Waldkarten plus alles aus dem Grunddeck, was in einen Wald passt. Mit Waldboden und Waldmusik.', mood: 'wald',
     base: waldCount, unlocked: () => !!STORY.worlds.w3, lockTxt: 'Das Pilzwald-Deck schaltest du frei, wenn du im Storymodus Welt 3 abschließt.'},
-  {id: 'strand', name: 'Strand-Deck', icon: 'Krabbenbaron Kneifer', desc: 'Quallen, Haie und der Krabbenbaron, dazu Ebbe und Flut: 19 Strandkarten plus alles aus dem Grunddeck, was an einen Strand passt. Mit Sandstrand und Strandmusik.', mood: 'strand',
+  {id: 'strand', name: 'Strand-Deck', icon: 'Krabbenbaron Kneifer', desc: 'Quallen, Haie und der Krabbenbaron, dazu Ebbe und Flut: 20 Strandkarten plus alles aus dem Grunddeck, was an einen Strand passt. Mit Sandstrand und Strandmusik.', mood: 'strand',
     base: strandCount, unlocked: () => worldReady('w4'), lockTxt: 'Das Strand-Deck schaltest du frei, wenn du im Storymodus Welt 4 abschließt.'},
-  {id: 'meer', name: 'Meeres-Deck', icon: 'Käpt’n Achtarm', desc: 'Wale, Kraken, Piraten und Seegang, dazu die Schatzkarte: 31 Meereskarten plus alles aus dem Grunddeck, was aufs Meer passt. Mit Schiffsdeck und Piratenmusik.', mood: 'schiff',
+  {id: 'meer', name: 'Meeres-Deck', icon: 'Käpt’n Achtarm', desc: 'Wale, Kraken, Piraten und Seegang, dazu die Schatzkarte: 32 Meereskarten plus alles aus dem Grunddeck, was aufs Meer passt. Mit Schiffsdeck und Piratenmusik.', mood: 'schiff',
     base: meerCount, unlocked: () => worldReady('w5'), lockTxt: 'Das Meeres-Deck schaltest du frei, wenn du im Storymodus Welt 5 abschließt.'}
 ];
 // Karten einer Welt tauchen in der Kartenliste erst auf, wenn ihr Deck freigeschaltet ist

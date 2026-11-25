@@ -42,7 +42,8 @@ const MONSTERS_W2 = [
   {n:'Rollendes Riesenfass',lvl:7,tr:2,run:-2,bad:{t:'multi',l:[{t:'lvl',n:1},{t:'slot',s:'schuhe'}]},txt:'Rollt dir hinterher: Weglaufen −2.',badTxt:'Verliere 1 Stufe und dein Schuhwerk.'},
   {n:'Pfandflaschen-Golem',lvl:10,tr:3,bad:{t:'lvl',n:2},txt:'Klirrt bedrohlich.',badTxt:'Verliere 2 Stufen.'},
   {n:'Ratten-Leibgarde',lvl:12,tr:3,nager:true,np:3,bad:{t:'multi',l:[{t:'slot',s:'kopf'},{t:'lvl',n:1}]},txt:'Nager. Bewacht den Thron. Verfolgt niemanden bis Stufe 3.',badTxt:'Verliere deine Kopfbedeckung und 1 Stufe.'},
-  {n:'Rattenkönig Rüdiger',lvl:14,tr:4,up:2,nager:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'best'}]},txt:'Nager. Trägt einen Kronkorken als Krone. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und deinen besten Gegenstand.'}
+  {n:'Rattenkönig Rüdiger',lvl:14,tr:4,up:2,nager:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'best'}]},txt:'Nager. Trägt einen Kronkorken als Krone. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und deinen besten Gegenstand.'},
+  {n:'Kanal-Krokodil Klaus',lvl:15,tr:4,up:2,np:5,bad:{t:'death'},txt:'Kam als Haustier und wuchs durchs Abflussrohr. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'}
 ].map(m=>Object.assign({w:2},m));
 const CURSES_W2 = [
   {n:'Kellerkälte',w:2,x:2,eff:{t:'chill',n:2},txt:'Im nächsten Kampf −2.'},
@@ -60,7 +61,7 @@ const ONESHOTS_W2 = [
 ];
 const LEVELUPS_W2 = ['Bier aus dem Keller geholt'];
 // Was aus dem Grunddeck mit in den Keller darf (Name -> Stückzahl); Schätze kommen alle mit
-const KELLER_GRUND = {'Wütender Gartenzwerg':1,'Schleimige Socke':2,'Kellerassel XXL':1,'Steuerprüfer-Gespenst':1,'Pilzkönig':1,'Vampir-Kaninchen':1,'Riesen-Nacktschnecke':1,'Zombie-Hausmeister':1,'Bürokratie-Golem':1,'Falsche Schatztruhe':1,
+const KELLER_GRUND = {'Wütender Gartenzwerg':1,'Schleimige Socke':2,'Kellerassel XXL':1,'Steuerprüfer-Gespenst':1,'Pilzkönig':1,'Vampir-Kaninchen':1,'Riesen-Nacktschnecke':1,'Zombie-Hausmeister':1,'Falsche Schatztruhe':1,
   'Pechsträhne':1,'Rost':1,'Löcher in den Sohlen':1,'Identitätskrise':1,'Ahnenforschung':1,'Taschendieb-Gnom':1};
 /* Grund-Schätze, die in einem Welt-Deck Platz für die Welt-Karten machen (Name -> Stückzahl dort).
    Getauscht wird möglichst Gleiches gegen Gleiches (Platz, Bonus), damit die Decks gleich stark bleiben. */
@@ -87,7 +88,8 @@ const MONSTERS_W3 = [
   {n:'Gestiefelter Fliegenpilz',lvl:8,tr:2,pilz:true,bad:{t:'multi',l:[{t:'lvl',n:1},{t:'spore',n:1}]},txt:'Pilz. Fesch, aber giftig.',badTxt:'Verliere 1 Stufe und bekomme eine Sporenwolke ab.'},
   {n:'Bärlauch-Bär',lvl:9,tr:2,run:-2,bad:{t:'lvl',n:2},txt:'Riecht dich drei Täler weit: Weglaufen −2.',badTxt:'Verliere 2 Stufen.'},
   {n:'Myzel-Koloss',lvl:12,tr:3,pilz:true,noHelp:true,np:3,bad:{t:'lvl',n:2},txt:'Pilz. Das Waldnetz hört alles mit: Niemand darf helfen. Verfolgt niemanden bis Stufe 3.',badTxt:'Verliere 2 Stufen.'},
-  {n:'Pilzkönigin Morchella',lvl:15,tr:4,up:2,pilz:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'best'}]},txt:'Pilz. Ihr Mann, der Pilzkönig, trägt ihr die Schleppe. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und deinen besten Gegenstand.'}
+  {n:'Pilzkönigin Morchella',lvl:15,tr:4,up:2,pilz:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'best'}]},txt:'Pilz. Ihr Mann, der Pilzkönig, trägt ihr die Schleppe. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und deinen besten Gegenstand.'},
+  {n:'Moorgeist mit Mundgeruch',lvl:16,tr:4,up:2,undead:true,np:5,bad:{t:'death'},txt:'Untot. Ein einziger Hauch genügt. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'}
 ].map(m=>Object.assign({w:3},m));
 const CURSES_W3 = [
   {n:'Sporenwolke',w:3,x:2,eff:{t:'spore',n:1},txt:'Bleibt, bis du einen Kampf gewinnst: So lange −1 in jedem Kampf.'},
@@ -106,7 +108,7 @@ const ONESHOTS_W3 = [
 ];
 const LEVELUPS_W3 = ['Aus dem Wald zurückgefunden'];
 // Was aus dem Grunddeck mit in den Wald darf (Name -> Stückzahl); Schätze kommen alle mit
-const WALD_GRUND = {'Wütender Gartenzwerg':1,'Schleimige Socke':1,'Schwarm Stechmücken':1,'Kellerassel XXL':1,'Rentner-Ritter':1,'Pilzkönig':1,'Vampir-Kaninchen':1,'Riesen-Nacktschnecke':1,'Falsche Schatztruhe':1,
+const WALD_GRUND = {'Wütender Gartenzwerg':1,'Schleimige Socke':1,'Schwarm Stechmücken':1,'Kellerassel XXL':1,'Rentner-Ritter':1,'Pilzkönig':1,'Vampir-Kaninchen':1,'Riesen-Nacktschnecke':1,
   'Pechsträhne':1,'Windböe':1,'Rost':1,'Löcher in den Sohlen':1,'Identitätskrise':1,'Ahnenforschung':1,'Taschendieb-Gnom':1};
 function waldCount(p){ if(p.tpl.w===3) return p.wdef; if(p.tpl.w) return 0; if(p.deck==='tr') return trCount(p,3); if(p.tpl.k==='monster'||p.tpl.k==='curse') return WALD_GRUND[p.tpl.n]||0; return p.def; }
 /* Welt 4 (Sommerpause, Strand): nur im Strand-Deck. meer = Monster-Merkmal (bei Flut +3), sun = Sonnenbrand,
@@ -121,7 +123,8 @@ const MONSTERS_W4 = [
   {n:'Bademeister-Golem',lvl:8,tr:2,vs:{cls:'krieger',val:3},bad:{t:'class'},txt:'„Hier wird nicht gerauft!“ +3 gegen Krieger.',badTxt:'Verliere deine Klasse.'},
   {n:'Hai mit Schwimmflügeln',lvl:10,tr:3,meer:true,run:-2,bad:{t:'lvl',n:2},txt:'Meer. Schwimmt schneller als du: Weglaufen −2.',badTxt:'Verliere 2 Stufen.'},
   {n:'Sandburg-Koloss',lvl:12,tr:3,soft:3,np:3,bad:{t:'multi',l:[{t:'slot',s:'ruestung'},{t:'lvl',n:1}]},txt:'Bei Flut weicht er auf: dann −3. Verfolgt niemanden bis Stufe 3.',badTxt:'Verliere deine Rüstung und 1 Stufe.'},
-  {n:'Krabbenbaron Kneifer',lvl:15,tr:4,up:2,meer:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'hands'}]},txt:'Meer. Kassiert für jeden Fußbreit Sand. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und alles, was du in den Händen hältst.'}
+  {n:'Krabbenbaron Kneifer',lvl:15,tr:4,up:2,meer:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'hands'}]},txt:'Meer. Kassiert für jeden Fußbreit Sand. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und alles, was du in den Händen hältst.'},
+  {n:'Sandwurm mit Sonnenbrand',lvl:16,tr:4,up:2,np:5,bad:{t:'death'},txt:'Taucht genau dort auf, wo dein Handtuch liegt. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'}
 ].map(m=>Object.assign({w:4},m));
 const CURSES_W4 = [
   {n:'Sonnenbrand',w:4,x:2,eff:{t:'sun'},txt:'Bleibt, bis du einen Kampf gewinnst: So lange −1 in jedem Kampf, und niemand hilft dir.'},
@@ -139,7 +142,7 @@ const ONESHOTS_W4 = [
 ];
 const LEVELUPS_W4 = ['Den Strandkorb erobert'];
 // Was aus dem Grunddeck mit an den Strand darf (Name -> Stückzahl); Schätze kommen alle mit
-const STRAND_GRUND = {'Übellaunige Möwe':1,'Schleimige Socke':1,'Schwarm Stechmücken':2,'Rentner-Ritter':1,'Steuerprüfer-Gespenst':1,'Durchgedrehter Saugroboter':1,'Riesen-Nacktschnecke':1,'Falsche Schatztruhe':1,'Troll unter der Autobahnbrücke':1,
+const STRAND_GRUND = {'Übellaunige Möwe':1,'Schleimige Socke':1,'Schwarm Stechmücken':2,'Rentner-Ritter':1,'Steuerprüfer-Gespenst':1,'Durchgedrehter Saugroboter':1,'Riesen-Nacktschnecke':1,'Falsche Schatztruhe':1,
   'Pechsträhne':1,'Windböe':1,'Rost':1,'Löcher in den Sohlen':1,'Identitätskrise':1,'Taschendieb-Gnom':1};
 function strandCount(p){ if(p.tpl.w===4) return p.wdef; if(p.tpl.w) return 0; if(p.deck==='tr') return trCount(p,4); if(p.tpl.k==='monster'||p.tpl.k==='curse') return STRAND_GRUND[p.tpl.n]||0; return p.def; }
 // Gezeiten: null ohne Strandkarten, sonst 'ebbe' in ungeraden und 'flut' in geraden Runden (Springflut: immer Flut)
@@ -162,7 +165,8 @@ const MONSTERS_W5 = [
   {n:'Wal mit Schluckauf',lvl:10,tr:3,run:-1,bad:{t:'hand',n:99},txt:'Verschluckt dich und spuckt dich wieder aus: Weglaufen −1.',badTxt:'Wirf deine ganze Hand ab.'},
   {n:'Schwertfisch-Fechtmeister',lvl:11,tr:3,vs:{cls:'zauberer',val:3},bad:{t:'lvl',n:2},txt:'Zauberer fuchteln zu langsam: +3 gegen Zauberer.',badTxt:'Verliere 2 Stufen.'},
   {n:'Riesenkrake Klara',lvl:13,tr:3,tiefsee:true,noHelp:true,np:3,bad:{t:'lvl',n:2},txt:'Tiefsee. Zu viele Arme: Niemand darf helfen. Verfolgt niemanden bis Stufe 3.',badTxt:'Verliere 2 Stufen.'},
-  {n:'Käpt’n Achtarm',lvl:16,tr:4,up:2,pirat:true,tiefsee:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'best'}]},txt:'Pirat, Tiefsee. Acht Arme, acht Säbel. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und deinen besten Gegenstand.'}
+  {n:'Käpt’n Achtarm',lvl:16,tr:4,up:2,pirat:true,tiefsee:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'best'}]},txt:'Pirat, Tiefsee. Acht Arme, acht Säbel. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und deinen besten Gegenstand.'},
+  {n:'Geisterschiff mit Seekrankheit',lvl:17,tr:4,up:2,undead:true,np:5,bad:{t:'death'},txt:'Untot. Die Mannschaft ist grün im Gesicht, aber hungrig. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'}
 ].map(m=>Object.assign({w:5},m));
 const CURSES_W5 = [
   {n:'Seegang',w:5,x:2,eff:{t:'seegang'},txt:'Das Schiff schaukelt: Alle geben 1 zufällige Handkarte an den Nachbarn weiter, in ungerader Runde nach links, in gerader nach rechts. Von der Hand jederzeit spielbar.'},
@@ -186,7 +190,7 @@ const ONESHOTS_W5 = [
   {n:'Schatzkarte (rechte Hälfte)',w:5,b:0,g:100,map:'r',txt:'Zusammen mit der linken Hälfte: in deinem Zug den Schatz ausgraben und 3 Schätze ziehen.'}
 ];
 const LEVELUPS_W5 = ['Seebeine bekommen','Land in Sicht!'];
-const MEER_GRUND = {'Übellaunige Möwe':1,'Schleimige Socke':1,'Steuerprüfer-Gespenst':1,'Durchgedrehter Saugroboter':1,'Riesen-Nacktschnecke':1,'Falsche Schatztruhe':1,'Hydra mit Migräne':1,
+const MEER_GRUND = {'Übellaunige Möwe':1,'Schleimige Socke':1,'Steuerprüfer-Gespenst':1,'Durchgedrehter Saugroboter':1,'Riesen-Nacktschnecke':1,'Falsche Schatztruhe':1,
   'Pechsträhne':1,'Windböe':1,'Rost':1,'Identitätskrise':1,'Taschendieb-Gnom':1};
 function meerCount(p){ if(p.tpl.w===5) return p.wdef; if(p.tpl.w) return 0; if(p.deck==='tr') return trCount(p,5); if(p.tpl.k==='monster'||p.tpl.k==='curse') return MEER_GRUND[p.tpl.n]||0; return p.def; }
 // Schatzkarte: beide Hälften auf der Hand
