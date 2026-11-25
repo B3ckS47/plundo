@@ -261,7 +261,7 @@ function socPanelsHTML() {
   h += `<div class="panel on-p"><h3>Freunde${fl.length ? ` <small class="fr-n">${fl.filter(f => f.mutual && f.online).length} online</small>` : ''}</h3>`;
   if (reqs.length) h += `<p class="fr-sub">Anfragen</p><ul class="fr-list">${reqs.map(([u, x]) => `<li class="fr-row req">${seatFace(x)}<span class="fr-t"><b>${esc(x.name)}</b><small>#${esc(x.tag || '')} möchte mit dir befreundet sein</small></span><button type="button" class="btn primary" data-soc="ryes" data-u="${u}">Annehmen</button><button type="button" class="fr-x" data-soc="rno" data-u="${u}" aria-label="Ablehnen" title="Ablehnen">×</button></li>`).join('')}</ul>`;
   h += fl.length ? `<ul class="fr-list">${fl.map(f => friendRowHTML(f, 'list')).join('')}</ul>` : `<p class="on-note">Noch keine Freunde. Gib unten die Spieler-ID eines Freundes ein. Seine ID steht bei ihm unter „Dein Charakter“.</p>`;
-  h += `<div class="on-join fr-add"><input id="fr-id" class="on-codein fr-in" maxlength="9" autocomplete="off" spellcheck="false" placeholder="ABCD-1234" value="${esc(SOC.addId)}" aria-label="Spieler-ID"><button type="button" class="btn" data-soc="add"${ON.busy ? ' disabled' : ''}>Hinzufügen</button></div>` +
+  h += `<div class="on-join fr-add"><input id="fr-id" class="on-codein fr-in" maxlength="12" autocomplete="off" spellcheck="false" placeholder="#ABCD-1234" value="${esc(SOC.addId)}" aria-label="Spieler-ID"><button type="button" class="btn" data-soc="add"${ON.busy ? ' disabled' : ''}>Hinzufügen</button></div>` +
     `<p class="fr-me">Deine Spieler-ID: <b>#${esc(myTag())}</b> <button type="button" class="fr-copy" data-soc="myid">kopieren</button></p></div>`;
   return h;
 }
