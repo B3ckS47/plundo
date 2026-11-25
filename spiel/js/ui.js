@@ -1306,8 +1306,14 @@ function seatFlash(id, kind) {
   const go = () => { const z = document.querySelector(`#wopps .gseat[data-opp="${id}"]`); if (!z) return; const r = z.getBoundingClientRect(); if (!r.width) return;
     const f = document.createElement('div'); f.className = 'seatfx ' + kind;
     Object.assign(f.style, {left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px'});
-    document.body.appendChild(f); setTimeout(() => f.remove(), 1000); };
+    document.body.appendChild(f); setTimeout(() => f.remove(), kind === 'dead' ? 2200 : 1000); };
   requestAnimationFrame(go);
+}
+// PC: eigener Tod – alles wird kurz schwarz-weiß, die Ränder verschwimmen und dunkeln ab
+function deathFx() {
+  if (UI.reduce) { flash('dark'); return; }
+  const f = document.createElement('div'); f.className = 'deathfx'; f.innerHTML = '<i class="dfx-edge"></i>';
+  document.body.appendChild(f); setTimeout(() => f.remove(), 2700);
 }
 function burstAt(sel, n) { const el = $(sel); if (!el) return; const r = el.getBoundingClientRect(); if (!r.width && !r.height) return; Particles.burst(r.left + r.width / 2, r.top + r.height / 2, n); }
 
@@ -1326,7 +1332,7 @@ FX_HANDLER = (t, d) => {
     case 'hurt': Snd.sfx('hurt'); if (d.p.human) { shake(); flash('red'); buzz([60, 40, 60]); } break;
     case 'curse': Snd.sfx('curse'); if (d.p.human) { flash('purple'); buzz(80); banner('Verflucht!', 'bad'); } break;
     case 'cursehit': if (!d.p.human) seatFlash(d.p.id, d.lost ? 'red' : 'purple'); break;
-    case 'death': Snd.sfx('death'); if (d.p.human) { flash('dark'); banner('Tot!', 'bad'); buzz([100, 50, 100]); } break;
+    case 'death': Snd.sfx('death'); if (d.p.human) { if (PCGX()) deathFx(); else flash('dark'); banner('Tot!', 'bad'); buzz([100, 50, 100]); } else seatFlash(d.p.id, 'dead'); break;
     case 'dice': Snd.sfx('dice'); W.diceHideAt = 0; break;
     case 'diceland': Snd.sfx('diceland'); buzz(20); W.diceHideAt = performance.now() + 1500; setTimeout(render, 1550); break;
     case 'gameover':

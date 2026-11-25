@@ -3255,3 +3255,9 @@ html.pcg-on #table .stepbtn svg{width:16px;height:16px}
 .seatfx.red{background:radial-gradient(ellipse at center,rgba(220,40,40,.25),rgba(200,20,20,.6));box-shadow:0 0 0 3px #e04040,0 0 26px rgba(224,64,64,.8)}
 .seatfx.purple{box-shadow:inset 0 0 0 3px #b06ae8,inset 0 0 30px rgba(160,80,230,.55),0 0 22px rgba(176,106,232,.85)}
 @keyframes seatfx{0%{opacity:0}15%{opacity:1}35%{opacity:.55}55%{opacity:1}100%{opacity:0}}
+/* PC: Tod – Bildschirm kurz schwarz-weiß mit verschwommenen, dunklen Rändern */
+.deathfx{position:fixed;inset:0;z-index:61;pointer-events:none;-webkit-backdrop-filter:grayscale(1) contrast(1.15) brightness(.85);backdrop-filter:grayscale(1) contrast(1.15) brightness(.85);animation:deathfx 2.6s ease-in-out forwards}
+.deathfx .dfx-edge{position:absolute;inset:0;-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);-webkit-mask:radial-gradient(ellipse at center,transparent 38%,#000 78%);mask:radial-gradient(ellipse at center,transparent 38%,#000 78%);background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.6) 100%)}
+@keyframes deathfx{0%{opacity:0}14%{opacity:1}75%{opacity:1}100%{opacity:0}}
+.seatfx.dead{-webkit-backdrop-filter:grayscale(1) brightness(.6);backdrop-filter:grayscale(1) brightness(.6);background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.55));box-shadow:inset 0 0 0 3px rgba(150,20,20,.9),0 0 20px rgba(0,0,0,.8);animation:seatdead 2.1s ease-in-out forwards}
+@keyframes seatdead{0%{opacity:0}15%{opacity:1}75%{opacity:1}100%{opacity:0}}
