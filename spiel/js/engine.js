@@ -1642,7 +1642,7 @@ function findCard(uid){
   if(p.race && p.race.uid===uid) return p.race;
   if(p.cls && p.cls.uid===uid) return p.cls;
   if(S.reveal && S.reveal.uid===uid) return S.reveal;
-  if(UI.prompt && UI.prompt.ctx==='loot'){ const c=UI.prompt.data.pool.find(x=>x.uid===uid); if(c) return c; }
+  if(UI.prompt && UI.prompt.data && UI.prompt.data.pool && (UI.prompt.ctx==='loot' || UI.prompt.data.draft)){ const c=UI.prompt.data.pool.find(x=>x.uid===uid); if(c) return c; }
   const o=ownerOf(uid); if(o) return o.c;
   if(S.combat){ for(const m of S.combat.mons){ if(m.c.uid===uid) return m.c; const e=m.enh.find(x=>x.uid===uid); if(e) return e; } }
   return null;
