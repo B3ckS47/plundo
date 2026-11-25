@@ -166,7 +166,7 @@ const MONSTERS_W5 = [
   {n:'Schwertfisch-Fechtmeister',lvl:11,tr:3,vs:{cls:'zauberer',val:3},bad:{t:'lvl',n:2},txt:'Zauberer fuchteln zu langsam: +3 gegen Zauberer.',badTxt:'Verliere 2 Stufen.'},
   {n:'Riesenkrake Klara',lvl:13,tr:3,tiefsee:true,noHelp:true,np:3,bad:{t:'lvl',n:2},txt:'Tiefsee. Zu viele Arme: Niemand darf helfen. Verfolgt niemanden bis Stufe 3.',badTxt:'Verliere 2 Stufen.'},
   {n:'Käpt’n Achtarm',lvl:16,tr:4,up:2,pirat:true,tiefsee:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'best'}]},txt:'Pirat, Tiefsee. Acht Arme, acht Säbel. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und deinen besten Gegenstand.'},
-  {n:'Geisterschiff mit Seekrankheit',lvl:17,tr:4,up:2,undead:true,np:5,bad:{t:'death'},txt:'Untot. Die Mannschaft ist grün im Gesicht, aber hungrig. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'}
+  {n:'Inselschildkröte Ilse',lvl:17,tr:4,up:2,np:5,bad:{t:'death'},txt:'Man hält sie für eine Insel, bis sie abtaucht. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'}
 ].map(m=>Object.assign({w:5},m));
 const CURSES_W5 = [
   {n:'Seegang',w:5,x:2,eff:{t:'seegang'},txt:'Das Schiff schaukelt: Alle geben 1 zufällige Handkarte an den Nachbarn weiter, in ungerader Runde nach links, in gerader nach rechts. Von der Hand jederzeit spielbar.'},
@@ -379,6 +379,9 @@ const ART = {
   "Pfandflaschen-Golem":"art/monster-pfandflaschen-golem.webp",
   "Ratten-Leibgarde":"art/monster-ratten-leibgarde.webp",
   "Rattenkönig Rüdiger":"art/monster-rattenkoenig-ruediger.webp",
+  "Kanal-Krokodil Klaus":"art/monster-kanal-krokodil-klaus.webp",
+  "Moorgeist mit Mundgeruch":"art/monster-moorgeist-mit-mundgeruch.webp",
+  "Sandwurm mit Sonnenbrand":"art/monster-sandwurm-mit-sonnenbrand.webp",
   "Kellerkälte":"art/fluch-kellerkaelte.webp",
   "Licht aus!":"art/fluch-licht-aus.webp",
   "Kellerlaterne":"art/gegenstand-kellerlaterne.webp",
