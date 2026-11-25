@@ -3520,3 +3520,9 @@ html.pcnav #scr-profile #pf-frames{grid-template-columns:repeat(5,minmax(0,1fr))
 .rq-badge{position:absolute;top:-7px;right:-7px;z-index:3;min-width:22px;height:22px;padding:0 6px;box-sizing:border-box;display:grid;place-items:center;border-radius:999px;background:#c8352b;color:#fff;font:800 12px/1 var(--body);border:2px solid #fff3d6;box-shadow:0 2px 6px rgba(0,0,0,.5);animation:rqPop .3s cubic-bezier(.3,1.6,.5,1) both}
 @keyframes rqPop{from{transform:scale(.3)}}
 .hub-mode .rq-badge{top:8px;left:8px;right:auto}
+/* Hildes Aufträge am PC: Zettel und Schatten liegen auf ::after, der Zettel selbst hat keinen Filter mehr.
+   Manche Chrome-Grafiktreiber ließen in gefilterten Elementen Text weg (Titel, Belohnung, Fortschritt fehlten). */
+.hub-daily .note,.hub-daily .note.done{filter:none;border-image:none;border-color:transparent}
+.hub-daily .note::after{content:'';position:absolute;z-index:-1;inset:-14px -22px -14px -14px;border:solid transparent;border-width:14px 22px 14px 14px;border-image:url(../art/zettel-auftrag-dunkel.webp) 60 90 60 50 fill / 14px 22px 14px 14px stretch;filter:drop-shadow(0 5px 4px rgba(0,0,0,.5));pointer-events:none}
+.hub-daily .note.done::after{filter:drop-shadow(0 5px 4px rgba(0,0,0,.5)) saturate(.85)}
+.hub-daily .notes{transform:none}
