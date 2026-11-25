@@ -152,6 +152,11 @@ function renderProfile() {
   const titles = Object.entries(COSMETICS.title).filter(([k]) => (PC || owns('title:' + k)) && inG('title:' + k)).sort((x, y) => rarityOf('title:' + x[0]) - rarityOf('title:' + y[0]));
   patch($('#pf-titles'), (!PC || pfOriginOk('') ? `<button type="button" class="pf-ti" data-title="" aria-pressed="${!myTitle()}">Kein Titel</button>` : '') + titles.map(([k, l]) => owns('title:' + k) ? `<button type="button" class="pf-ti" data-title="${k}" data-rar="${rarityOf('title:' + k)}" title="${rarityName('title:' + k)}" aria-pressed="${PROFILE.title === k}">${esc(l)}</button>` : `<span class="pf-ti locked" data-rar="${rarityOf('title:' + k)}" title="${rarityName('title:' + k)}"><svg viewBox="0 0 24 24" aria-hidden="true">${LOCK_PATH}</svg>${esc(l)}</span>`).join('') +
     `<p class="hint">${titles.length ? 'Weitere Titel' : 'Titel'} gibt es im Storymodus, im Krämerladen und in Truhen.</p>`);
+  // Handy: Spieler-ID unter dem Kopf (am PC baut renderProfilePC denselben Kasten)
+  if (!PC) {
+    let idb = $('#scr-profile .pf-idbox'); if (!idb) { idb = document.createElement('div'); idb.className = 'panel pf-idbox'; $('#pf-hero').after(idb); }
+    patch(idb, `<span><small>Spieler-ID</small><b>#${playerTag()}</b><em>Damit fügen dich Freunde unter „Mit Freunden spielen“ hinzu.</em></span><button type="button" class="pf-copy" data-copyid aria-label="Spieler-ID kopieren" title="Kopieren"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button>`);
+  }
   if (mq().pc.matches) renderProfilePC();
 }
 // Kurze Spieler-ID aus der festen Profil-ID (für Freunde im Online-Modus)
