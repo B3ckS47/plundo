@@ -1,5 +1,5 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-e5ae0b10e9';
+const CACHE = 'loota-7c7d38f55e';
 const FILES = [
 "./",
 "index.html",
@@ -182,6 +182,7 @@ const FILES = [
 "art/menu-optionen.webp",
 "art/menu-regeln.webp",
 "art/menu-spielen.webp",
+"art/monster-ausgebuexte-gewuerzgurke.webp",
 "art/monster-bademeister-golem.webp",
 "art/monster-baerlauch-baer.webp",
 "art/monster-betrunkener-klabautermann.webp",
@@ -193,7 +194,9 @@ const FILES = [
 "art/monster-einsiedlerkrebs.webp",
 "art/monster-eisverkaeufer-yeti.webp",
 "art/monster-falsche-schatztruhe.webp",
+"art/monster-fauchender-heizkessel.webp",
 "art/monster-feuerspeiende-kaffeemaschine.webp",
+"art/monster-fledermaus-im-weinregal.webp",
 "art/monster-geisterpirat-gismo.webp",
 "art/monster-gestiefelter-fliegenpilz.webp",
 "art/monster-gezeiten-titan.webp",
@@ -203,6 +206,7 @@ const FILES = [
 "art/monster-inselschildkroete-ilse.webp",
 "art/monster-kaeptn-achtarm.webp",
 "art/monster-kanal-krokodil-klaus.webp",
+"art/monster-kartoffel-koloss.webp",
 "art/monster-kellerassel-xxl.webp",
 "art/monster-kerzenwachs-golem.webp",
 "art/monster-korkgeist.webp",
@@ -221,6 +225,7 @@ const FILES = [
 "art/monster-pilzkoenig.webp",
 "art/monster-pilzkoenigin-morchella.webp",
 "art/monster-pirat-holzbeine.webp",
+"art/monster-presslufthammer-specht.webp",
 "art/monster-quallen-gang.webp",
 "art/monster-ratten-leibgarde.webp",
 "art/monster-rattenkoenig-ruediger.webp",
@@ -251,6 +256,8 @@ const FILES = [
 "art/monster-vampir-kaninchen.webp",
 "art/monster-wal-schluckauf.webp",
 "art/monster-wandernder-bovist.webp",
+"art/monster-wellenreiter-walross.webp",
+"art/monster-werkzeugkasten-mimik.webp",
 "art/monster-windschutz-wueterich.webp",
 "art/monster-wuetender-gartenzwerg.webp",
 "art/monster-zecke-mit-rucksack.webp",

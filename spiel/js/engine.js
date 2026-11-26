@@ -43,7 +43,13 @@ const MONSTERS_W2 = [
   {n:'Pfandflaschen-Golem',lvl:10,tr:3,bad:{t:'lvl',n:2},txt:'Klirrt bedrohlich.',badTxt:'Verliere 2 Stufen.'},
   {n:'Ratten-Leibgarde',lvl:12,tr:3,nager:true,np:3,bad:{t:'multi',l:[{t:'slot',s:'kopf'},{t:'lvl',n:1}]},txt:'Nager. Bewacht den Thron. Verfolgt niemanden bis Stufe 3.',badTxt:'Verliere deine Kopfbedeckung und 1 Stufe.'},
   {n:'Rattenkönig Rüdiger',lvl:14,tr:4,up:2,nager:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'best'}]},txt:'Nager. Trägt einen Kronkorken als Krone. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und deinen besten Gegenstand.'},
-  {n:'Kanal-Krokodil Klaus',lvl:15,tr:4,up:2,np:5,bad:{t:'death'},txt:'Kam als Haustier und wuchs durchs Abflussrohr. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'}
+  {n:'Kanal-Krokodil Klaus',lvl:15,tr:4,up:2,np:5,bad:{t:'death'},txt:'Kam als Haustier und wuchs durchs Abflussrohr. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'},
+  // Nov. 2026, Bilder von Nano Banana: ersetzen die Grund-Monster im Keller-Deck
+  {n:'Ausgebüxte Gewürzgurke',lvl:1,tr:1,x:2,bad:{t:'hand',n:1},txt:'Sauer macht lustig, aber nicht diese.',badTxt:'Sie spritzt dir Gurkenwasser ins Gesicht: Wirf 1 zufällige Handkarte ab.'},
+  {n:'Fauchender Heizkessel',lvl:5,tr:2,run:-1,bad:{t:'slot',s:'ruestung'},txt:'Steht kurz vor dem Platzen: Weglaufen −1.',badTxt:'Deine Rüstung wird so heiß, dass du sie ablegen musst. Verliere deine Rüstung.'},
+  {n:'Fledermaus im Weinregal',lvl:6,tr:2,run:-1,bad:{t:'slot',s:'kopf'},txt:'Fliegt im Zickzack: Weglaufen −1.',badTxt:'Sie verheddert sich in deiner Kopfbedeckung und fliegt damit davon.'},
+  {n:'Werkzeugkasten-Mimik',lvl:8,tr:2,vs:{cls:'dieb',val:3},bad:{t:'hands'},txt:'Diebe wollen ihn immer zuerst öffnen: +3 gegen Diebe.',badTxt:'Er schnappt sich alles, was du in den Händen hältst.'},
+  {n:'Kartoffel-Koloss',lvl:11,tr:3,run:1,np:3,bad:{t:'multi',l:[{t:'lvl',n:1},{t:'hand',n:2}]},txt:'Langsam, aber nicht aufzuhalten: Weglaufen +1. Verfolgt niemanden bis Stufe 3.',badTxt:'Verliere 1 Stufe und 2 zufällige Handkarten.'}
 ].map(m=>Object.assign({w:2},m));
 const CURSES_W2 = [
   {n:'Kellerkälte',w:2,x:2,eff:{t:'chill',n:2},txt:'Im nächsten Kampf −2.'},
@@ -61,7 +67,8 @@ const ONESHOTS_W2 = [
 ];
 const LEVELUPS_W2 = ['Bier aus dem Keller geholt'];
 // Was aus dem Grunddeck mit in den Keller darf (Name -> Stückzahl); Schätze kommen alle mit
-const KELLER_GRUND = {'Wütender Gartenzwerg':1,'Schleimige Socke':2,'Kellerassel XXL':1,'Steuerprüfer-Gespenst':1,'Pilzkönig':1,'Vampir-Kaninchen':1,'Riesen-Nacktschnecke':1,'Zombie-Hausmeister':1,'Falsche Schatztruhe':1,
+// Nov. 2026: Schleimige Socke, Pilzkönig, Vampir-Kaninchen, Riesen-Nacktschnecke und Falsche Schatztruhe ersetzt durch eigene Keller-Monster
+const KELLER_GRUND = {'Wütender Gartenzwerg':1,'Kellerassel XXL':1,'Steuerprüfer-Gespenst':1,'Zombie-Hausmeister':1,
   'Pechsträhne':1,'Rost':1,'Löcher in den Sohlen':1,'Identitätskrise':1,'Ahnenforschung':1,'Taschendieb-Gnom':1};
 /* Grund-Schätze, die in einem Welt-Deck Platz für die Welt-Karten machen (Name -> Stückzahl dort).
    Getauscht wird möglichst Gleiches gegen Gleiches (Platz, Bonus), damit die Decks gleich stark bleiben. */
@@ -91,6 +98,7 @@ const MONSTERS_W3 = [
   {n:'Pilzkönigin Morchella',lvl:15,tr:4,up:2,pilz:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'best'}]},txt:'Pilz. Ihr Mann, der Pilzkönig, trägt ihr die Schleppe. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und deinen besten Gegenstand.'},
   {n:'Moorgeist mit Mundgeruch',lvl:16,tr:4,up:2,undead:true,np:5,bad:{t:'death'},txt:'Untot. Ein einziger Hauch genügt. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'},
   // Nov. 2026, Bilder von Nano Banana: ersetzen nach und nach die Grund-Monster im Wald-Deck
+  {n:'Presslufthammer-Specht',lvl:7,tr:2,noHelp:true,bad:{t:'slot',s:'kopf'},txt:'So laut, dass niemand deine Hilferufe hört: Niemand darf helfen.',badTxt:'Er hämmert deine Kopfbedeckung kaputt.'},
   {n:'Zecke mit Rucksack',lvl:1,tr:1,run:-1,bad:{t:'cheap'},txt:'Reist bei jedem mit: Weglaufen −1.',badTxt:'Sie zieht mit deinem billigsten Gegenstand weiter.'},
   {n:'Borkenkäfer-Bande',lvl:3,tr:1,bad:{t:'slot',s:'schuhe'},txt:'Frisst sich durch alles, was aus Holz ist.',badTxt:'Sie fressen dein Schuhwerk.'},
   {n:'Trüffelschwein Trude',lvl:5,tr:2,vs:{race:'zwerg',val:2},bad:{t:'hand',n:2},txt:'Wittert die Trüffel in jedem Zwergenbart: +2 gegen Zwerge.',badTxt:'Sie wühlt deine Hand durch: Wirf 2 zufällige Handkarten ab.'},
@@ -114,7 +122,7 @@ const ONESHOTS_W3 = [
 const LEVELUPS_W3 = ['Aus dem Wald zurückgefunden'];
 // Was aus dem Grunddeck mit in den Wald darf (Name -> Stückzahl); Schätze kommen alle mit
 // Nov. 2026: Schleimige Socke, Kellerassel XXL, Rentner-Ritter und Vampir-Kaninchen ersetzt durch eigene Wald-Monster
-const WALD_GRUND = {'Wütender Gartenzwerg':1,'Schwarm Stechmücken':1,'Pilzkönig':1,'Riesen-Nacktschnecke':1,
+const WALD_GRUND = {'Wütender Gartenzwerg':1,'Schwarm Stechmücken':1,'Pilzkönig':1,
   'Pechsträhne':1,'Windböe':1,'Rost':1,'Löcher in den Sohlen':1,'Identitätskrise':1,'Ahnenforschung':1,'Taschendieb-Gnom':1};
 function waldCount(p){ if(p.tpl.w===3) return p.wdef; if(p.tpl.w) return 0; if(p.deck==='tr') return trCount(p,3); if(p.tpl.k==='monster'||p.tpl.k==='curse') return WALD_GRUND[p.tpl.n]||0; return p.def; }
 /* Welt 4 (Sommerpause, Strand): nur im Strand-Deck. meer = Monster-Merkmal (bei Flut +3), sun = Sonnenbrand,
@@ -132,6 +140,7 @@ const MONSTERS_W4 = [
   {n:'Krabbenbaron Kneifer',lvl:15,tr:4,up:2,meer:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'hands'}]},txt:'Meer. Kassiert für jeden Fußbreit Sand. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und alles, was du in den Händen hältst.'},
   {n:'Sandwurm mit Sonnenbrand',lvl:16,tr:4,up:2,np:5,bad:{t:'death'},txt:'Taucht genau dort auf, wo dein Handtuch liegt. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'},
   // Nov. 2026, Bilder von Nano Banana: ersetzen nach und nach die Grund-Monster im Strand-Deck
+  {n:'Wellenreiter-Walross',lvl:7,tr:2,meer:true,run:-1,bad:{t:'lvl',n:1},txt:'Meer. Niemand kann ihn bremsen: Weglaufen −1.',badTxt:'Er walzt dich platt: Verliere 1 Stufe.'},
   {n:'Sonnenmilch-Schleim',lvl:1,tr:1,bad:{t:'sand'},txt:'Rutschig und klebrig zugleich.',badTxt:'Sand klebt an dir: Weglaufen −2, bis du eine Stufe aufsteigst.'},
   {n:'Liegen-Reservierer',lvl:2,tr:1,run:-1,bad:{t:'hand',n:2},txt:'War schon um fünf Uhr da: Weglaufen −1.',badTxt:'Er belegt deine Karten mit Handtüchern: Wirf 2 zufällige Handkarten ab.'},
   {n:'Eisverkäufer-Yeti',lvl:9,tr:2,soft:2,bad:{t:'lvl',n:1},txt:'Schmilzt dahin: Bei Flut −2.',badTxt:'Hirnfrost! Verliere 1 Stufe.'},
@@ -156,7 +165,7 @@ const ONESHOTS_W4 = [
 const LEVELUPS_W4 = ['Den Strandkorb erobert'];
 // Was aus dem Grunddeck mit an den Strand darf (Name -> Stückzahl); Schätze kommen alle mit
 // Nov. 2026: Übellaunige Möwe, Schleimige Socke, Riesen-Nacktschnecke und Falsche Schatztruhe ersetzt durch eigene Strand-Monster
-const STRAND_GRUND = {'Schwarm Stechmücken':2,'Rentner-Ritter':1,'Steuerprüfer-Gespenst':1,'Durchgedrehter Saugroboter':1,
+const STRAND_GRUND = {'Schwarm Stechmücken':2,'Rentner-Ritter':1,'Steuerprüfer-Gespenst':1,
   'Pechsträhne':1,'Windböe':1,'Rost':1,'Löcher in den Sohlen':1,'Identitätskrise':1,'Taschendieb-Gnom':1};
 function strandCount(p){ if(p.tpl.w===4) return p.wdef; if(p.tpl.w) return 0; if(p.deck==='tr') return trCount(p,4); if(p.tpl.k==='monster'||p.tpl.k==='curse') return STRAND_GRUND[p.tpl.n]||0; return p.def; }
 // Gezeiten: null ohne Strandkarten, sonst 'ebbe' in ungeraden und 'flut' in geraden Runden (Springflut: immer Flut)
@@ -395,6 +404,8 @@ const ART = {
   "Rattenkönig Rüdiger":"art/monster-rattenkoenig-ruediger.webp",
   "Kanal-Krokodil Klaus":"art/monster-kanal-krokodil-klaus.webp",
   "Moorgeist mit Mundgeruch":"art/monster-moorgeist-mit-mundgeruch.webp",
+  "Ausgebüxte Gewürzgurke":"art/monster-ausgebuexte-gewuerzgurke.webp","Fauchender Heizkessel":"art/monster-fauchender-heizkessel.webp","Fledermaus im Weinregal":"art/monster-fledermaus-im-weinregal.webp","Werkzeugkasten-Mimik":"art/monster-werkzeugkasten-mimik.webp","Kartoffel-Koloss":"art/monster-kartoffel-koloss.webp",
+  "Presslufthammer-Specht":"art/monster-presslufthammer-specht.webp","Wellenreiter-Walross":"art/monster-wellenreiter-walross.webp",
   "Zecke mit Rucksack":"art/monster-zecke-mit-rucksack.webp","Borkenkäfer-Bande":"art/monster-borkenkaefer-bande.webp","Trüffelschwein Trude":"art/monster-trueffelschwein-trude.webp","Uhu mit Schlafstörung":"art/monster-uhu-mit-schlafstoerung.webp",
   "Sandwurm mit Sonnenbrand":"art/monster-sandwurm-mit-sonnenbrand.webp",
   "Sonnenmilch-Schleim":"art/monster-sonnenmilch-schleim.webp","Liegen-Reservierer":"art/monster-liegen-reservierer.webp","Eisverkäufer-Yeti":"art/monster-eisverkaeufer-yeti.webp",
