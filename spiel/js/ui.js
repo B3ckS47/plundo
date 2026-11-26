@@ -3275,9 +3275,10 @@ function hubStoryHTML(cw) {
   if (HUBSEL) map = map.replace(`class="snode `, m => m).replace(new RegExp(`class="(snode[^"]*)"( data-station="${HUBSEL}")`), 'class="$1 sel"$2');
   const nameOf = q => q.w ? q.w.name : q.f.name, lblOf = q => q.w ? wLabel(q.w) : `Welt ${q.f.n}`;
   // Welten als Kacheln über dem Textfeld (wie auf der Startseite), praktisch auch für viele Welten
-  const tiles = `<div class="pd-wtiles">${pages.map((q, k) => { const ww = q.w, img = ww ? ww.map : q.f.map;
+  const arrow = (d, path, lbl) => `<button type="button" class="pd-warr ${d < 0 ? 'l' : 'r'}" data-hubw="${d}"${(d < 0 ? HUBW <= 0 : HUBW >= pages.length - 1) ? ' disabled' : ''} aria-label="${lbl}"><svg viewBox="0 0 24 24"><path d="${path}" /></svg></button>`;
+  const tiles = `<div class="pd-wbar">${arrow(-1, 'M15 5l-7 7 7 7', 'Vorherige Welt')}<div class="pd-wtiles">${pages.map((q, k) => { const ww = q.w, img = ww ? ww.map : q.f.map;
     return `<button type="button" class="pd-wt${k === HUBW ? ' on' : ''}${q.f ? ' fog' : ''}${ww && !worldOwned(ww) ? ' shut' : ''}" data-hubwt="${k}"${img ? ` style="--img:url('${new URL(img, document.baseURI).href}')"` : ''} aria-label="${esc(lblOf(q))}: ${esc(nameOf(q))}">` +
-      `<span class="pd-wt-t"><small>${esc(lblOf(q))}</small><b>${esc(nameOf(q))}</b>${ww ? `<em>${starSvg(true)}${worldStars(ww)}/${worldMaxStars(ww)}</em>` : `<em>im Nebel</em>`}</span></button>`; }).join('')}</div>`;
+      `<span class="pd-wt-t"><small>${esc(lblOf(q))}</small><b>${esc(nameOf(q))}</b>${ww ? `<em>${starSvg(true)}${worldStars(ww)}/${worldMaxStars(ww)}</em>` : `<em>im Nebel</em>`}</span></button>`; }).join('')}</div>${arrow(1, 'M9 5l7 7-7 7', 'Nächste Welt')}</div>`;
   const w = pg.w || cw, all = w.stations.length, done = w.stations.filter(st => STORY.done[st.id]).length;
   return `<main class="pp-modes pd-st${HUBST === 'open' ? ' unroll' : ''}">` +
       `<section class="pd-stmap"><span class="pd-rod" aria-hidden="true"></span><div class="pd-page${HUBPG ? ' pg-' + HUBPG : ''}" data-page="${HUBW}">${map}</div>` +
@@ -3322,7 +3323,14 @@ document.addEventListener('click', e => {
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-hubw]'); if (!b || !HUBST) return;
   const d = +b.dataset.hubw, n = hubPages().length, k = Math.max(0, Math.min(n - 1, HUBW + d)); if (k === HUBW) return;
-  HUBW = k; HUBPG = UI.reduce ? '' : d > 0 ? 'r' : 'l'; renderHub(); HUBPG = ''; Snd.sfx('deal'); buzz(6);
+  HUBW = k; HUBSEL = null; HUBPG = UI.reduce ? '' : d > 0 ? 'r' : 'l'; if (SHEETS.length) closeAllSheets(); renderHub(); HUBPG = ''; Snd.sfx('deal'); buzz(6);
+  const t = $(`#t-hub [data-hubwt="${k}"]`); if (t) t.scrollIntoView({block: 'nearest', inline: 'nearest'});
+});
+// Pfeiltasten links/rechts blättern durch die Welten, solange die Weltkarte offen ist und kein Fenster darüber liegt
+document.addEventListener('keydown', e => {
+  if (!HUBST || HUBBOT || SHEETS.length || e.repeat || CUR !== 'title' || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+  if (e.target.closest && e.target.closest('input,textarea,select')) return;
+  const b = $(`#t-hub .pd-warr.${e.key === 'ArrowLeft' ? 'l' : 'r'}`); if (b && !b.disabled) { e.preventDefault(); b.click(); }
 });
 document.addEventListener('click', e => { const b = e.target.closest('[data-soon]'); if (b) toast(b.dataset.soon); });
 function renderShopPage() {
