@@ -1,5 +1,5 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-cc5d825e24';
+const CACHE = 'loota-a34afe9d86';
 const FILES = [
 "./",
 "index.html",
@@ -33,6 +33,11 @@ const FILES = [
 "art/alt-riesenkrake-klara.webp",
 "art/besonders-schatzkarte-links.webp",
 "art/besonders-schatzkarte-rechts.webp",
+"art/booster-grund.webp",
+"art/booster-keller.webp",
+"art/booster-meer.webp",
+"art/booster-strand.webp",
+"art/booster-wald.webp",
 "art/brett-auftraege.webp",
 "art/brett-hub.webp",
 "art/brett-keller.webp",

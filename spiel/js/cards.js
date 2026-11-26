@@ -339,10 +339,12 @@ function cvSelectHTML(c, pv) {
 
 /* ================= Booster öffnen ================= */
 const BOOSTER_LOOK = {1: 'grund', 2: 'keller', 3: 'wald', 4: 'strand', 5: 'meer'};
+// Booster-Packung: Bild je Welt (art/booster-*.webp), Weltname auf dem goldenen Banner.
+// Der gezackte obere Rand ist ein eigener Ausschnitt desselben Bildes, damit er beim Öffnen abreißen kann.
 function boosterPackHTML(w, cls = '') {
-  const wd = TC_WORLD[w];
-  return `<span class="bpack w-${BOOSTER_LOOK[w]}${cls}"><span class="bp-top"></span><span class="bp-body"><i class="bp-ico" style="-webkit-mask-image:url(icons/deck-${wd.s}.png);mask-image:url(icons/deck-${wd.s}.png)"></i>` +
-    `<b>${esc(wd.n)}</b><small>Booster</small><em>3 Karten</em></span><span class="bp-shine"></span></span>`;
+  const wd = TC_WORLD[w], src = `art/booster-${BOOSTER_LOOK[w]}.webp`;
+  return `<span class="bpack w-${BOOSTER_LOOK[w]}${cls}" style="--bimg:url('${src}')"><img class="bpk-body" src="${src}" alt="" draggable="false">` +
+    `<img class="bpk-top" src="${src}" alt="" draggable="false"><b class="bpk-name">${esc(wd.n)}</b><span class="bpk-shine"></span></span>`;
 }
 // Overlay: Booster wackelt, reißt auf, drei Karten fliegen verdeckt heraus und drehen sich nacheinander um.
 // Doppelte bekommen einen Stempel, ihre Münzen fliegen nach oben.
