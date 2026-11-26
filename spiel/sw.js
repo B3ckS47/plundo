@@ -1,5 +1,5 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-fc16d9db26';
+const CACHE = 'loota-e5ae0b10e9';
 const FILES = [
 "./",
 "index.html",
@@ -185,6 +185,7 @@ const FILES = [
 "art/monster-bademeister-golem.webp",
 "art/monster-baerlauch-baer.webp",
 "art/monster-betrunkener-klabautermann.webp",
+"art/monster-borkenkaefer-bande.webp",
 "art/monster-buerokratie-golem.webp",
 "art/monster-drache-des-montagmorgens.webp",
 "art/monster-durchgedrehter-saugroboter.webp",
@@ -244,12 +245,15 @@ const FILES = [
 "art/monster-strandkorb-mimik.webp",
 "art/monster-tintenfisch-taschendieb.webp",
 "art/monster-troll-unter-der-autobahnbruecke.webp",
+"art/monster-trueffelschwein-trude.webp",
 "art/monster-uebellaunige-moewe.webp",
+"art/monster-uhu-mit-schlafstoerung.webp",
 "art/monster-vampir-kaninchen.webp",
 "art/monster-wal-schluckauf.webp",
 "art/monster-wandernder-bovist.webp",
 "art/monster-windschutz-wueterich.webp",
 "art/monster-wuetender-gartenzwerg.webp",
+"art/monster-zecke-mit-rucksack.webp",
 "art/monster-zitteraal.webp",
 "art/monster-zombie-hausmeister.webp",
 "art/muenzen-1.webp",

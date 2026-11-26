@@ -89,7 +89,12 @@ const MONSTERS_W3 = [
   {n:'Bärlauch-Bär',lvl:9,tr:2,run:-2,bad:{t:'lvl',n:2},txt:'Riecht dich drei Täler weit: Weglaufen −2.',badTxt:'Verliere 2 Stufen.'},
   {n:'Myzel-Koloss',lvl:12,tr:3,pilz:true,noHelp:true,np:3,bad:{t:'lvl',n:2},txt:'Pilz. Das Waldnetz hört alles mit: Niemand darf helfen. Verfolgt niemanden bis Stufe 3.',badTxt:'Verliere 2 Stufen.'},
   {n:'Pilzkönigin Morchella',lvl:15,tr:4,up:2,pilz:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'best'}]},txt:'Pilz. Ihr Mann, der Pilzkönig, trägt ihr die Schleppe. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und deinen besten Gegenstand.'},
-  {n:'Moorgeist mit Mundgeruch',lvl:16,tr:4,up:2,undead:true,np:5,bad:{t:'death'},txt:'Untot. Ein einziger Hauch genügt. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'}
+  {n:'Moorgeist mit Mundgeruch',lvl:16,tr:4,up:2,undead:true,np:5,bad:{t:'death'},txt:'Untot. Ein einziger Hauch genügt. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'},
+  // Nov. 2026, Bilder von Nano Banana: ersetzen nach und nach die Grund-Monster im Wald-Deck
+  {n:'Zecke mit Rucksack',lvl:1,tr:1,run:-1,bad:{t:'cheap'},txt:'Reist bei jedem mit: Weglaufen −1.',badTxt:'Sie zieht mit deinem billigsten Gegenstand weiter.'},
+  {n:'Borkenkäfer-Bande',lvl:3,tr:1,bad:{t:'slot',s:'schuhe'},txt:'Frisst sich durch alles, was aus Holz ist.',badTxt:'Sie fressen dein Schuhwerk.'},
+  {n:'Trüffelschwein Trude',lvl:5,tr:2,vs:{race:'zwerg',val:2},bad:{t:'hand',n:2},txt:'Wittert die Trüffel in jedem Zwergenbart: +2 gegen Zwerge.',badTxt:'Sie wühlt deine Hand durch: Wirf 2 zufällige Handkarten ab.'},
+  {n:'Uhu mit Schlafstörung',lvl:6,tr:2,run:-2,bad:{t:'lvl',n:1},txt:'Hat seit Tagen kein Auge zugetan und sieht trotzdem alles: Weglaufen −2.',badTxt:'Verliere 1 Stufe.'}
 ].map(m=>Object.assign({w:3},m));
 const CURSES_W3 = [
   {n:'Sporenwolke',w:3,x:2,eff:{t:'spore',n:1},txt:'Bleibt, bis du einen Kampf gewinnst: So lange −1 in jedem Kampf.'},
@@ -108,7 +113,8 @@ const ONESHOTS_W3 = [
 ];
 const LEVELUPS_W3 = ['Aus dem Wald zurückgefunden'];
 // Was aus dem Grunddeck mit in den Wald darf (Name -> Stückzahl); Schätze kommen alle mit
-const WALD_GRUND = {'Wütender Gartenzwerg':1,'Schleimige Socke':1,'Schwarm Stechmücken':1,'Kellerassel XXL':1,'Rentner-Ritter':1,'Pilzkönig':1,'Vampir-Kaninchen':1,'Riesen-Nacktschnecke':1,
+// Nov. 2026: Schleimige Socke, Kellerassel XXL, Rentner-Ritter und Vampir-Kaninchen ersetzt durch eigene Wald-Monster
+const WALD_GRUND = {'Wütender Gartenzwerg':1,'Schwarm Stechmücken':1,'Pilzkönig':1,'Riesen-Nacktschnecke':1,
   'Pechsträhne':1,'Windböe':1,'Rost':1,'Löcher in den Sohlen':1,'Identitätskrise':1,'Ahnenforschung':1,'Taschendieb-Gnom':1};
 function waldCount(p){ if(p.tpl.w===3) return p.wdef; if(p.tpl.w) return 0; if(p.deck==='tr') return trCount(p,3); if(p.tpl.k==='monster'||p.tpl.k==='curse') return WALD_GRUND[p.tpl.n]||0; return p.def; }
 /* Welt 4 (Sommerpause, Strand): nur im Strand-Deck. meer = Monster-Merkmal (bei Flut +3), sun = Sonnenbrand,
@@ -389,6 +395,7 @@ const ART = {
   "Rattenkönig Rüdiger":"art/monster-rattenkoenig-ruediger.webp",
   "Kanal-Krokodil Klaus":"art/monster-kanal-krokodil-klaus.webp",
   "Moorgeist mit Mundgeruch":"art/monster-moorgeist-mit-mundgeruch.webp",
+  "Zecke mit Rucksack":"art/monster-zecke-mit-rucksack.webp","Borkenkäfer-Bande":"art/monster-borkenkaefer-bande.webp","Trüffelschwein Trude":"art/monster-trueffelschwein-trude.webp","Uhu mit Schlafstörung":"art/monster-uhu-mit-schlafstoerung.webp",
   "Sandwurm mit Sonnenbrand":"art/monster-sandwurm-mit-sonnenbrand.webp",
   "Sonnenmilch-Schleim":"art/monster-sonnenmilch-schleim.webp","Liegen-Reservierer":"art/monster-liegen-reservierer.webp","Eisverkäufer-Yeti":"art/monster-eisverkaeufer-yeti.webp",
   "Windschutz-Wüterich":"art/monster-windschutz-wueterich.webp","Lenkdrachen-Drache":"art/monster-lenkdrachen-drache.webp","Gezeiten-Titan":"art/monster-gezeiten-titan.webp",
