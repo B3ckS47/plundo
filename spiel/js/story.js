@@ -846,8 +846,11 @@ function openChest() {
   else if (Math.random() < 0.35) id = pickByRarity(all, 'holz');
   const coins = gold ? (id ? 20 : 60 + 5 * Math.floor(Math.random() * 9)) : (id ? 0 : 15 + 5 * Math.floor(Math.random() * 5));
   if (id) grant(id);
+  // Mit Glück steckt zusätzlich ein Booster drin (Holztruhe 15 %, Goldtruhe 50 %)
+  let booster = null; const bw = typeof boosterWorlds === 'function' ? boosterWorlds() : [];
+  if (bw.length && Math.random() < (gold ? 0.5 : 0.15)) { booster = bw[Math.floor(Math.random() * bw.length)]; (STORY.boosters = STORY.boosters || []).push(booster); }
   STORY.coins += coins; saveStory(); saveDaily();
-  return {t: c.t, id, coins};
+  return {t: c.t, id, coins, booster};
 }
 function streakNext(n) { const at = n < 3 ? 3 : n < 7 ? 7 : Math.ceil((n + 1) / 7) * 7; return Object.assign({at, from: at === 3 ? 0 : at === 7 ? 3 : at - 7}, streakGoal(at)); }
 // Längste je erreichte Serie (auch wenn die aktuelle schon abgerissen ist)

@@ -632,31 +632,20 @@ function cardNum(c) {
   }
 }
 function cardMini(c, o = {}) {
-  const t = TYPES[c.k], num = cardNum(c), art = ART[c.n];
+  const t = TYPES[c.k], num = cardNum(c), cv = cardVariant(c), art = cv === 'alt' && ALT_ART[c.n] ? ALT_ART[c.n] : ART[c.n];
   const tag = o.inert ? 'span' : 'button';
   // Beim Verkaufen steht der Goldwert auf jeder verkaufbaren Karte
   const gold = !o.inert && typeof S !== 'undefined' && S && UI.sel && UI.sel.ctx === 'sell' && o.where && ['hand', 'eq', 'pack'].includes(o.where) ? goldOf(me(), c) : 0;
   const data = o.inert ? '' : o.cname ? `data-cname="${esc(c.n)}"` : `data-uid="${c.uid}" data-where="${o.where || ''}"`;
-  return `<${tag}${o.inert ? '' : ' type="button"'} class="mc k-${c.k}${o.size ? ' ' + o.size : ''}${o.extra ? ' ' + o.extra : ''}" ${data} aria-label="${esc(c.n)}">` +
+  return `<${tag}${o.inert ? '' : ' type="button"'} class="mc k-${c.k}${cv ? ' v-' + cv : ''}${o.size ? ' ' + o.size : ''}${o.extra ? ' ' + o.extra : ''}" ${data} aria-label="${esc(c.n)}">` +
     `<span class="mc-head"><span class="mc-type">${t.s || t.l}</span>${num !== '' ? `<span class="mc-num">${num}</span>` : ''}</span>` +
-    (art ? `<img class="mc-art" src="${art}" alt="" loading="lazy" decoding="async" draggable="false">` : `<img class="mc-art" src="${ICON.slot.race}" alt="" draggable="false" style="object-fit:contain;padding:8px">`) +
+    (art && cv ? `<span class="mc-art mc-artv" style="background-image:url('${art}')"></span>` : art ? `<img class="mc-art" src="${art}" alt="" loading="lazy" decoding="async" draggable="false">` : `<img class="mc-art" src="${ICON.slot.race}" alt="" draggable="false" style="object-fit:contain;padding:8px">`) +
+    (cv === 'full' || cv === 'alt' ? '<i class="mc-gl"></i>' : '') + (o.cname && o.coll ? collDots(c) : '') +
     (gold ? `<span class="mc-gold">${fmt(gold)} Gold</span>` : '') +
     `<span class="mc-name">${esc(c.n)}</span></${tag}>`;
 }
-function cardBig(c) {
-  const t = TYPES[c.k], num = cardNum(c), human = c === HUMAN;
-  let body = '', foot = '';
-  switch (c.k) {
-    case 'monster': body = `<div>${c.txt}</div><div class="bc-bad"><b>Pech:</b> ${c.badTxt}</div>`; foot = `<span>${c.tr} ${pl(c.tr, 'Schatz', 'Schätze')}</span><span>${c.up || 1} ${pl(c.up || 1, 'Stufe', 'Stufen')}</span>`; break;
-    case 'item': body = `<div>${itemTxt(c) || 'Keine Besonderheit.'}</div>`; foot = `<span>${slotTxt(c)}</span><span>${fmt(c.g)} Gold</span>`; break;
-    case 'oneshot': body = `<div>${c.txt || 'Im Kampf für eine Seite deiner Wahl. Danach ablegen.'}</div>`; foot = `<span>Einmal einsetzbar</span><span>${fmt(c.g)} Gold</span>`; break;
-    case 'enh': body = '<div>In einem beliebigen Kampf auf ein Monster spielen.</div>'; foot = `<span>${c.trm > 0 ? '+' : '−'}${Math.abs(c.trm)} ${pl(Math.abs(c.trm), 'Schatz', 'Schätze')}</span>${S && hasCls(me(), 'dieb') ? '<span>200 Gold</span>' : ''}`; break;
-    default: body = `<div>${c.txt || ''}</div>`;
-  }
-  const art = ART[c.n] ? `<img class="bc-art" src="${ART[c.n]}" alt="">` : human ? `<img class="bc-art human" src="${ICON.slot.race}" alt="">` : '';
-  return `<div class="bc k-${c.k}"><div class="bc-head"><span class="bc-type">${human ? 'Volk · keine Karte' : `${t.l} · ${t.d}karte`}</span>${num !== '' ? `<span class="bc-num">${num}</span>` : ''}</div>` +
-    `<div class="bc-name">${esc(c.n)}</div>${art}<div class="bc-body">${body}</div>${foot ? `<div class="bc-foot">${foot}</div>` : ''}</div>`;
-}
+// Große Karte im Sammelkarten-Design (js/cards.js), in der Variante, die der Spieler für diese Karte gewählt hat
+function cardBig(c, v) { return tcHTML(c, v != null ? v : cardVariant(c)); }
 const coinsHTML = l => { const m = WINLVL(); let s = ''; for (let i = 1; i <= m; i++) s += `<i class="${i <= l ? 'on' : ''}${i === l ? ' cur' : ''}${i === m ? ' goal' : ''}"></i>`; return s; };
 
 /* ================= Beobachter: Effekte aus Zustandsänderungen ================= */
@@ -755,10 +744,11 @@ function artTop(c, enh) {
 }
 function artNode(c, enh, anim) {
   const b = document.createElement('button');
-  b.type = 'button'; b.className = `art k-${c.k}${anim ? ' ' + anim : ''}`;
+  const cv = cardVariant(c);
+  b.type = 'button'; b.className = `art k-${c.k}${cv ? ' v-' + cv : ''}${anim ? ' ' + anim : ''}`;
   b.dataset.uid = c.uid; b.dataset.where = 'table';
   b.setAttribute('aria-label', c.n + ', Karte ansehen');
-  b.innerHTML = `<img src="${ART[c.n] || ART_FALLBACK}" alt="" decoding="async"><span class="art-top"></span>`;
+  b.innerHTML = `<img src="${(cv === 'alt' && ALT_ART[c.n]) || ART[c.n] || ART_FALLBACK}" alt="" decoding="async">${cv ? '<i class="art-gl"></i>' : ''}<span class="art-top"></span>`;
   patch(b.querySelector('.art-top'), artTop(c, enh));
   return b;
 }
@@ -1123,13 +1113,15 @@ const SHEET_VIEWS = {
     if (live) acts.forEach(a => { if (a.fn && !tutActOk(c, a.l, s.where)) { a.dis = true; tutLock = true; } });
     if (tutLock && acts.some(a => a.fn) && acts.every(a => !a.fn || a.dis)) acts.unshift({info: 'Hilde: „Die brauchst du gerade nicht. Mach erst mal, was ich dir zeige.“'});
     UI.cardActs = acts;
-    const meaning = cardMeaning(c), wh = S && !s.human ? whereNow(c) : [];
+    // (Erklärtext und Fundorte stehen nicht mehr neben der Karte)
     const actHTML = acts.map((a, i) => a.info ? `<p>${a.info}</p>` : `<button type="button" class="btn ${a.kind === 'primary' ? 'primary' : ''}${UI.adv && UI.adv.uid === c.uid && UI.adv.act && a.l.startsWith(UI.adv.act) ? ' rec' : ''}" data-cact="${i}" ${a.dis ? 'disabled' : ''}>${esc(a.l)}</button>${a.dis && a.dis !== true ? `<p class="err">${a.dis}</p>` : ''}`).join('');
     const swap = live && (s.where === 'hand' || s.where === 'pack') ? equipInfoHTML(me(), c) : '';
-    const info = (meaning ? `<p class="meaning">${meaning}</p>` : '') + (wh.length ? `<ul class="wherenow">${wh.map(x => `<li>${x}</li>`).join('')}</ul>` : ''), actBox = actHTML ? `<div class="acts">${actHTML}</div>` : '';
+    // Keine Erklärung neben der Karte: Regeln und Schlagwörter stehen auf der Karte selbst
+    const info = '', actBox = actHTML ? `<div class="acts">${actHTML}</div>` : '';
     /* Beim Ausrüsten stehen Slot-Info und Knopf direkt unter der Karte, die Erklärung danach */
     // PC, Kartenansicht (Karten-Seite, Regeln, Laden): nur die große Karte, ohne Rahmen und Erklärtext
-    if (s.cname && mq().pc.matches && !(PCGX() && CUR === 'game')) return {head: h3(''), body: cardBig(c), bare: true};
+    const pvv = s.cname && s.pv != null ? s.pv : null, cvs = s.cname && !s.human ? cvSelectHTML(c, pvv) : '';
+    if (s.cname && mq().pc.matches && !(PCGX() && CUR === 'game')) return {head: h3(''), body: cardBig(c, pvv) + cvs, bare: true};
     if (PCGX() && CUR === 'game') {
       // PC: Karte links, rechts die Aktionen kompakt. Hauptaktionen groß, alles andere als kleine Knöpfe nebeneinander,
       // Ziele („Auf Nyra spielen“) mit dem Porträt des Spielers.
@@ -1141,7 +1133,7 @@ const SHEET_VIEWS = {
       const box = main.length || more.length ? `<div class="cdx-acts">${main.length ? `<div class="cdx-main">${main.join('')}</div>` : ''}${more.length ? `<div class="cdx-more">${more.join('')}</div>` : ''}</div>` : '';
       return {head: h3(''), body: `<div class="cdx"><div class="cdx-card">${cardBig(c)}</div><div class="cdx-side">${notes.join('')}${swap}${box}${info}</div></div>`};
     }
-    return {head: h3(''), body: cardBig(c) + (swap ? swap + actBox + info : info + actBox)};
+    return {head: h3(''), body: cardBig(c, pvv) + cvs + (swap ? swap + actBox + info : info + actBox)};
   },
   opp(s) {
     const p = S && S.players[s.pid]; if (!p) return null;
@@ -1419,8 +1411,18 @@ function updFilterStuck() {
   const sc = $('#scr-cards .content'), f = $('#card-filter'); if (!sc || !f) return;
   f.classList.toggle('stuck', f.getBoundingClientRect().top <= sc.getBoundingClientRect().top + 2);
 }
+// Kleine Punkte an der Karte: welche Varianten (S, E, L) schon in der Sammlung sind
+const collDots = c => { const vs = cardVariants(c.n).filter(v => v && collOwned(c.n, v)); return vs.length ? `<span class="mc-coll">${vs.map(v => `<i data-rar="${TC_VAR_RAR[v]}">${'GSEL'[TC_VAR_RAR[v] - 1]}</i>`).join('')}</span>` : ''; };
+// Sammlung und Booster in der Kartenübersicht
+function renderBoosterPane() {
+  const el = $('#booster-pane'); if (!el) return;
+  const n = boostersWaiting().length;
+  const rows = boosterWorlds().map(w => { const s = collStats(w); return `<li><i class="bp-mini" style="-webkit-mask-image:url(icons/deck-${TC_WORLD[w].s}.png);mask-image:url(icons/deck-${TC_WORLD[w].s}.png)"></i><b>${TC_WORLD[w].n}</b><span><em data-rar="2">S</em>${s.foil}/${s.n}</span><span><em data-rar="3">E</em>${s.full}/${s.n}</span>${s.altN ? `<span><em data-rar="4">L</em>${s.alt}/${s.altN}</span>` : '<span></span>'}</li>`; }).join('');
+  patch(el, `<div class="bpane-head"><div><b>Sammlung</b><span>Glitzer, Vollbild und Legendär aus Boostern. Tippe eine Karte an, um ihr Design zu wählen.</span></div>${n ? boosterPackHTML(boostersWaiting()[0], ' mini') : ''}</div>` +
+    `<ul class="bpane-list">${rows}</ul>` + (n ? `<button type="button" class="btn primary" data-bopen>${n === 1 ? 'Booster öffnen' : `Booster öffnen (${n})`}</button>` : `<p class="hint">Booster gibt es ab und zu im Krämerladen und mit Glück in Truhen.</p>`));
+}
 function renderCards() {
-  renderDeckPanel(); requestAnimationFrame(updFilterStuck);
+  renderDeckPanel(); renderBoosterPane(); requestAnimationFrame(updFilterStuck);
   const f = UI.kfilter || 'alle', PCk = mq().pc.matches, cf = $('#card-filter');
   // PC: Suchfeld über den Filtern (eigener Knoten, damit Tippen nicht durch Neuzeichnen unterbrochen wird)
   if (PCk && !cf.querySelector('.cf-chips')) { cf.__h = ''; cf.innerHTML = '<label class="cf-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg><input type="search" id="card-q" placeholder="Karten suchen: Name oder Kartentext" autocomplete="off" spellcheck="false"></label><div class="cf-chips"></div>'; cf.querySelector('#card-q').value = UI.kq || ''; }
@@ -1439,7 +1441,7 @@ function renderCards() {
     const total = cs.reduce((n, [c]) => n + (DECK.counts[c.n] || 0), 0);
     html += `<h3 class="cgroup">${label}<span>${total} im Deck</span></h3>` + cs.map(([c, i]) => {
       const n = DECK.counts[c.n] || 0;
-      return `<div class="dk${n ? '' : ' off'}">${cardMini(c, {cname: true, size: 'grid'})}<div class="stp"><button type="button" data-dk="${i}" data-d="-1" aria-label="${esc(c.n)} einmal weniger" ${n ? '' : 'disabled'}>−</button><b>${n}×</b><button type="button" data-dk="${i}" data-d="1" aria-label="${esc(c.n)} einmal mehr" ${n >= DECK_MAX ? 'disabled' : ''}>+</button></div></div>`;
+      return `<div class="dk${n ? '' : ' off'}">${cardMini(c, {cname: true, size: 'grid', coll: true})}<div class="stp"><button type="button" data-dk="${i}" data-d="-1" aria-label="${esc(c.n)} einmal weniger" ${n ? '' : 'disabled'}>−</button><b>${n}×</b><button type="button" data-dk="${i}" data-d="1" aria-label="${esc(c.n)} einmal mehr" ${n >= DECK_MAX ? 'disabled' : ''}>+</button></div></div>`;
     }).join('');
   });
   if (!html && q) html = `<p class="cg-none">Keine Karte gefunden für „${esc(UI.kq.trim())}“.</p>`;
@@ -1610,7 +1612,7 @@ function streakBox(sk) {
     : tr.today ? 'Heute geschafft! Morgen geht es weiter.' : 'Heute noch offen. Sonst erlischt die Kerze um Mitternacht.';
   return `<div class="streakbox${sk ? ' lit' : ''}"><div class="sk-head">${candleHtml(sk > 0)}<div class="sk-main">` +
     `<b>${sk ? `<span class="sk-n">${sk}</span> ${sk === 1 ? 'Tag' : 'Tage'} in Folge` : 'Noch keine Serie'}</b><span class="sk-txt">${txt}</span></div></div>${tr.html}${chestsWaiting().length ? `<button type="button" class="btn primary small sk-open" data-chest>${CHESTS[chestsWaiting()[0].t].n} öffnen</button>` : ''}` +
-    `<span class="sk-info">In der Holztruhe stecken Münzen oder mit Glück ein Porträt, Rahmen oder Titel. In der Goldtruhe ist sicher eins davon. Ab der zweiten Woche gibt es zwischendurch Münzen.</span></div>`;
+    `<span class="sk-info">In der Holztruhe stecken Münzen oder mit Glück ein Porträt, Rahmen oder Titel. In der Goldtruhe ist sicher eins davon. Mit Glück liegt in beiden auch ein Booster mit Sammelkarten. Ab der zweiten Woche gibt es zwischendurch Münzen.</span></div>`;
 }
 // Truhe öffnen: wackelt immer stärker, heller Blitz (darin wechselt das Bild auf offen), Strahlen, Münzregen, Beute steigt auf
 function showChest() {
@@ -1636,6 +1638,7 @@ function showChest() {
       loot.innerHTML = r.id
         ? `<span class="ribbon"><span>Neu für dich</span></span>${k === 'title' ? `<span class="cv-title">„${esc(COSMETICS.title[r.id.split(':')[1]])}“</span>` : cosPreview(r.id)}<em class="cv-rar" data-rar="${rarityOf(r.id)}">${rarityName(r.id)}</em><b>${esc(cosmeticName(r.id).replace(/^\S+ „|“$/g, ''))}</b><small>${{portrait: 'Porträt', frame: 'Rahmen', bg: 'Hintergrund', title: 'Titel'}[k]} · im Charakter-Bildschirm auswählen</small>${r.coins ? `<span class="cv-coins sm">${coinImg}+${r.coins}</span>` : ''}`
         : `<span class="ribbon"><span>Münzen</span></span><span class="cv-coins">${coinImg}+${r.coins}</span><small>Für den Krämerladen</small>`;
+      if (r.booster) loot.insertAdjacentHTML('beforeend', `<span class="cv-boost">${boosterPackHTML(r.booster, ' mini')}<span>Dazu ein <b>Booster ${esc(TC_WORLD[r.booster].n)}</b>! Öffnen kannst du ihn in der Kartenübersicht.</span></span>`);
       loot.insertAdjacentHTML('beforeend', '<button type="button" class="btn primary small cv-ok">Super!</button>');
       setTimeout(() => { loot.hidden = false; watchBoards(el); Snd.sfx('coin'); }, 450);
       loot.querySelector('.cv-ok').addEventListener('click', done);
@@ -1678,6 +1681,15 @@ function cosPreview(id) {
 }
 // Ein Fach im Regal: Ware auf dem Regalbrett (Titel auf einem Holzschild), Preisschild links am Brett,
 // beim Angebot durchgestrichen mit Pappschild daneben, darunter Name und Kaufen. Für Krämerladen und Händler im Storymodus.
+// Booster im Krämerladen (ungefähr jeden zweiten Tag einer)
+function afterBooster() { renderTitle(); renderWnav(); if (CUR === 'cards') renderCards(); if (CUR === 'shop') renderShopPage(); if (SHEETS.length) renderSheet(false); }
+function boosterShelf() {
+  const b = boosterOffer(); if (!b) return '';
+  const poor = STORY.coins < BOOSTER.price;
+  return `<div class="sitem sbooster${b.sold ? ' own' : ''}" data-rar="3"><span class="si-ware"><span class="ptag"><span>${coinImg}<s>${BOOSTER.price}</s></span></span>${boosterPackHTML(b.w, ' shelf')}</span>` +
+    `<span class="si-t"><b class="rn" data-rar="3">Booster ${esc(TC_WORLD[b.w].n)}</b><small>3 Sammelkarten · 2 Glitzer, 1 Vollbild</small></span>` +
+    `<button type="button" class="btn small sbuy${b.sold || poor ? '' : ' primary'}" data-bbuy${b.sold || poor ? ' disabled' : ''}>${b.sold ? 'Gekauft' : 'Kaufen'}</button></div>`;
+}
 function shelfItem(id, base, price, pct, buyAttr) {
   const own = owns(id), poor = STORY.coins < price, [k, key] = id.split(':'), nm = esc(cosmeticName(id).replace(/^\S+ „|“$/g, ''));
   const ware = k === 'title' ? `<span class="sp-ti"><span>${esc(COSMETICS.title[key])}</span></span>` : cosPreview(id);
@@ -1691,7 +1703,7 @@ SHEET_VIEWS.shop = () => {
   const items = st.shop.map(id => { const it = shopItem(id); if (!it) return ''; const deal = shopDeal(id); return shelfItem(id, it.price, shopPrice(id), deal ? deal.pct : 0, 'data-shopbuy'); }).join('');
   return {head: h3('Krämerladen'),
     body: `<img class="scene" src="art/szene-kraemerladen.webp" alt=""><div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Frisch reingekommen, nur heute! Na ja, fast nur heute.“</p></div><p class="shop-coins">${coinImg}<b>${STORY.coins}</b> Münzen</p>` +
-      `<div class="sitems">${items || '<p class="hint">Du hast schon alles aus dem Laden. Hut ab!</p>'}</div>` +
+      `<div class="sitems">${boosterShelf()}${items || '<p class="hint">Du hast schon alles aus dem Laden. Hut ab!</p>'}</div>` +
       `<p class="hint">Neues Angebot in ${untilMidnight()}. Münzen gibt es für Aufträge und im Storymodus. Gekauftes wählst du im Charakter-Bildschirm aus.</p>` +
       `<div class="acts"><button type="button" class="btn" data-go="daily">Zu den Aufträgen</button><button type="button" class="btn" data-go="profile">Zum Charakter</button></div>`};
 };
@@ -2003,6 +2015,15 @@ document.addEventListener('click', e => {
     if (r === 'poor') { buzz(40); return; }
     if (r === 'ok') { Snd.sfx('coin'); missionToast(`${cosmeticName(id)} gehört dir`, 0); renderSheet(false); renderTitle(); if (CUR === 'profile') renderProfile(); if (CUR === 'shop') renderShopPage(); renderWnav(); }
     return; }
+  // Booster kaufen und öffnen, Design einer Karte wählen
+  if ((el = t.closest('[data-bbuy]'))) { const r = buyBooster();
+    if (r === 'poor') { buzz(40); toast(`Dafür brauchst du ${BOOSTER.price} Münzen.`); return; }
+    if (r === 'ok') { Snd.sfx('coin'); renderSheet(false); renderTitle(); if (CUR === 'shop') renderShopPage(); renderWnav(); showBooster(afterBooster); }
+    return; }
+  if ((el = t.closest('[data-bopen]'))) { showBooster(afterBooster); return; }
+  if ((el = t.closest('[data-cvar]'))) { const s = topSheet(), v = el.dataset.cvar, n = el.dataset.cvn; if (!s) return;
+    s.pv = v; if (setCardVariant(n, v)) { Snd.sfx('flip'); if (CUR === 'cards') renderCards(); }
+    renderSheet(false); return; }
   if ((el = t.closest('[data-story-choice]'))) { pickChoice(el.dataset.storyChoice); return; }
   if ((el = t.closest('[data-buy]'))) { buyItem(el.dataset.buy); return; }
   if ((el = t.closest('[data-storyclose]'))) { closeAllSheets(); return; }
@@ -3269,7 +3290,7 @@ function renderShopPage() {
   const items = st.shop.map(id => { const it = shopItem(id); if (!it) return ''; const deal = shopDeal(id); return shelfItem(id, it.price, shopPrice(id), deal ? deal.pct : 0, 'data-shopbuy'); }).join('');
   const kl = `<section class="kl-panel"><header class="kl-head"><div><h2>Krämerladen</h2></div><span class="kl-coins">${coinImg}<b>${STORY.coins}</b> Münzen</span></header>` +
     `<div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Frisch reingekommen, nur heute! Na ja, fast nur heute.“</p></div>` +
-    `<div class="kl-shelf"><div class="sitems">${items || Array.from({length: 4}, () => '<div class="sitem empty"><span class="si-ware"></span><span class="si-t"><b>&nbsp;</b><small>&nbsp;</small></span></div>').join('')}</div>${items ? '' : '<p class="kl-empty">Du hast schon alles aus dem Laden. Hut ab!<small>Morgen räumt Kuno neue Ware ins Regal.</small></p>'}</div>` +
+    `<div class="kl-shelf"><div class="sitems">${boosterShelf()}${items || Array.from({length: 4}, () => '<div class="sitem empty"><span class="si-ware"></span><span class="si-t"><b>&nbsp;</b><small>&nbsp;</small></span></div>').join('')}</div>${items ? '' : '<p class="kl-empty">Du hast schon alles aus dem Laden. Hut ab!<small>Morgen räumt Kuno neue Ware ins Regal.</small></p>'}</div>` +
     `<p class="kl-hint">Neues Angebot in ${untilMidnight()}. Münzen gibt es für Aufträge und im Storymodus. Gekauftes wählst du im Charakter-Bildschirm aus.</p></section>`;
   patch(el, kl + premiumHTML()); watchBoards(el); fitNames(el);
 }

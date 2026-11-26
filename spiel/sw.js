@@ -1,5 +1,5 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-e12eb15bfa';
+const CACHE = 'loota-8e96b16f4a';
 const FILES = [
 "./",
 "index.html",
@@ -8,6 +8,7 @@ const FILES = [
 "css/legal.css",
 "js/audio.js",
 "js/billing.js",
+"js/cards.js",
 "js/cloud.js",
 "js/community.js",
 "js/engine.js",
@@ -23,6 +24,13 @@ const FILES = [
 "fonts/grenze-gotisch-latin-700-normal.woff2",
 "fonts/kalam-latin-400-normal.woff2",
 "fonts/kalam-latin-700-normal.woff2",
+"art/alt-diebischer-waschbaer.webp",
+"art/alt-drache-des-montagmorgens.webp",
+"art/alt-gezeiten-titan.webp",
+"art/alt-krabbenbaron-kneifer.webp",
+"art/alt-pilzkoenigin-morchella.webp",
+"art/alt-rattenkoenig-ruediger.webp",
+"art/alt-riesenkrake-klara.webp",
 "art/besonders-schatzkarte-links.webp",
 "art/besonders-schatzkarte-rechts.webp",
 "art/brett-auftraege.webp",
@@ -333,6 +341,11 @@ const FILES = [
 "art/verstaerker-winzig.webp",
 "art/zettel-auftrag-dunkel.webp",
 "art/zettel-auftrag.webp",
+"icons/deck-grund.png",
+"icons/deck-keller.png",
+"icons/deck-meer.png",
+"icons/deck-strand.png",
+"icons/deck-wald.png",
 "icons/icon-haende.png",
 "icons/icon-klasse.png",
 "icons/icon-kopf.png",
