@@ -1,5 +1,5 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-9f200802d4';
+const CACHE = 'loota-fc16d9db26';
 const FILES = [
 "./",
 "index.html",
@@ -190,10 +190,12 @@ const FILES = [
 "art/monster-durchgedrehter-saugroboter.webp",
 "art/monster-eichhoernchen-inkasso.webp",
 "art/monster-einsiedlerkrebs.webp",
+"art/monster-eisverkaeufer-yeti.webp",
 "art/monster-falsche-schatztruhe.webp",
 "art/monster-feuerspeiende-kaffeemaschine.webp",
 "art/monster-geisterpirat-gismo.webp",
 "art/monster-gestiefelter-fliegenpilz.webp",
+"art/monster-gezeiten-titan.webp",
 "art/monster-hai-mit-schwimmfluegeln.webp",
 "art/monster-hexenring.webp",
 "art/monster-hydra-mit-migraene.webp",
@@ -205,7 +207,9 @@ const FILES = [
 "art/monster-korkgeist.webp",
 "art/monster-krabbenbaron-kneifer.webp",
 "art/monster-kugelfisch.webp",
+"art/monster-lenkdrachen-drache.webp",
 "art/monster-lich-mit-rueckenschmerzen.webp",
+"art/monster-liegen-reservierer.webp",
 "art/monster-moewen-bande.webp",
 "art/monster-moorgeist-mit-mundgeruch.webp",
 "art/monster-moos-troll.webp",
@@ -233,6 +237,7 @@ const FILES = [
 "art/monster-schwertfisch.webp",
 "art/monster-seeigel-igel.webp",
 "art/monster-seeschlange.webp",
+"art/monster-sonnenmilch-schleim.webp",
 "art/monster-spinne-mit-strickzeug.webp",
 "art/monster-staubmaus-bande.webp",
 "art/monster-steuerpruefer-gespenst.webp",
@@ -243,6 +248,7 @@ const FILES = [
 "art/monster-vampir-kaninchen.webp",
 "art/monster-wal-schluckauf.webp",
 "art/monster-wandernder-bovist.webp",
+"art/monster-windschutz-wueterich.webp",
 "art/monster-wuetender-gartenzwerg.webp",
 "art/monster-zitteraal.webp",
 "art/monster-zombie-hausmeister.webp",

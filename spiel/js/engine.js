@@ -124,7 +124,14 @@ const MONSTERS_W4 = [
   {n:'Hai mit Schwimmflügeln',lvl:10,tr:3,meer:true,run:-2,bad:{t:'lvl',n:2},txt:'Meer. Schwimmt schneller als du: Weglaufen −2.',badTxt:'Verliere 2 Stufen.'},
   {n:'Sandburg-Koloss',lvl:12,tr:3,soft:3,np:3,bad:{t:'multi',l:[{t:'slot',s:'ruestung'},{t:'lvl',n:1}]},txt:'Bei Flut weicht er auf: dann −3. Verfolgt niemanden bis Stufe 3.',badTxt:'Verliere deine Rüstung und 1 Stufe.'},
   {n:'Krabbenbaron Kneifer',lvl:15,tr:4,up:2,meer:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'hands'}]},txt:'Meer. Kassiert für jeden Fußbreit Sand. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und alles, was du in den Händen hältst.'},
-  {n:'Sandwurm mit Sonnenbrand',lvl:16,tr:4,up:2,np:5,bad:{t:'death'},txt:'Taucht genau dort auf, wo dein Handtuch liegt. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'}
+  {n:'Sandwurm mit Sonnenbrand',lvl:16,tr:4,up:2,np:5,bad:{t:'death'},txt:'Taucht genau dort auf, wo dein Handtuch liegt. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'},
+  // Nov. 2026, Bilder von Nano Banana: ersetzen nach und nach die Grund-Monster im Strand-Deck
+  {n:'Sonnenmilch-Schleim',lvl:1,tr:1,bad:{t:'sand'},txt:'Rutschig und klebrig zugleich.',badTxt:'Sand klebt an dir: Weglaufen −2, bis du eine Stufe aufsteigst.'},
+  {n:'Liegen-Reservierer',lvl:2,tr:1,run:-1,bad:{t:'hand',n:2},txt:'War schon um fünf Uhr da: Weglaufen −1.',badTxt:'Er belegt deine Karten mit Handtüchern: Wirf 2 zufällige Handkarten ab.'},
+  {n:'Eisverkäufer-Yeti',lvl:9,tr:2,soft:2,bad:{t:'lvl',n:1},txt:'Schmilzt dahin: Bei Flut −2.',badTxt:'Hirnfrost! Verliere 1 Stufe.'},
+  {n:'Windschutz-Wüterich',lvl:13,tr:3,run:-2,np:3,bad:{t:'multi',l:[{t:'slot',s:'kopf'},{t:'hand',n:2}]},txt:'Wirbelt alles durcheinander: Weglaufen −2. Verfolgt niemanden bis Stufe 3.',badTxt:'Verliere deine Kopfbedeckung und 2 zufällige Handkarten.'},
+  {n:'Lenkdrachen-Drache',lvl:14,tr:3,np:4,bad:{t:'best'},txt:'Hat sich losgerissen und lässt sich nicht mehr einfangen. Verfolgt niemanden bis Stufe 4.',badTxt:'Er reißt dir deinen besten Gegenstand weg.'},
+  {n:'Gezeiten-Titan',lvl:18,tr:5,up:2,meer:true,np:5,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'slot',s:'ruestung'}]},txt:'Meer. Zieht den ganzen Strand ins Wasser. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Verliere 2 Stufen und deine Rüstung.'}
 ].map(m=>Object.assign({w:4},m));
 const CURSES_W4 = [
   {n:'Sonnenbrand',w:4,x:2,eff:{t:'sun'},txt:'Bleibt, bis du einen Kampf gewinnst: So lange −1 in jedem Kampf, und niemand hilft dir.'},
@@ -142,7 +149,8 @@ const ONESHOTS_W4 = [
 ];
 const LEVELUPS_W4 = ['Den Strandkorb erobert'];
 // Was aus dem Grunddeck mit an den Strand darf (Name -> Stückzahl); Schätze kommen alle mit
-const STRAND_GRUND = {'Übellaunige Möwe':1,'Schleimige Socke':1,'Schwarm Stechmücken':2,'Rentner-Ritter':1,'Steuerprüfer-Gespenst':1,'Durchgedrehter Saugroboter':1,'Riesen-Nacktschnecke':1,'Falsche Schatztruhe':1,
+// Nov. 2026: Übellaunige Möwe, Schleimige Socke, Riesen-Nacktschnecke und Falsche Schatztruhe ersetzt durch eigene Strand-Monster
+const STRAND_GRUND = {'Schwarm Stechmücken':2,'Rentner-Ritter':1,'Steuerprüfer-Gespenst':1,'Durchgedrehter Saugroboter':1,
   'Pechsträhne':1,'Windböe':1,'Rost':1,'Löcher in den Sohlen':1,'Identitätskrise':1,'Taschendieb-Gnom':1};
 function strandCount(p){ if(p.tpl.w===4) return p.wdef; if(p.tpl.w) return 0; if(p.deck==='tr') return trCount(p,4); if(p.tpl.k==='monster'||p.tpl.k==='curse') return STRAND_GRUND[p.tpl.n]||0; return p.def; }
 // Gezeiten: null ohne Strandkarten, sonst 'ebbe' in ungeraden und 'flut' in geraden Runden (Springflut: immer Flut)
@@ -382,6 +390,8 @@ const ART = {
   "Kanal-Krokodil Klaus":"art/monster-kanal-krokodil-klaus.webp",
   "Moorgeist mit Mundgeruch":"art/monster-moorgeist-mit-mundgeruch.webp",
   "Sandwurm mit Sonnenbrand":"art/monster-sandwurm-mit-sonnenbrand.webp",
+  "Sonnenmilch-Schleim":"art/monster-sonnenmilch-schleim.webp","Liegen-Reservierer":"art/monster-liegen-reservierer.webp","Eisverkäufer-Yeti":"art/monster-eisverkaeufer-yeti.webp",
+  "Windschutz-Wüterich":"art/monster-windschutz-wueterich.webp","Lenkdrachen-Drache":"art/monster-lenkdrachen-drache.webp","Gezeiten-Titan":"art/monster-gezeiten-titan.webp",
   "Inselschildkröte Ilse":"art/monster-inselschildkroete-ilse.webp",
   "Kellerkälte":"art/fluch-kellerkaelte.webp",
   "Licht aus!":"art/fluch-licht-aus.webp",
