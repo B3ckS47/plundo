@@ -411,7 +411,7 @@ async function setDeckCount(i, delta) {
   DECK.custom[DECK.deck][p.tpl.n] = n; DECK.counts = currentCounts(DECK); saveDeck(); renderCards();
 }
 
-const SCREENS = ['title', 'setup', 'game', 'settings', 'rules', 'cards', 'quiz', 'profile', 'story', 'shop'];
+const SCREENS = ['title', 'setup', 'game', 'settings', 'rules', 'cards', 'quiz', 'profile', 'story', 'shop', 'premium'];
 let CUR = 'title';
 const STACK = [];
 function show(name) { if (name !== CUR) STACK.push(CUR); setScreen(name); }
@@ -434,6 +434,7 @@ function setScreen(name) {
   if (name === 'story') renderStory();
   if (name === 'rules') { buildRulesToc(); if (mq().pc.matches) renderRulesPC(); }
   if (name === 'shop') renderShopPage();
+  if (name === 'premium') renderPremiumPage();
   if (name === 'game') { W.renderedOnce = false; render(); }
   Motes.toggle(name === 'title');
 }
@@ -1684,15 +1685,18 @@ function cosPreview(id) {
 }
 // Ein Fach im Regal: Ware auf dem Regalbrett (Titel auf einem Holzschild), Preisschild links am Brett,
 // beim Angebot durchgestrichen mit Pappschild daneben, darunter Name und Kaufen. Für Krämerladen und Händler im Storymodus.
-// Booster im Krämerladen (ungefähr jeden zweiten Tag einer)
 function afterBooster() { renderTitle(); renderWnav(); if (CUR === 'cards') renderCards(); if (CUR === 'shop') renderShopPage(); if (SHEETS.length) renderSheet(false); }
-function boosterShelf() {
-  const b = boosterOffer(); if (!b) return '';
-  const poor = STORY.coins < BOOSTER.price;
-  return `<div class="sitem sbooster${b.sold ? ' own' : ''}" data-rar="3"><span class="si-ware"><span class="ptag"><span>${coinImg}<s>${BOOSTER.price}</s></span></span>${boosterPackHTML(b.w, ' shelf')}</span>` +
-    `<span class="si-t"><b class="rn" data-rar="3">Booster ${esc(TC_WORLD[b.w].n)}</b><small>3 Sammelkarten · 2 Glitzer, 1 Vollbild</small></span>` +
-    `<button type="button" class="btn small sbuy${b.sold || poor ? '' : ' primary'}" data-bbuy${b.sold || poor ? ' disabled' : ''}>${b.sold ? 'Gekauft' : 'Kaufen'}</button></div>`;
+// Booster-Regal des Krämerladens: ein Booster je freigeschalteter Welt und Tag
+function boosterItems() {
+  return boosterOffers().map(({w, sold}) => {
+    const poor = STORY.coins < BOOSTER.price;
+    return `<div class="sitem sbooster${sold ? ' own' : ''}" data-rar="3"><span class="si-ware"><span class="ptag"><span>${coinImg}<s>${BOOSTER.price}</s></span></span>${boosterPackHTML(w, ' shelf')}</span>` +
+      `<span class="si-t"><b class="rn" data-rar="3">${esc(TC_WORLD[w].n)}</b><small>Booster · 3 Sammelkarten</small></span>` +
+      `<button type="button" class="btn small sbuy${sold || poor ? '' : ' primary'}" data-bbuy="${w}"${sold || poor ? ' disabled' : ''}>${sold ? 'Morgen wieder' : 'Kaufen'}</button></div>`;
+  }).join('');
 }
+const BOOSTER_SAY = '<div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Frische Booster, von jeder Welt einer am Tag. Was drin ist, weiß nicht mal ich!“</p></div>';
+const BOOSTER_HINT = 'In jedem Booster stecken 2 Glitzerkarten und 1 Vollbild-Karte aus der Welt, mit viel Glück eine Legendär-Karte. Doppelte werden zu Münzen.';
 function shelfItem(id, base, price, pct, buyAttr) {
   const own = owns(id), poor = STORY.coins < price, [k, key] = id.split(':'), nm = esc(cosmeticName(id).replace(/^\S+ „|“$/g, ''));
   const ware = k === 'title' ? `<span class="sp-ti"><span>${esc(COSMETICS.title[key])}</span></span>` : cosPreview(id);
@@ -1706,9 +1710,10 @@ SHEET_VIEWS.shop = () => {
   const items = st.shop.map(id => { const it = shopItem(id); if (!it) return ''; const deal = shopDeal(id); return shelfItem(id, it.price, shopPrice(id), deal ? deal.pct : 0, 'data-shopbuy'); }).join('');
   return {head: h3('Krämerladen'),
     body: `<img class="scene" src="art/szene-kraemerladen.webp" alt=""><div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Frisch reingekommen, nur heute! Na ja, fast nur heute.“</p></div><p class="shop-coins">${coinImg}<b>${STORY.coins}</b> Münzen</p>` +
-      `<div class="sitems">${boosterShelf()}${items || '<p class="hint">Du hast schon alles aus dem Laden. Hut ab!</p>'}</div>` +
+      `<h3 class="kl-sec">Individualisierungen</h3><div class="sitems">${items || '<p class="hint">Du hast schon alles aus dem Laden. Hut ab!</p>'}</div>` +
+      `<h3 class="kl-sec">Booster</h3>${BOOSTER_SAY}<div class="sitems sboosters">${boosterItems()}</div><p class="hint">${BOOSTER_HINT}</p>` +
       `<p class="hint">Neues Angebot in ${untilMidnight()}. Münzen gibt es für Aufträge und im Storymodus. Gekauftes wählst du im Charakter-Bildschirm aus.</p>` +
-      `<div class="acts"><button type="button" class="btn" data-go="daily">Zu den Aufträgen</button><button type="button" class="btn" data-go="profile">Zum Charakter</button></div>`};
+      `<div class="acts"><button type="button" class="btn" data-go="daily">Zu den Aufträgen</button><button type="button" class="btn" data-go="profile">Zum Charakter</button><button type="button" class="btn" data-go="premium">Zum Shop</button></div>`};
 };
 function resumeStation() {
   const d = storySave(); if (!d) return;
@@ -1800,7 +1805,7 @@ async function buyOffer(id) {
   Snd.sfx('victory'); buzz([40, 60, 40]);
   closeAllSheets(); toast(`${o.n} freigeschaltet!`);
   burstAt('#st-map', 30);
-  renderStory(); renderTitle(); if (CUR === 'shop') renderShopPage();
+  renderStory(); renderTitle(); if (CUR === 'shop') renderShopPage(); if (CUR === 'premium') renderPremiumPage();
 }
 // Sonderregeln einer Welt, über das i an der Weltüberschrift der Storykarte
 // Sonderregeln einer Welt direkt auf der Seite (PC). In der Station nur, wenn es welche gibt.
@@ -1932,6 +1937,7 @@ function go(a) {
     case 'profile': closeAllSheets(); show('profile'); break;
     case 'daily': closeAllSheets(); openSheet({id: 'daily'}); break;
     case 'shop': closeAllSheets(); if (mq().pc.matches) show('shop'); else openSheet({id: 'shop'}); break;
+    case 'premium': closeAllSheets(); show('premium'); break;
     case 'settings': closeAllSheets(); if (CUR === 'game' && PCGX()) { openSheet({id: 'gsettings'}); renderControls(); break; } show('settings'); break;
     case 'allsettings': closeAllSheets(); show('settings'); break;
     case 'pause': openSheet({id: 'pause'}); break;
@@ -2028,7 +2034,7 @@ document.addEventListener('click', e => {
     if (r === 'ok') { Snd.sfx('coin'); missionToast(`${cosmeticName(id)} gehört dir`, 0); renderSheet(false); renderTitle(); if (CUR === 'profile') renderProfile(); if (CUR === 'shop') renderShopPage(); renderWnav(); }
     return; }
   // Booster kaufen und öffnen, Design einer Karte wählen
-  if ((el = t.closest('[data-bbuy]'))) { const r = buyBooster();
+  if ((el = t.closest('[data-bbuy]'))) { const r = buyBooster(+el.dataset.bbuy);
     if (r === 'poor') { buzz(40); toast(`Dafür brauchst du ${BOOSTER.price} Münzen.`); return; }
     if (r === 'ok') { Snd.sfx('coin'); renderSheet(false); renderTitle(); if (CUR === 'shop') renderShopPage(); renderWnav(); showBooster(afterBooster); }
     return; }
@@ -3304,9 +3310,11 @@ function renderShopPage() {
   const items = st.shop.map(id => { const it = shopItem(id); if (!it) return ''; const deal = shopDeal(id); return shelfItem(id, it.price, shopPrice(id), deal ? deal.pct : 0, 'data-shopbuy'); }).join('');
   const kl = `<section class="kl-panel"><header class="kl-head"><div><h2>Krämerladen</h2></div><span class="kl-coins">${coinImg}<b>${STORY.coins}</b> Münzen</span></header>` +
     `<div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Frisch reingekommen, nur heute! Na ja, fast nur heute.“</p></div>` +
-    `<div class="kl-shelf"><div class="sitems">${boosterShelf()}${items || Array.from({length: 4}, () => '<div class="sitem empty"><span class="si-ware"></span><span class="si-t"><b>&nbsp;</b><small>&nbsp;</small></span></div>').join('')}</div>${items ? '' : '<p class="kl-empty">Du hast schon alles aus dem Laden. Hut ab!<small>Morgen räumt Kuno neue Ware ins Regal.</small></p>'}</div>` +
+    `<div class="kl-shelf"><div class="sitems">${items || Array.from({length: 4}, () => '<div class="sitem empty"><span class="si-ware"></span><span class="si-t"><b>&nbsp;</b><small>&nbsp;</small></span></div>').join('')}</div>${items ? '' : '<p class="kl-empty">Du hast schon alles aus dem Laden. Hut ab!<small>Morgen räumt Kuno neue Ware ins Regal.</small></p>'}</div>` +
     `<p class="kl-hint">Neues Angebot in ${untilMidnight()}. Münzen gibt es für Aufträge und im Storymodus. Gekauftes wählst du im Charakter-Bildschirm aus.</p></section>`;
-  patch(el, kl + premiumHTML()); watchBoards(el); fitNames(el);
+  const bp = `<section class="kl-panel kl-boost"><header class="kl-head"><div><h2>Booster</h2></div><span class="kl-coins">${coinImg}<b>${STORY.coins}</b> Münzen</span></header>${BOOSTER_SAY}` +
+    `<div class="kl-shelf"><div class="sitems sboosters">${boosterItems()}</div></div><p class="kl-hint">${BOOSTER_HINT}</p></section>`;
+  patch(el, kl + bp); watchBoards(el); fitNames(el);
 }
 // Shop für Echtgeld: Kaufwelten sind echt (über Google Play), der Rest sind Platzhalter für später
 function premiumHTML() {
@@ -3331,7 +3339,8 @@ function premiumHTML() {
     `</div><footer class="pr-foot"><span>${g('<rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />')}Sichere Bezahlung über Google Play</span><span>Käufe gelten für dein Konto auf allen Geräten</span></footer></section>`;
 }
 
-document.addEventListener('click', e => { if (e.target.closest('[data-pnshop]')) { if (CUR !== 'shop') go('shop'); } });
+document.addEventListener('click', e => { if (e.target.closest('[data-pnshop]')) { if (CUR !== 'premium') go('premium'); } });
+function renderPremiumPage() { const el = $('#premium-page'); if (el) patch(el, premiumHTML()); }
 
 // Inhaltsbreite am PC: von der linken Kante von „Spielen“ bis zur rechten Kante des Profils, live gemessen
 function pcEdgesNow() {

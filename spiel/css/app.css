@@ -3745,3 +3745,10 @@ html.wide-any .sheet.bare .cv-note{width:380px;color:#f1e3c4}
 .kl-panel .si-ware .bgpic{width:128px}
 .cv-loot .bgpic{width:220px;max-width:80vw;margin:4px auto}
 .bgpic.small{width:72px;border-radius:5px;border-width:1.5px}
+/* Krämerladen: zwei Verkaufsflächen (Individualisierungen, Booster); Shop als eigene Seite */
+.kl-sec{margin:14px 0 8px;font:700 22px/1 var(--display);color:var(--ink)}
+.sboosters .sitem .si-t small{white-space:normal}
+.kl-boost .bpack.shelf{width:78px}
+html.pcnav #scr-premium{background:linear-gradient(rgba(18,10,5,.28),rgba(18,10,5,.45)),url(../art/hg-laden.webp) center/cover no-repeat #1a100a}
+.premiumpage{max-width:760px;margin:0 auto;width:100%}
+html.pcnav #scr-premium .content{display:flex;align-items:flex-start;justify-content:center;padding-top:28px}

@@ -288,19 +288,16 @@ function collStats(w) {
   const pool = boosterPool(w), cnt = v => pool.filter(n => collOwned(n, v)).length;
   return {n: pool.length, foil: cnt('foil'), full: cnt('full'), alt: pool.filter(n => ALT_ART[n] && collOwned(n, 'alt')).length, altN: pool.filter(n => ALT_ART[n]).length};
 }
-// Tagesangebot im Krämerladen: ungefähr jeden zweiten Tag ein Booster einer freigeschalteten Welt
-function boosterOffer() {
+// Booster-Regal im Krämerladen: für jede freigeschaltete Welt liegt täglich ein Booster bereit. Gekauft ist er bis morgen weg.
+function boosterOffers() {
   const d = dailyState();
-  if (d.bDay !== d.day) {
-    const r = seeded('booster-' + d.day), ws = boosterWorlds();
-    d.bDay = d.day; d.boost = r() < 0.5 && ws.length ? {w: ws[Math.floor(r() * ws.length)], sold: false} : null; saveDaily();
-  }
-  return d.boost;
+  if (!d.bSold || d.bSold.day !== d.day) { d.bSold = {day: d.day, w: []}; saveDaily(); }
+  return boosterWorlds().map(w => ({w, sold: d.bSold.w.includes(w)}));
 }
-function buyBooster() {
-  const b = boosterOffer(); if (!b || b.sold) return 'none';
+function buyBooster(w) {
+  const o = boosterOffers().find(x => x.w === w); if (!o || o.sold) return 'none';
   if (STORY.coins < BOOSTER.price) return 'poor';
-  STORY.coins -= BOOSTER.price; b.sold = true; saveDaily(); grantBooster(b.w); return 'ok';
+  STORY.coins -= BOOSTER.price; dailyState().bSold.w.push(w); saveDaily(); grantBooster(w); return 'ok';
 }
 // Einen Booster öffnen: 2 Glitzer, 1 Vollbild (mit Glück statt dessen Legendär). Jeder Platz zieht mit 50 % aus fehlenden Karten.
 // Doppelte werden zu Münzen. Neue Varianten werden gleich als Design gewählt, wenn die Karte bisher normal gespielt wurde.
