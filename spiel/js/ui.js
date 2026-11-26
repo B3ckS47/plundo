@@ -1697,6 +1697,25 @@ function boosterItems() {
       `<button type="button" class="btn small sbuy${sold || poor ? '' : ' primary'}" data-bbuy="${w}"${sold || poor ? ' disabled' : ''}>${sold ? 'Morgen wieder' : 'Kaufen'}</button></div>`;
   }).join('');
 }
+// PC: Booster-Vitrine. Alle fünf Welten stehen drin, noch gesperrte abgedunkelt; dazu offen, was in einem Booster steckt.
+function boosterCaseHTML() {
+  const offers = boosterOffers(), poor = STORY.coins < BOOSTER.price;
+  const cells = [1, 2, 3, 4, 5].map(w => {
+    const o = offers.find(x => x.w === w), cs = collStats(w), pct = cs.n ? Math.round(100 * cs.foil / cs.n) : 0;
+    const btn = !o ? `<span class="bx-btn lock">${LOCK_SVG}Nach Welt ${w}</span>`
+      : o.sold ? '<span class="bx-btn sold">Morgen wieder</span>'
+      : `<button type="button" class="bx-btn buy" data-bbuy="${w}"${poor ? ' disabled' : ''}>${coinImg}<b>${BOOSTER.price}</b></button>`;
+    return `<div class="bx-item w-${BOOSTER_LOOK[w]}${!o ? ' locked' : o.sold ? ' sold' : ''}"><div class="bx-stage">${boosterPackHTML(w, ' bx')}${o && o.sold ? '<span class="bx-stamp">Gekauft</span>' : ''}</div>` +
+      `<b class="bx-name">${esc(TC_WORLD[w].n)}</b>` +
+      `<span class="bx-coll" title="Glitzer ${cs.foil}/${cs.n} · Vollbild ${cs.full}/${cs.n}${cs.altN ? ` · Legendär ${cs.alt}/${cs.altN}` : ''}"><i><em style="width:${pct}%"></em></i><small>${cs.foil}/${cs.n}</small></span>${btn}</div>`;
+  }).join('');
+  const r = (cls, l, t) => `<li><span class="bx-r ${cls}">${l}</span>${t}</li>`;
+  const info = `<div class="bx-info"><b>Was steckt drin?</b><ul>` +
+    r('s', 'S', '2 Glitzerkarten') +
+    `<li class="bx-third"><span class="bx-r q">?</span><span>Dritte Karte<small>Glitzer ${Math.round((1 - BOOSTER.full - BOOSTER.alt) * 100)} % · Vollbild ${Math.round(BOOSTER.full * 100)} % · Legendär ${Math.round(BOOSTER.alt * 100)} %</small></span></li></ul>` +
+    `<p>Doppelte werden zu Münzen: ${BOOSTER.dup.foil}, ${BOOSTER.dup.full} oder ${BOOSTER.dup.alt}.</p><p class="bx-day">Jede Welt einmal am Tag. Neue Ware in ${untilMidnight()}.</p></div>`;
+  return cells + info;
+}
 const BOOSTER_SAY = '<div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Frische Booster, von jeder Welt einer am Tag. Was drin ist, weiß nicht mal ich!“</p></div>';
 const BOOSTER_HINT = 'In jedem Booster stecken 3 Karten aus der Welt: 2 Glitzerkarten und eine dritte, die mit etwas Glück eine Vollbild-Karte ist, mit viel Glück sogar Legendär. Doppelte werden zu Münzen.';
 function shelfItem(id, base, price, pct, buyAttr) {
@@ -3314,8 +3333,8 @@ function renderShopPage() {
     `<div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Frisch reingekommen, nur heute! Na ja, fast nur heute.“</p></div>` +
     `<div class="kl-shelf"><div class="sitems">${items || Array.from({length: 4}, () => '<div class="sitem empty"><span class="si-ware"></span><span class="si-t"><b>&nbsp;</b><small>&nbsp;</small></span></div>').join('')}</div>${items ? '' : '<p class="kl-empty">Du hast schon alles aus dem Laden. Hut ab!<small>Morgen räumt Kuno neue Ware ins Regal.</small></p>'}</div>` +
     `<p class="kl-hint">Neues Angebot in ${untilMidnight()}. Münzen gibt es für Aufträge und im Storymodus. Gekauftes wählst du im Charakter-Bildschirm aus.</p></section>`;
-  const bp = `<section class="kl-panel kl-boost"><header class="kl-head"><div><h2>Booster</h2></div><span class="kl-coins">${coinImg}<b>${STORY.coins}</b> Münzen</span></header>${BOOSTER_SAY}` +
-    `<div class="kl-shelf"><div class="sitems sboosters">${boosterItems()}</div></div><p class="kl-hint">${BOOSTER_HINT}</p></section>`;
+  const bp = `<section class="kl-panel kl-boost bx"><header class="kl-head"><div><h2>Booster</h2></div><span class="kl-coins">${coinImg}<b>${STORY.coins}</b> Münzen</span></header>` +
+    `<div class="bx-case"><div class="bx-grid">${boosterCaseHTML()}</div></div></section>`;
   patch(el, kl + bp); watchBoards(el); fitNames(el);
 }
 // Shop für Echtgeld: Kaufwelten sind echt (über Google Play), der Rest sind Platzhalter für später
@@ -3342,7 +3361,63 @@ function premiumHTML() {
 }
 
 document.addEventListener('click', e => { if (e.target.closest('[data-pnshop]')) { if (CUR !== 'premium') go('premium'); } });
-function renderPremiumPage() { const el = $('#premium-page'); if (el) patch(el, premiumHTML()); }
+// PC: Shop als richtige Ladenseite über die volle Breite: großes Paket-Angebot oben, darunter Welten und Extras als Kacheln
+function premiumPCHTML() {
+  const own = id => !!PURCHASE.worlds[id];
+  const g = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+  const ICO = {
+    lock: '<rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />',
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5" />',
+    devices: '<rect x="3" y="5" width="13" height="10" rx="1.5" /><path d="M1.5 18h16" /><rect x="17.5" y="9" width="5" height="11" rx="1.2" />',
+    fair: '<path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6z" /><path d="M8.5 12l2.5 2.5 4.5-5" />',
+    noads: '<path d="M4 4l16 16 M9.5 5H19v9.5 M5 9v10h10" />',
+    star: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6L3.4 9.3l6-.7z" />'
+  };
+  const map = id => new URL(`art/karte-welt${id.slice(1)}.webp`, document.baseURI).href;
+  const FOCUS = {w4: '50% 46%', w5: '55% 62%'};
+  const state = o => {
+    const done = o.worlds.every(own), part = !done && o.worlds.length > 1 && o.worlds.some(own), wait = !done && !offerOk(o);
+    return {done, part, wait, off: done || part || wait, prev: wait && needPrev(worldById(o.worlds[0]))};
+  };
+  const btn = (o, st, big) => st.done ? `<span class="ps-btn owned">${g(ICO.check)}Gekauft</span>`
+    : st.part ? `<span class="ps-btn off">Teilweise gekauft</span>`
+    : st.wait ? `<span class="ps-btn off">${g(ICO.lock)}${st.prev ? 'Erst nach ' + esc(wLabel(st.prev)) : 'Gesperrt'}</span>`
+    : `<button type="button" class="ps-btn buy${big ? ' big' : ''}" data-buyworld="${o.worlds[0]}">${big ? 'Für ' : ''}${esc(offerPrice(o))}${big ? ' kaufen' : ''}</button>`;
+  // Streichpreis fürs Paket: Summe der Einzelpreise im selben Format, nur wenn sich die Preise sauber lesen lassen
+  const num = t => { const m = String(t).match(/(\d+)[.,](\d{2})/); return m ? +m[1] + m[2] / 100 : null; };
+  const single = OFFERS.filter(o => o.worlds.length === 1).map(offerPrice), sum = single.map(num);
+  const was = sum.every(x => x != null) ? single[0].replace(/(\d+)[.,](\d{2})/, (sum.reduce((a, b) => a + b, 0)).toFixed(2).replace('.', single[0].includes(',') ? ',' : '.')) : '';
+  const stCount = id => (worldById(id).stations || []).length;
+  // Paket
+  const B = OFFERS.find(o => o.worlds.length > 1), bs = state(B);
+  const hero = `<article class="ps-hero${bs.off ? ' is-off' : ''}">` +
+    `<div class="ps-hero-art">${B.worlds.map(id => `<span style="background-image:url('${map(id)}');background-position:${FOCUS[id] || '50% 50%'}"></span>`).join('')}</div>` +
+    `<div class="ps-hero-body"><span class="ps-kicker">${bs.off ? 'Paket' : 'Bestes Angebot · Paket'}</span>` +
+    `<h3>${B.worlds.map(id => esc(worldById(id).name)).join(' <i>+</i> ')}</h3>` +
+    `<ul class="ps-feat">` +
+      `<li>${g(ICO.check)}Zwei neue Welten mit zusammen ${B.worlds.reduce((a, id) => a + stCount(id), 0)} Stationen</li>` +
+      `<li>${g(ICO.check)}Neue Karten, Monster und Sonderregeln</li>` +
+      `<li>${g(ICO.check)}Eigener Spieltisch, Musik und Deck fürs freie Spiel</li>` +
+      `<li>${g(ICO.check)}Booster beider Welten im Krämerladen</li></ul>` +
+    `<div class="ps-buyrow">${!bs.off && was ? `<span class="ps-was"><s>${esc(was)}</s><b>Spare 20 %</b></span>` : ''}${btn(B, bs, true)}</div>` +
+    `${bs.part ? '<p class="ps-note">Eine der Welten gehört dir schon. Hol dir die andere einfach einzeln.</p>' : ''}</div></article>`;
+  // Einzelne Welten
+  const world = o => {
+    const st = state(o), id = o.worlds[0], w = worldById(id);
+    return `<article class="ps-card${st.done ? ' is-owned' : st.off ? ' is-off' : ''}"><div class="ps-art" style="background-image:url('${map(id)}');background-position:${FOCUS[id] || '50% 50%'}"><span class="ps-chip">${esc(wLabel(w))}</span></div>` +
+      `<div class="ps-cbody"><h4>${esc(w.name)}</h4><p>${stCount(id)} neue Stationen mit eigenen Karten, Sonderregeln und Belohnungen.</p>${btn(o, st)}</div></article>`;
+  };
+  const soon = (ic, kind, title, txt) => `<article class="ps-card is-soon"><div class="ps-art ic">${g(ic)}<span class="ps-chip">${kind}</span></div>` +
+    `<div class="ps-cbody"><h4>${title}</h4><p>${txt}</p><button type="button" class="ps-btn soon" data-soon="${esc(title)} kommt bald in den Shop.">Bald verfügbar</button></div></article>`;
+  return `<div class="ps-page"><header class="ps-top"><div><h2>Shop</h2><p>Unterstütze Plundo und hol dir neue Abenteuer.</p></div>` +
+    `<span class="ps-secure">${g(ICO.lock)}Sichere Bezahlung über Google Play</span></header>${hero}` +
+    `<div class="ps-grid"><section><h3 class="ps-lbl">Einzelne Welten</h3><div class="ps-row">${OFFERS.filter(o => o.worlds.length === 1).map(world).join('')}</div></section>` +
+    `<section><h3 class="ps-lbl">Extras</h3><div class="ps-row">${soon(ICO.noads, 'Komfort', 'Werbefrei', 'Spielen ohne Werbung. Einmal kaufen, für immer.')}${soon(ICO.star, 'Unterstützer', 'Gönnerpaket', 'Exklusiver Rahmen, Titel und Hintergrund als Dankeschön.')}</div></section></div>` +
+    `<footer class="ps-trust"><span>${g(ICO.lock)}<b>Sichere Bezahlung</b>Abgewickelt über Google Play</span>` +
+    `<span>${g(ICO.devices)}<b>Auf allen Geräten</b>Käufe gelten für dein Konto</span>` +
+    `<span>${g(ICO.fair)}<b>Kein Zufall für Echtgeld</b>Du bekommst genau, was du kaufst</span></footer></div>`;
+}
+function renderPremiumPage() { const el = $('#premium-page'); if (!el) return; const pc = mq().pc.matches; el.classList.toggle('pc', pc); patch(el, pc ? premiumPCHTML() : premiumHTML()); }
 
 // Inhaltsbreite am PC: von der linken Kante von „Spielen“ bis zur rechten Kante des Profils, live gemessen
 function pcEdgesNow() {
