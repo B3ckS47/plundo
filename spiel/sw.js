@@ -1,5 +1,5 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-c9caf324f9';
+const CACHE = 'loota-e12eb15bfa';
 const FILES = [
 "./",
 "index.html",
@@ -188,6 +188,7 @@ const FILES = [
 "art/monster-betrunkener-klabautermann.webp",
 "art/monster-borkenkaefer-bande.webp",
 "art/monster-buerokratie-golem.webp",
+"art/monster-diebischer-waschbaer.webp",
 "art/monster-drache-des-montagmorgens.webp",
 "art/monster-durchgedrehter-saugroboter.webp",
 "art/monster-eichhoernchen-inkasso.webp",
@@ -213,7 +214,9 @@ const FILES = [
 "art/monster-kerzenwachs-golem.webp",
 "art/monster-korkgeist.webp",
 "art/monster-krabbenbaron-kneifer.webp",
+"art/monster-kreiselnder-seestern.webp",
 "art/monster-kugelfisch.webp",
+"art/monster-kung-fu-pelikan.webp",
 "art/monster-lenkdrachen-drache.webp",
 "art/monster-leuchtturm-anglerfisch.webp",
 "art/monster-lich-mit-rueckenschmerzen.webp",
@@ -223,6 +226,7 @@ const FILES = [
 "art/monster-moos-troll.webp",
 "art/monster-muraene-im-bullauge.webp",
 "art/monster-muschel-mimik.webp",
+"art/monster-muskel-kokosnuss.webp",
 "art/monster-myzel-koloss.webp",
 "art/monster-papageientaucher-patrouille.webp",
 "art/monster-pfandflaschen-golem.webp",

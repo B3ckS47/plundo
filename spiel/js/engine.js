@@ -102,7 +102,8 @@ const MONSTERS_W3 = [
   {n:'Zecke mit Rucksack',lvl:1,tr:1,run:-1,bad:{t:'cheap'},txt:'Reist bei jedem mit: Weglaufen −1.',badTxt:'Sie zieht mit deinem billigsten Gegenstand weiter.'},
   {n:'Borkenkäfer-Bande',lvl:3,tr:1,bad:{t:'slot',s:'schuhe'},txt:'Frisst sich durch alles, was aus Holz ist.',badTxt:'Sie fressen dein Schuhwerk.'},
   {n:'Trüffelschwein Trude',lvl:5,tr:2,vs:{race:'zwerg',val:2},bad:{t:'hand',n:2},txt:'Wittert die Trüffel in jedem Zwergenbart: +2 gegen Zwerge.',badTxt:'Sie wühlt deine Hand durch: Wirf 2 zufällige Handkarten ab.'},
-  {n:'Uhu mit Schlafstörung',lvl:6,tr:2,run:-2,bad:{t:'lvl',n:1},txt:'Hat seit Tagen kein Auge zugetan und sieht trotzdem alles: Weglaufen −2.',badTxt:'Verliere 1 Stufe.'}
+  {n:'Uhu mit Schlafstörung',lvl:6,tr:2,run:-2,bad:{t:'lvl',n:1},txt:'Hat seit Tagen kein Auge zugetan und sieht trotzdem alles: Weglaufen −2.',badTxt:'Verliere 1 Stufe.'},
+  {n:'Diebischer Waschbär',lvl:2,tr:1,bad:{t:'cheap'},txt:'Wäscht seine Beute im Bach, bis sie glänzt.',badTxt:'Er wäscht deinen billigsten Gegenstand gründlich und behält ihn.'}
 ].map(m=>Object.assign({w:3},m));
 const CURSES_W3 = [
   {n:'Sporenwolke',w:3,x:2,eff:{t:'spore',n:1},txt:'Bleibt, bis du einen Kampf gewinnst: So lange −1 in jedem Kampf.'},
@@ -121,8 +122,8 @@ const ONESHOTS_W3 = [
 ];
 const LEVELUPS_W3 = ['Aus dem Wald zurückgefunden'];
 // Was aus dem Grunddeck mit in den Wald darf (Name -> Stückzahl); Schätze kommen alle mit
-// Nov. 2026: Schleimige Socke, Kellerassel XXL, Rentner-Ritter und Vampir-Kaninchen ersetzt durch eigene Wald-Monster
-const WALD_GRUND = {'Wütender Gartenzwerg':1,'Schwarm Stechmücken':1,'Pilzkönig':1,
+// Nov. 2026: Schleimige Socke, Kellerassel XXL, Rentner-Ritter, Vampir-Kaninchen und Schwarm Stechmücken ersetzt durch eigene Wald-Monster
+const WALD_GRUND = {'Wütender Gartenzwerg':1,'Pilzkönig':1,
   'Pechsträhne':1,'Windböe':1,'Rost':1,'Löcher in den Sohlen':1,'Identitätskrise':1,'Ahnenforschung':1,'Taschendieb-Gnom':1};
 function waldCount(p){ if(p.tpl.w===3) return p.wdef; if(p.tpl.w) return 0; if(p.deck==='tr') return trCount(p,3); if(p.tpl.k==='monster'||p.tpl.k==='curse') return WALD_GRUND[p.tpl.n]||0; return p.def; }
 /* Welt 4 (Sommerpause, Strand): nur im Strand-Deck. meer = Monster-Merkmal (bei Flut +3), sun = Sonnenbrand,
@@ -146,7 +147,10 @@ const MONSTERS_W4 = [
   {n:'Eisverkäufer-Yeti',lvl:9,tr:2,soft:2,bad:{t:'lvl',n:1},txt:'Schmilzt dahin: Bei Flut −2.',badTxt:'Hirnfrost! Verliere 1 Stufe.'},
   {n:'Windschutz-Wüterich',lvl:13,tr:3,run:-2,np:3,bad:{t:'multi',l:[{t:'slot',s:'kopf'},{t:'hand',n:2}]},txt:'Wirbelt alles durcheinander: Weglaufen −2. Verfolgt niemanden bis Stufe 3.',badTxt:'Verliere deine Kopfbedeckung und 2 zufällige Handkarten.'},
   {n:'Lenkdrachen-Drache',lvl:14,tr:3,np:4,bad:{t:'best'},txt:'Hat sich losgerissen und lässt sich nicht mehr einfangen. Verfolgt niemanden bis Stufe 4.',badTxt:'Er reißt dir deinen besten Gegenstand weg.'},
-  {n:'Gezeiten-Titan',lvl:18,tr:5,up:2,meer:true,np:5,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'slot',s:'ruestung'}]},txt:'Meer. Zieht den ganzen Strand ins Wasser. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Verliere 2 Stufen und deine Rüstung.'}
+  {n:'Gezeiten-Titan',lvl:18,tr:5,up:2,meer:true,np:5,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'slot',s:'ruestung'}]},txt:'Meer. Zieht den ganzen Strand ins Wasser. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Verliere 2 Stufen und deine Rüstung.'},
+  {n:'Muskel-Kokosnuss',lvl:2,tr:1,x:2,bad:{t:'lvl',n:1},txt:'Trainiert seit Monaten für den perfekten Strandkörper.',badTxt:'Er stemmt dich wie eine Hantel: Verliere 1 Stufe.'},
+  {n:'Kreiselnder Seestern',lvl:4,tr:2,run:-1,bad:{t:'sand'},txt:'Dreht sich so schnell, dass dir schwindelig wird: Weglaufen −1.',badTxt:'Er wirbelt dir Sand in die Badehose: Weglaufen −2, bis du eine Stufe aufsteigst.'},
+  {n:'Kung-Fu-Pelikan',lvl:4,tr:2,meer:true,bad:{t:'slot',s:'ruestung'},txt:'Meer. Zerlegt Buhnen mit einem einzigen Tritt.',badTxt:'Ein Handkantenschlag, und deine Rüstung liegt in Stücken: Verliere sie.'}
 ].map(m=>Object.assign({w:4},m));
 const CURSES_W4 = [
   {n:'Sonnenbrand',w:4,x:2,eff:{t:'sun'},txt:'Bleibt, bis du einen Kampf gewinnst: So lange −1 in jedem Kampf, und niemand hilft dir.'},
@@ -164,9 +168,8 @@ const ONESHOTS_W4 = [
 ];
 const LEVELUPS_W4 = ['Den Strandkorb erobert'];
 // Was aus dem Grunddeck mit an den Strand darf (Name -> Stückzahl); Schätze kommen alle mit
-// Nov. 2026: Übellaunige Möwe, Schleimige Socke, Riesen-Nacktschnecke und Falsche Schatztruhe ersetzt durch eigene Strand-Monster
-const STRAND_GRUND = {'Schwarm Stechmücken':2,'Rentner-Ritter':1,'Steuerprüfer-Gespenst':1,
-  'Pechsträhne':1,'Windböe':1,'Rost':1,'Löcher in den Sohlen':1,'Identitätskrise':1,'Taschendieb-Gnom':1};
+// Nov. 2026: Übellaunige Möwe, Schleimige Socke, Riesen-Nacktschnecke, Falsche Schatztruhe, Schwarm Stechmücken, Rentner-Ritter und Steuerprüfer-Gespenst ersetzt durch eigene Strand-Monster
+const STRAND_GRUND = {'Pechsträhne':1,'Windböe':1,'Rost':1,'Löcher in den Sohlen':1,'Identitätskrise':1,'Taschendieb-Gnom':1};
 function strandCount(p){ if(p.tpl.w===4) return p.wdef; if(p.tpl.w) return 0; if(p.deck==='tr') return trCount(p,4); if(p.tpl.k==='monster'||p.tpl.k==='curse') return STRAND_GRUND[p.tpl.n]||0; return p.def; }
 // Gezeiten: null ohne Strandkarten, sonst 'ebbe' in ungeraden und 'flut' in geraden Runden (Springflut: immer Flut)
 function tideNow(){ if(!S || !S.tides) return null; return S.spring || S.turn%2===0 ? 'flut' : 'ebbe'; }
@@ -413,9 +416,9 @@ const ART = {
   "Moorgeist mit Mundgeruch":"art/monster-moorgeist-mit-mundgeruch.webp",
   "Ausgebüxte Gewürzgurke":"art/monster-ausgebuexte-gewuerzgurke.webp","Fauchender Heizkessel":"art/monster-fauchender-heizkessel.webp","Fledermaus im Weinregal":"art/monster-fledermaus-im-weinregal.webp","Werkzeugkasten-Mimik":"art/monster-werkzeugkasten-mimik.webp","Kartoffel-Koloss":"art/monster-kartoffel-koloss.webp",
   "Presslufthammer-Specht":"art/monster-presslufthammer-specht.webp","Wellenreiter-Walross":"art/monster-wellenreiter-walross.webp",
-  "Zecke mit Rucksack":"art/monster-zecke-mit-rucksack.webp","Borkenkäfer-Bande":"art/monster-borkenkaefer-bande.webp","Trüffelschwein Trude":"art/monster-trueffelschwein-trude.webp","Uhu mit Schlafstörung":"art/monster-uhu-mit-schlafstoerung.webp",
+  "Zecke mit Rucksack":"art/monster-zecke-mit-rucksack.webp","Borkenkäfer-Bande":"art/monster-borkenkaefer-bande.webp","Trüffelschwein Trude":"art/monster-trueffelschwein-trude.webp","Uhu mit Schlafstörung":"art/monster-uhu-mit-schlafstoerung.webp","Diebischer Waschbär":"art/monster-diebischer-waschbaer.webp",
   "Sandwurm mit Sonnenbrand":"art/monster-sandwurm-mit-sonnenbrand.webp",
-  "Sonnenmilch-Schleim":"art/monster-sonnenmilch-schleim.webp","Liegen-Reservierer":"art/monster-liegen-reservierer.webp","Eisverkäufer-Yeti":"art/monster-eisverkaeufer-yeti.webp",
+  "Sonnenmilch-Schleim":"art/monster-sonnenmilch-schleim.webp","Liegen-Reservierer":"art/monster-liegen-reservierer.webp","Eisverkäufer-Yeti":"art/monster-eisverkaeufer-yeti.webp","Muskel-Kokosnuss":"art/monster-muskel-kokosnuss.webp","Kreiselnder Seestern":"art/monster-kreiselnder-seestern.webp","Kung-Fu-Pelikan":"art/monster-kung-fu-pelikan.webp",
   "Windschutz-Wüterich":"art/monster-windschutz-wueterich.webp","Lenkdrachen-Drache":"art/monster-lenkdrachen-drache.webp","Gezeiten-Titan":"art/monster-gezeiten-titan.webp",
   "Inselschildkröte Ilse":"art/monster-inselschildkroete-ilse.webp",
   "Seepferdchen-Ritter":"art/monster-seepferdchen-ritter.webp","Papageientaucher-Patrouille":"art/monster-papageientaucher-patrouille.webp","Flaschenpost-Phantom":"art/monster-flaschenpost-phantom.webp","Muräne im Bullauge":"art/monster-muraene-im-bullauge.webp","Hummer mit Hammer":"art/monster-hummer-mit-hammer.webp","Leuchtturm-Anglerfisch":"art/monster-leuchtturm-anglerfisch.webp",
@@ -1704,7 +1707,7 @@ function applyBad(p,eff){
       ruleOnce('sun','Sonnenbrand: −1 in jedem Kampf, und niemand hilft dir. Er bleibt, bis du einen Kampf gewinnst. Sonnencreme beseitigt ihn sofort, ein Sonnenschirm schützt davor.');
       break; }
     case 'sand': { if(!p.sand){ p.sand=1; log(`${nm(p)} ${V(p,'hast','hat')} Sand in der Badehose: Weglaufen −2, bis ${V(p,'du aufsteigst','er wieder aufsteigt')}.`,'bad'); } break; }
-    case 'cheap': { const all=[...p.eq,...p.pack].sort((a,b)=>(a.g||0)-(b.g||0)); if(all.length){ take(p,all[0]); discard(all[0]); log(`Die Möwen klauen ${nmD(p)} ${all[0].n}.`,'bad'); } else log(`${nm(p)} ${V(p,'hast','hat')} nichts, was die Möwen interessiert.`); break; }
+    case 'cheap': { const all=[...p.eq,...p.pack].sort((a,b)=>(a.g||0)-(b.g||0)).slice(0,eff.n||1); if(all.length){ all.forEach(i=>{ take(p,i); discard(i); }); log(`${nm(p)} ${V(p,'verlierst','verliert')} ${all.map(i=>i.n).join(' und ')}.`,'bad'); } else log(`${nm(p)} ${V(p,'hast','hat')} nichts, was sich zu klauen lohnt.`); break; }
     case 'hands': { const its=p.eq.filter(i=>i.slot==='hand'); its.forEach(i=>{ take(p,i); discard(i); }); log(its.length ? `${nm(p)} ${V(p,'verlierst','verliert')} ${its.map(i=>i.n).join(' und ')}.` : `${nm(p)} ${V(p,'hältst','hält')} nichts in den Händen.`,'bad'); break; }
     case 'death': kill(p); break;
     case 'multi': eff.l.forEach(e=>applyBad(p,e)); break;
