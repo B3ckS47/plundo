@@ -574,6 +574,8 @@ function renderSaveInfo() {
   $('#save-info').textContent = s ? `Gespeichert am ${new Date(s.ts).toLocaleString('de-DE', {dateStyle: 'short', timeStyle: 'short'})}: Runde ${s.S.turn}, du auf Stufe ${s.S.players[0].lvl}.` : 'Kein gespeichertes Spiel.';
   $('#app-version').textContent = 'Version ' + APP_VERSION;
   const bw = Object.keys(PURCHASE.worlds).filter(k => PURCHASE.worlds[k]); $('#cheat-buy').textContent = bw.length ? 'Freigeschaltet: ' + bw.map(k => 'Welt ' + k.slice(1)).join(', ') : 'Noch nichts freigeschaltet';
+  const cs = [1, 2, 3, 4, 5].map(collStats), cS = cs.reduce((n, s) => n + s.foil, 0), cE = cs.reduce((n, s) => n + s.full, 0), cL = cs.reduce((n, s) => n + s.alt, 0), cN = cs.reduce((n, s) => n + s.n, 0);
+  $('#cheat-coll').textContent = cS + cE + cL ? `Glitzer ${cS}/${cN} · Vollbild ${cE}/${cN} · Legendär ${cL}/${cs.reduce((n, s) => n + s.altN, 0)}` : 'Noch keine Sammelkarten';
   const sk = streakNow(), cw = chestsWaiting().length; $('#cheat-streak').textContent = `Aktuell ${sk} ${sk === 1 ? 'Tag' : 'Tage'} · Rekord ${streakBest()}${cw ? ` · ${cw} ${cw === 1 ? 'Truhe' : 'Truhen'} bereit` : ''}`;
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent), standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   $('#install-hint').textContent = standalone ? 'Die App ist installiert.' : ios ? 'Installieren am iPhone: In Safari auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.' : 'Installieren: Im Browser-Menü „App installieren“ oder „Zum Startbildschirm hinzufügen“ wählen.';
@@ -1904,6 +1906,7 @@ function go(a) {
     case 'streakreset': resetStreak(); toast('Serie auf 0 gesetzt'); renderSaveInfo(); break;
     case 'unlockall': confirmDialog('Alles freischalten?', 'Alle Welten werden gekauft, jede Station gilt mit allen Sternen als geschafft, und alle Decks, Tische, Musikstücke, Titel, Rahmen und Porträts werden freigeschaltet.', 'Freischalten', 'Abbrechen').then(ok => { if (!ok) return; unlockAll(); toast('Alles freigeschaltet'); renderSaveInfo(); renderControls(); }); break;
     case 'buyreset': PURCHASE.worlds = {}; savePurchase(); toast('Käufe zurückgesetzt'); renderSaveInfo(); break;
+    case 'collreset': { STORY.coll = {}; STORY.cvar = {}; STORY.boosters = []; saveStory(); renderSaveInfo(); toast('Sammlung zurückgesetzt'); break; }
     case 'shopreroll': { const st = dailyState(); st.shop = rollShop(dayKey(), ':' + Date.now()); st.deal = null; saveDaily(); dailyState(); toast(st.shop.length ? 'Laden neu bestückt' : 'Im Laden gibt es nichts mehr, das du nicht hast'); break; }
     case 'online': openOnline(); break;
     case 'setup': freePlay(); break;
@@ -2021,6 +2024,8 @@ document.addEventListener('click', e => {
     if (r === 'ok') { Snd.sfx('coin'); renderSheet(false); renderTitle(); if (CUR === 'shop') renderShopPage(); renderWnav(); showBooster(afterBooster); }
     return; }
   if ((el = t.closest('[data-bopen]'))) { showBooster(afterBooster); return; }
+  // Testphase: kostenlos einen Booster einer beliebigen Welt öffnen (auch noch gesperrte Welten)
+  if ((el = t.closest('[data-testbooster]'))) { (STORY.boosters = STORY.boosters || []).unshift(+el.dataset.testbooster); saveStory(); showBooster(() => { afterBooster(); renderSaveInfo(); }); return; }
   if ((el = t.closest('[data-cvar]'))) { const s = topSheet(), v = el.dataset.cvar, n = el.dataset.cvn; if (!s) return;
     s.pv = v; if (setCardVariant(n, v)) { Snd.sfx('flip'); if (CUR === 'cards') renderCards(); }
     renderSheet(false); return; }
