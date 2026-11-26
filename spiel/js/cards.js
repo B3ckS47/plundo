@@ -373,15 +373,18 @@ function showBooster(onDone) {
       box.innerHTML = res.cards.map((x, i) => `<button type="button" class="bst-card r-${x.v}" style="--i:${i}" data-bcard="${esc(x.n)}" data-bv="${x.v}">` +
         `<span class="bst-in"><span class="bst-back"><i style="-webkit-mask-image:url(icons/deck-${TC_WORLD[res.w].s}.png);mask-image:url(icons/deck-${TC_WORLD[res.w].s}.png)"></i></span>` +
         `<span class="bst-front">${tcHTML(POOLCAT[x.n] || CATALOG[x.n], x.v)}${x.dup ? `<span class="bst-dup">Doppelt</span><span class="bst-coin"><img src="icons/muenze-voll.png" alt="">+${x.coins}</span>` : '<span class="bst-new">Neu</span>'}</span></span></button>`).join('');
+      // Der Spieler dreht jede Karte selbst um (in beliebiger Reihenfolge). Die dritte Karte (Vollbild bzw. Legendär) bekommt den großen Auftritt.
+      const hint = el.querySelector('.bst-hint');
       const flip = i => {
-        const b = box.children[i]; if (!b) return finish();
+        const b = box.children[i]; if (!b || b.classList.contains('flip')) return;
         b.classList.add('flip');
         const x = res.cards[i], last = i === res.cards.length - 1;
         if (typeof Snd !== 'undefined') Snd.sfx(last ? 'levelup' : 'flip');
         if (last) { el.classList.add('peak', 'peak-' + x.v); if (typeof Particles !== 'undefined') { const r = b.getBoundingClientRect(); Particles.burst(r.left + r.width / 2, r.top + r.height / 2, x.v === 'alt' ? 60 : 30, 1.2); } }
         if (x.dup) setTimeout(() => { b.classList.add('dup'); if (typeof Snd !== 'undefined') Snd.sfx('coin'); }, fast ? 0 : 420);
-        setTimeout(() => flip(i + 1), fast ? 0 : last ? 600 : 750);
+        if (box.querySelectorAll('.bst-card:not(.flip)').length === 0) { hint.hidden = true; setTimeout(finish, fast ? 0 : 900); }
       };
+      box.querySelectorAll('.bst-card').forEach((b, i) => b.addEventListener('click', e => { if (!b.classList.contains('flip')) { e.stopPropagation(); flip(i); } }));
       const finish = () => {
         const nNew = res.cards.filter(x => !x.dup).length, sum = el.querySelector('.bst-sum'), acts = el.querySelector('.bst-acts');
         sum.innerHTML = `${nNew ? `<b>${nNew} ${nNew === 1 ? 'neue Karte' : 'neue Karten'}</b>` : '<b>Nur Doppelte</b>'}${res.coins ? `<span>Für Doppelte gibt es stattdessen <img src="icons/muenze-voll.png" alt="">${res.coins} Münzen.</span>` : ''}<small>Tippe auf eine Karte, um sie groß anzusehen.</small>`;
@@ -391,7 +394,7 @@ function showBooster(onDone) {
         acts.querySelector('[data-bdone]').addEventListener('click', close);
         const nx = acts.querySelector('[data-bnext]'); if (nx) nx.addEventListener('click', () => { el.remove(); showBooster(onDone); });
       };
-      setTimeout(() => flip(0), fast ? 0 : 650);
+      setTimeout(() => { box.classList.add('ready'); hint.textContent = 'Tippe auf eine Karte, um sie umzudrehen!'; hint.hidden = false; }, fast ? 0 : 700);
     }, fast ? 50 : 900);
   });
   // Aufgedeckte Karte antippen: groß ansehen

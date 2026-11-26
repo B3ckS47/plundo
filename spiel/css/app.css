@@ -3724,3 +3724,11 @@ html.wide-any .sheet.bare .cv-note{width:380px;color:#f1e3c4}
 @media (prefers-reduced-motion: reduce){.bst-pack.idle,.bst-rays i,.bpk-shine{animation:none}}
 .btnrow-b{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:6px;margin:4px 0 8px}
 .btnrow-b .btn{min-height:40px;padding:6px 8px}
+
+/* Karten im Booster selbst umdrehen: verdeckte Karten wippen leicht und leuchten, die dritte (seltene) stärker */
+.bst-cards.ready .bst-card:not(.flip) .bst-in{animation:bstWait 1.6s ease-in-out infinite;animation-delay:calc(var(--i) * .2s)}
+.bst-cards.ready .bst-card:not(.flip) .bst-back{box-shadow:0 10px 24px rgba(0,0,0,.6),inset 0 0 0 4px #4a1e58,0 0 18px rgba(255,214,120,.45)}
+.bst-cards.ready .bst-card:nth-child(3):not(.flip) .bst-back{box-shadow:0 10px 24px rgba(0,0,0,.6),inset 0 0 0 4px #4a1e58,0 0 26px rgba(200,140,255,.75)}
+.bst-cards.ready .bst-card:not(.flip):hover .bst-in{transform:translateY(-8px) scale(1.04);animation:none}
+@keyframes bstWait{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-6px) rotate(-1.5deg)}}
+@media (prefers-reduced-motion: reduce){.bst-cards.ready .bst-card:not(.flip) .bst-in{animation:none}}
