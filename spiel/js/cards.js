@@ -120,7 +120,9 @@ function tcNumber(c) {
 const ALT_ART = {
   'Drache des Montagmorgens': 'art/alt-drache-des-montagmorgens.webp', 'Rattenkönig Rüdiger': 'art/alt-rattenkoenig-ruediger.webp',
   'Diebischer Waschbär': 'art/alt-diebischer-waschbaer.webp', 'Pilzkönigin Morchella': 'art/alt-pilzkoenigin-morchella.webp',
-  'Gezeiten-Titan': 'art/alt-gezeiten-titan.webp', 'Krabbenbaron Kneifer': 'art/alt-krabbenbaron-kneifer.webp', 'Riesenkrake Klara': 'art/alt-riesenkrake-klara.webp'
+  'Gezeiten-Titan': 'art/alt-gezeiten-titan.webp', 'Krabbenbaron Kneifer': 'art/alt-krabbenbaron-kneifer.webp', 'Riesenkrake Klara': 'art/alt-riesenkrake-klara.webp',
+  'Krieger': 'art/alt-krieger.webp', 'Kanal-Krokodil Klaus': 'art/alt-kanal-krokodil-klaus.webp', 'Bärlauch-Bär': 'art/alt-baerlauch-baer.webp',
+  'Hai mit Schwimmflügeln': 'art/alt-hai-mit-schwimmfluegeln.webp', 'Käpt’n Achtarm': 'art/alt-kaeptn-achtarm.webp'
 };
 const TC_VAR_RAR = {'': 1, foil: 2, full: 3, alt: 4};
 
