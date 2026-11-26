@@ -276,7 +276,8 @@ const cardVariants = n => ['', 'foil', 'full'].concat(ALT_ART[n] ? ['alt'] : [])
 
 /* ================= Booster ================= */
 // Kein Glücksspiel für Echtgeld: Booster gibt es nur für erspielte Münzen oder aus Truhen.
-const BOOSTER = {price: 60, alt: 0.05, pity: 0.5, dup: {foil: 10, full: 25, alt: 100}};
+// Dritter Platz: 5 % Legendär, 45 % Vollbild, sonst Glitzer. Die ersten beiden sind immer Glitzer.
+const BOOSTER = {price: 60, alt: 0.05, full: 0.45, pity: 0.5, dup: {foil: 10, full: 25, alt: 100}};
 const BOOSTER_DECK = {2: 'keller', 3: 'wald', 4: 'strand', 5: 'meer'};
 // Welten, deren Booster man bekommen kann: Grunddeck immer, die anderen, sobald ihr Deck freigeschaltet ist
 const boosterWorlds = () => [1, 2, 3, 4, 5].filter(w => w === 1 || (typeof deckById === 'function' && deckById(BOOSTER_DECK[w]) && deckById(BOOSTER_DECK[w]).unlocked()));
@@ -299,7 +300,7 @@ function buyBooster(w) {
   if (STORY.coins < BOOSTER.price) return 'poor';
   STORY.coins -= BOOSTER.price; dailyState().bSold.w.push(w); saveDaily(); grantBooster(w); return 'ok';
 }
-// Einen Booster öffnen: 2 Glitzer, 1 Vollbild (mit Glück statt dessen Legendär). Jeder Platz zieht mit 50 % aus fehlenden Karten.
+// Einen Booster öffnen: 2 Glitzer, dazu ein dritter Platz mit Glitzer, Vollbild oder Legendär (siehe BOOSTER). Jeder Platz zieht mit 50 % aus fehlenden Karten.
 // Doppelte werden zu Münzen. Neue Varianten werden gleich als Design gewählt, wenn die Karte bisher normal gespielt wurde.
 function openBooster(r = Math.random) {
   const list = STORY.boosters || []; if (!list.length) return null;
@@ -308,9 +309,9 @@ function openBooster(r = Math.random) {
     const free = from.filter(n => !picked.has(n)), miss = free.filter(n => !collOwned(n, v)), src = miss.length && r() < BOOSTER.pity ? miss : free;
     const n = src[Math.floor(r() * src.length)]; picked.add(n); return n;
   };
-  ['foil', 'foil', 'full'].forEach((v, i) => {
-    const alts = pool.filter(n => ALT_ART[n]);
-    if (i === 2 && alts.length && r() < BOOSTER.alt) v = 'alt';
+  const alts = pool.filter(n => ALT_ART[n]), roll = r();
+  const third = alts.length && roll < BOOSTER.alt ? 'alt' : roll < BOOSTER.alt + BOOSTER.full ? 'full' : 'foil';
+  ['foil', 'foil', third].forEach(v => {
     const n = pick(v, v === 'alt' ? alts : pool), isNew = collAdd(n, v), coins = isNew ? 0 : BOOSTER.dup[v];
     if (isNew && !(STORY.cvar && STORY.cvar[n])) { STORY.cvar = STORY.cvar || {}; STORY.cvar[n] = v; }
     else if (isNew && (v === 'alt' || (v === 'full' && STORY.cvar[n] === 'foil'))) STORY.cvar[n] = v;
@@ -381,7 +382,7 @@ function showBooster(onDone) {
         b.classList.add('flip');
         if (typeof Snd !== 'undefined') Snd.sfx(x.v === 'alt' ? 'revealL' : x.v === 'full' ? 'revealE' : 'revealS');
         if (last && typeof buzz === 'function') buzz(x.v === 'alt' ? [60, 40, 120] : [40, 30, 60]);
-        if (last) { el.classList.add('peak', 'peak-' + x.v); if (typeof Particles !== 'undefined') { const r = b.getBoundingClientRect(); Particles.burst(r.left + r.width / 2, r.top + r.height / 2, x.v === 'alt' ? 60 : 30, 1.2); } }
+        if (last && x.v !== 'foil') { el.classList.add('peak', 'peak-' + x.v); if (typeof Particles !== 'undefined') { const r = b.getBoundingClientRect(); Particles.burst(r.left + r.width / 2, r.top + r.height / 2, x.v === 'alt' ? 60 : 30, 1.2); } }
         if (x.dup) setTimeout(() => { b.classList.add('dup'); if (typeof Snd !== 'undefined') { Snd.sfx('stamp'); setTimeout(() => Snd.sfx('coin'), 380); } }, fast ? 0 : last ? 900 : 420);
         if (box.querySelectorAll('.bst-card:not(.flip)').length === 0) { hint.hidden = true; setTimeout(finish, fast ? 0 : 900); }
       };

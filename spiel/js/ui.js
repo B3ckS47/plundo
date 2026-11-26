@@ -1696,7 +1696,7 @@ function boosterItems() {
   }).join('');
 }
 const BOOSTER_SAY = '<div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Frische Booster, von jeder Welt einer am Tag. Was drin ist, weiß nicht mal ich!“</p></div>';
-const BOOSTER_HINT = 'In jedem Booster stecken 2 Glitzerkarten und 1 Vollbild-Karte aus der Welt, mit viel Glück eine Legendär-Karte. Doppelte werden zu Münzen.';
+const BOOSTER_HINT = 'In jedem Booster stecken 3 Karten aus der Welt: 2 Glitzerkarten und eine dritte, die mit etwas Glück eine Vollbild-Karte ist, mit viel Glück sogar Legendär. Doppelte werden zu Münzen.';
 function shelfItem(id, base, price, pct, buyAttr) {
   const own = owns(id), poor = STORY.coins < price, [k, key] = id.split(':'), nm = esc(cosmeticName(id).replace(/^\S+ „|“$/g, ''));
   const ware = k === 'title' ? `<span class="sp-ti"><span>${esc(COSMETICS.title[key])}</span></span>` : cosPreview(id);
