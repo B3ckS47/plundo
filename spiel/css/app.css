@@ -3736,3 +3736,12 @@ html.wide-any .sheet.bare .cv-note{width:380px;color:#f1e3c4}
 .bst-cards.ready .bst-card.charge .bst-in{animation:bstCharge .12s linear infinite}
 .bst-cards.ready .bst-card.charge .bst-back{box-shadow:0 10px 24px rgba(0,0,0,.6),inset 0 0 0 4px #4a1e58,0 0 40px rgba(255,200,255,.95)}
 @keyframes bstCharge{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(-2px,1px) rotate(-1.5deg)}50%{transform:translate(2px,-1px) rotate(1.5deg)}75%{transform:translate(-1px,-2px) rotate(-1deg)}100%{transform:translate(0,0) rotate(0)}}
+
+/* Hintergrund-Vorschau im Querformat (ersetzt die Staffelei) */
+.bgpic{position:relative;display:block;width:140px;max-width:100%;aspect-ratio:3/1;border-radius:8px;overflow:hidden;border:2px solid #3b2414;background:#3a2414;box-shadow:0 4px 0 rgba(0,0,0,.28),inset 0 0 0 2px rgba(255,236,190,.35)}
+.bgpic i{position:absolute;inset:0;background-size:cover;background-repeat:no-repeat}
+.bgpic::after{content:'';position:absolute;inset:0;border-radius:6px;box-shadow:inset 0 0 0 2px rgba(255,236,190,.35);pointer-events:none}
+.si-ware .bgpic{width:136px;max-width:calc(100% - 8px);margin:12px 0 6px}
+.kl-panel .si-ware .bgpic{width:128px}
+.cv-loot .bgpic{width:220px;max-width:80vw;margin:4px auto}
+.bgpic.small{width:72px;border-radius:5px;border-width:1.5px}

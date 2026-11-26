@@ -1211,7 +1211,8 @@ function fitNames(root) {
   }));
 }
 // Hintergrund als Ware: kleines Gemälde auf der Staffelei (Leinwand ist in der Grafik ausgeschnitten)
-const easel = (key, c, cls = '') => `<span class="easel${cls}"><i style="background-image:url('art/kulisse-${key}-k.webp');background-position:${(c && c.p) || '50% 50%'}"></i></span>`;
+// Hintergrund als Vorschau: einfach das Bild im Querformat, ohne Staffelei (Laden, Truhe, Händler, Belohnungen)
+const easel = (key, c, cls = '') => `<span class="bgpic${cls}"><i style="background-image:url('art/kulisse-${key}-k.webp');background-position:${(c && c.p) || '50% 50%'}"></i></span>`;
 function heroHead(p) {
   const title = p.human ? myTitle() : (p.ti && COSMETICS.title[p.ti]) || '';
   return `<div class="sh-hero${bgAttr(bgOf(p))}"><span class="hh-pt">${bigPortrait(p)}<b class="hh-lvl" aria-label="Stufe ${p.lvl}">${p.lvl}</b></span>` +
