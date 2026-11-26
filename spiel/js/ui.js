@@ -1699,13 +1699,15 @@ function boosterItems() {
 }
 // PC: Booster-Vitrine. Alle fünf Welten stehen drin, noch gesperrte abgedunkelt; dazu offen, was in einem Booster steckt.
 function boosterCaseHTML() {
-  const offers = boosterOffers(), poor = STORY.coins < BOOSTER.price;
-  const cells = [1, 2, 3, 4, 5].map(w => {
+  const offers = boosterOffers(), poor = STORY.coins < BOOSTER.price, rot = boosterRotates();
+  // Freie Fächer zeigen die nächsten gesperrten Welten als Vorschau
+  const show = offers.map(o => o.w).concat(boosterAll().filter(w => !boosterWorlds().includes(w))).slice(0, BOOSTER_SLOTS);
+  const cells = show.map((w, i) => {
     const o = offers.find(x => x.w === w), cs = collStats(w), pct = cs.n ? Math.round(100 * cs.foil / cs.n) : 0;
     const btn = !o ? `<span class="bx-btn lock">${LOCK_SVG}Nach Welt ${w}</span>`
       : o.sold ? '<span class="bx-btn sold">Morgen wieder</span>'
       : `<button type="button" class="bx-btn buy" data-bbuy="${w}"${poor ? ' disabled' : ''}>${coinImg}<b>${BOOSTER.price}</b></button>`;
-    return `<div class="bx-item w-${BOOSTER_LOOK[w]}${!o ? ' locked' : o.sold ? ' sold' : ''}"><div class="bx-stage">${boosterPackHTML(w, ' bx')}${o && o.sold ? '<span class="bx-stamp">Gekauft</span>' : ''}</div>` +
+    return `<div class="bx-item w-${BOOSTER_LOOK[w] || 'grund'}${!o ? ' locked' : o.sold ? ' sold' : ''}">${rot && i === 0 ? '<span class="bx-new">Neueste Welt</span>' : ''}<div class="bx-stage">${boosterPackHTML(w, ' bx')}${o && o.sold ? '<span class="bx-stamp">Gekauft</span>' : ''}</div>` +
       `<b class="bx-name">${esc(TC_WORLD[w].n)}</b>` +
       `<span class="bx-coll" title="Glitzer ${cs.foil}/${cs.n} · Vollbild ${cs.full}/${cs.n}${cs.altN ? ` · Legendär ${cs.alt}/${cs.altN}` : ''}"><i><em style="width:${pct}%"></em></i><small>${cs.foil}/${cs.n}</small></span>${btn}</div>`;
   }).join('');
@@ -1713,10 +1715,11 @@ function boosterCaseHTML() {
   const info = `<div class="bx-info"><b>Was steckt drin?</b><ul>` +
     r('s', 'S', '2 Glitzerkarten') +
     `<li class="bx-third"><span class="bx-r q">?</span><span>Dritte Karte<small>Glitzer ${Math.round((1 - BOOSTER.full - BOOSTER.alt) * 100)} % · Vollbild ${Math.round(BOOSTER.full * 100)} % · Legendär ${Math.round(BOOSTER.alt * 100)} %</small></span></li></ul>` +
-    `<p>Doppelte werden zu Münzen: ${BOOSTER.dup.foil}, ${BOOSTER.dup.full} oder ${BOOSTER.dup.alt}.</p><p class="bx-day">Jede Welt einmal am Tag. Neue Ware in ${untilMidnight()}.</p></div>`;
+    `<p>Doppelte werden zu Münzen: ${BOOSTER.dup.foil}, ${BOOSTER.dup.full} oder ${BOOSTER.dup.alt}.</p><p class="bx-day">${rot ? `Jeden Tag eine neue Auswahl. Die nächste in ${untilMidnight()}.` : `Jede Welt einmal am Tag. Neue Ware in ${untilMidnight()}.`}</p></div>`;
   return cells + info;
 }
-const BOOSTER_SAY = '<div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Frische Booster, von jeder Welt einer am Tag. Was drin ist, weiß nicht mal ich!“</p></div>';
+// Ab mehr als 5 Welten wechselt die Auswahl täglich, Kuno sagt das dann auch
+const boosterSay = () => `<div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „${boosterRotates() ? 'Frische Booster, jeden Tag aus anderen Welten.' : 'Frische Booster, von jeder Welt einer am Tag.'} Was drin ist, weiß nicht mal ich!“</p></div>`;
 const BOOSTER_HINT = 'In jedem Booster stecken 3 Karten aus der Welt: 2 Glitzerkarten und eine dritte, die mit etwas Glück eine Vollbild-Karte ist, mit viel Glück sogar Legendär. Doppelte werden zu Münzen.';
 function shelfItem(id, base, price, pct, buyAttr) {
   const own = owns(id), poor = STORY.coins < price, [k, key] = id.split(':'), nm = esc(cosmeticName(id).replace(/^\S+ „|“$/g, ''));
@@ -1732,7 +1735,7 @@ SHEET_VIEWS.shop = () => {
   return {head: h3('Krämerladen'),
     body: `<img class="scene" src="art/szene-kraemerladen.webp" alt=""><div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Frisch reingekommen, nur heute! Na ja, fast nur heute.“</p></div><p class="shop-coins">${coinImg}<b>${STORY.coins}</b> Münzen</p>` +
       `<h3 class="kl-sec">Individualisierungen</h3><div class="sitems">${items || '<p class="hint">Du hast schon alles aus dem Laden. Hut ab!</p>'}</div>` +
-      `<h3 class="kl-sec">Booster</h3>${BOOSTER_SAY}<div class="sitems sboosters">${boosterItems()}</div><p class="hint">${BOOSTER_HINT}</p>` +
+      `<h3 class="kl-sec">Booster</h3>${boosterSay()}<div class="sitems sboosters">${boosterItems()}</div><p class="hint">${BOOSTER_HINT}</p>` +
       `<p class="hint">Neues Angebot in ${untilMidnight()}. Münzen gibt es für Aufträge und im Storymodus. Gekauftes wählst du im Charakter-Bildschirm aus.</p>` +
       `<div class="acts"><button type="button" class="btn" data-go="daily">Zu den Aufträgen</button><button type="button" class="btn" data-go="profile">Zum Charakter</button><button type="button" class="btn" data-go="premium">Zum Shop</button></div>`};
 };

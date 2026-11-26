@@ -282,7 +282,9 @@ const cardVariants = n => ['', 'foil', 'full'].concat(ALT_ART[n] ? ['alt'] : [])
 const BOOSTER = {price: 60, alt: 0.05, full: 0.45, pity: 0.5, dup: {foil: 10, full: 25, alt: 100}};
 const BOOSTER_DECK = {2: 'keller', 3: 'wald', 4: 'strand', 5: 'meer'};
 // Welten, deren Booster man bekommen kann: Grunddeck immer, die anderen, sobald ihr Deck freigeschaltet ist
-const boosterWorlds = () => [1, 2, 3, 4, 5].filter(w => w === 1 || (typeof deckById === 'function' && deckById(BOOSTER_DECK[w]) && deckById(BOOSTER_DECK[w]).unlocked()));
+const BOOSTER_SLOTS = 5;
+const boosterAll = () => Object.keys(TC_WORLD).map(Number).sort((a, b) => a - b);
+const boosterWorlds = () => boosterAll().filter(w => w === 1 || (typeof deckById === 'function' && deckById(BOOSTER_DECK[w]) && deckById(BOOSTER_DECK[w]).unlocked()));
 const boosterPool = w => [...new Set(cardPool().filter(p => (p.tpl.w || 1) === w).map(p => p.tpl.n))];
 const boostersWaiting = () => STORY.boosters || [];
 function grantBooster(w) { (STORY.boosters = STORY.boosters || []).push(w); saveStory(); }
@@ -291,11 +293,46 @@ function collStats(w) {
   const pool = boosterPool(w), cnt = v => pool.filter(n => collOwned(n, v)).length;
   return {n: pool.length, foil: cnt('foil'), full: cnt('full'), alt: pool.filter(n => ALT_ART[n] && collOwned(n, 'alt')).length, altN: pool.filter(n => ALT_ART[n]).length};
 }
-// Booster-Regal im Krämerladen: für jede freigeschaltete Welt liegt täglich ein Booster bereit. Gekauft ist er bis morgen weg.
+// Alles gesammelt (jede Karte in Glitzer und Vollbild, alle alternativen Artworks): ein Booster bringt nur noch Münzen
+function collComplete(w) { const c = collStats(w); return c.n > 0 && c.foil === c.n && c.full === c.n && c.alt === c.altN; }
+// Auswahl der Vitrine für einen Tag (rein rechnerisch, damit sie sich testen lässt).
+// Fach 1: die neueste freigeschaltete Welt. Passen alle übrigen in die Fächer, liegen sie alle drin.
+// Sonst kommen sie aus einem gemischten Stapel, ohne Zurücklegen: jede Welt ist dran, bevor neu gemischt wird.
+// Komplett gesammelte Welten kommen nur bei jedem zweiten Mischen in den Stapel.
+// st = {bag: [...], round: n} wird dabei fortgeschrieben; keep = schon gezogene Welten dieses Tages, die bleiben.
+function boosterPick(unlocked, st, complete = () => false, keep = [], r = Math.random) {
+  const u = [...unlocked].sort((a, b) => a - b); if (!u.length) return [];
+  const newest = u[u.length - 1], rest = u.slice(0, -1), n = BOOSTER_SLOTS - 1;
+  if (rest.length <= n) return [newest, ...rest];
+  const out = keep.filter(w => rest.includes(w)).slice(0, n);
+  st.bag = (st.bag || []).filter(w => rest.includes(w) && !out.includes(w));
+  let guard = 0;
+  while (out.length < n && guard++ < 50) {
+    if (!st.bag.length) {
+      st.round = (st.round || 0) + 1;
+      let fresh = rest.filter(w => !out.includes(w) && (!complete(w) || st.round % 2 === 0));
+      if (!fresh.length) fresh = rest.filter(w => !out.includes(w));
+      for (let i = fresh.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [fresh[i], fresh[j]] = [fresh[j], fresh[i]]; }
+      st.bag = fresh;
+    }
+    out.push(st.bag.shift());
+  }
+  return [newest, ...out.sort((a, b) => a - b)];
+}
+const boosterRotates = () => boosterWorlds().length > BOOSTER_SLOTS;
+// Booster-Regal im Krämerladen: bis zu 5 Welten am Tag, je ein Booster. Gekauft ist er bis morgen weg.
+// Die Auswahl wird einmal am Tag festgelegt und gespeichert; wird mittags eine neue Welt frei, rückt sie in Fach 1.
 function boosterOffers() {
-  const d = dailyState();
+  const d = dailyState(), u = boosterWorlds();
   if (!d.bSold || d.bSold.day !== d.day) { d.bSold = {day: d.day, w: []}; saveDaily(); }
-  return boosterWorlds().map(w => ({w, sold: d.bSold.w.includes(w)}));
+  const key = u.join(',');
+  if (!d.bPick || d.bPick.day !== d.day || d.bPick.u !== key) {
+    const st = STORY.bRot = STORY.bRot || {bag: [], round: 0};
+    const keep = d.bPick && d.bPick.day === d.day ? d.bPick.w.slice(1) : [];
+    d.bPick = {day: d.day, u: key, w: boosterPick(u, st, collComplete, keep)};
+    saveDaily(); saveStory();
+  }
+  return d.bPick.w.map(w => ({w, sold: d.bSold.w.includes(w)}));
 }
 function buyBooster(w) {
   const o = boosterOffers().find(x => x.w === w); if (!o || o.sold) return 'none';
