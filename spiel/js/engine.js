@@ -189,7 +189,14 @@ const MONSTERS_W5 = [
   {n:'Schwertfisch-Fechtmeister',lvl:11,tr:3,vs:{cls:'zauberer',val:3},bad:{t:'lvl',n:2},txt:'Zauberer fuchteln zu langsam: +3 gegen Zauberer.',badTxt:'Verliere 2 Stufen.'},
   {n:'Riesenkrake Klara',lvl:13,tr:3,tiefsee:true,noHelp:true,np:3,bad:{t:'lvl',n:2},txt:'Tiefsee. Zu viele Arme: Niemand darf helfen. Verfolgt niemanden bis Stufe 3.',badTxt:'Verliere 2 Stufen.'},
   {n:'Käpt’n Achtarm',lvl:16,tr:4,up:2,pirat:true,tiefsee:true,np:4,bad:{t:'multi',l:[{t:'lvl',n:2},{t:'best'}]},txt:'Pirat, Tiefsee. Acht Arme, acht Säbel. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 4.',badTxt:'Verliere 2 Stufen und deinen besten Gegenstand.'},
-  {n:'Inselschildkröte Ilse',lvl:17,tr:4,up:2,np:5,bad:{t:'death'},txt:'Man hält sie für eine Insel, bis sie abtaucht. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'}
+  {n:'Inselschildkröte Ilse',lvl:17,tr:4,up:2,np:5,bad:{t:'death'},txt:'Man hält sie für eine Insel, bis sie abtaucht. Bringt 2 Stufen. Verfolgt niemanden bis Stufe 5.',badTxt:'Du bist tot.'},
+  // Nov. 2026, Bilder von Nano Banana: ersetzen alle Grund-Monster im Meer-Deck
+  {n:'Seepferdchen-Ritter',lvl:1,tr:1,vs:{cls:'krieger',val:2},bad:{t:'slot',s:'kopf'},txt:'Fordert jeden Krieger zum Duell: +2 gegen Krieger.',badTxt:'Er stößt dir mit der Lanze die Kopfbedeckung vom Kopf.'},
+  {n:'Papageientaucher-Patrouille',lvl:2,tr:1,bad:{t:'cheap'},txt:'Kontrolliert jeden auf dem Steg.',badTxt:'Sie beschlagnahmen deinen billigsten Gegenstand.'},
+  {n:'Flaschenpost-Phantom',lvl:4,tr:1,undead:true,bad:{t:'hand',n:2},txt:'Untot. Hat sich seit 100 Jahren viel aufgeschrieben.',badTxt:'Es drückt dir seine Beschwerden in die Hand: Wirf 2 zufällige Handkarten ab.'},
+  {n:'Muräne im Bullauge',lvl:6,tr:2,tiefsee:true,bad:{t:'lvl',n:1},txt:'Tiefsee. Lauert im Wrack auf alle, die zu nah vorbeischwimmen.',badTxt:'Verliere 1 Stufe.'},
+  {n:'Hummer mit Hammer',lvl:7,tr:2,vs:{cls:'priester',val:3},bad:{t:'slot',s:'ruestung'},txt:'Hält Priester für Köche: +3 gegen Priester.',badTxt:'Er klopft deine Rüstung zu Blech: Verliere sie.'},
+  {n:'Leuchtturm-Anglerfisch',lvl:11,tr:3,tiefsee:true,np:3,bad:{t:'multi',l:[{t:'lvl',n:1},{t:'cheap',n:2}]},txt:'Tiefsee. Sein Licht lockt jedes Schiff an. Verfolgt niemanden bis Stufe 3.',badTxt:'Verliere 1 Stufe und deine 2 billigsten Gegenstände.'}
 ].map(m=>Object.assign({w:5},m));
 const CURSES_W5 = [
   {n:'Seegang',w:5,x:2,eff:{t:'seegang'},txt:'Das Schiff schaukelt: Alle geben 1 zufällige Handkarte an den Nachbarn weiter, in ungerader Runde nach links, in gerader nach rechts. Von der Hand jederzeit spielbar.'},
@@ -213,8 +220,8 @@ const ONESHOTS_W5 = [
   {n:'Schatzkarte (rechte Hälfte)',w:5,b:0,g:100,map:'r',txt:'Zusammen mit der linken Hälfte: in deinem Zug den Schatz ausgraben und 3 Schätze ziehen.'}
 ];
 const LEVELUPS_W5 = ['Seebeine bekommen','Land in Sicht!'];
-const MEER_GRUND = {'Übellaunige Möwe':1,'Schleimige Socke':1,'Steuerprüfer-Gespenst':1,'Durchgedrehter Saugroboter':1,'Riesen-Nacktschnecke':1,'Falsche Schatztruhe':1,
-  'Pechsträhne':1,'Windböe':1,'Rost':1,'Identitätskrise':1,'Taschendieb-Gnom':1};
+// Nov. 2026: alle Grund-Monster durch eigene Meer-Monster ersetzt, aus dem Grunddeck kommen nur noch Flüche
+const MEER_GRUND = {'Pechsträhne':1,'Windböe':1,'Rost':1,'Identitätskrise':1,'Taschendieb-Gnom':1};
 function meerCount(p){ if(p.tpl.w===5) return p.wdef; if(p.tpl.w) return 0; if(p.deck==='tr') return trCount(p,5); if(p.tpl.k==='monster'||p.tpl.k==='curse') return MEER_GRUND[p.tpl.n]||0; return p.def; }
 // Schatzkarte: beide Hälften auf der Hand
 const mapSet = p => { const l=p.hand.find(c=>c.map==='l'), r=p.hand.find(c=>c.map==='r'); return l && r ? [l,r] : null; };
@@ -411,6 +418,7 @@ const ART = {
   "Sonnenmilch-Schleim":"art/monster-sonnenmilch-schleim.webp","Liegen-Reservierer":"art/monster-liegen-reservierer.webp","Eisverkäufer-Yeti":"art/monster-eisverkaeufer-yeti.webp",
   "Windschutz-Wüterich":"art/monster-windschutz-wueterich.webp","Lenkdrachen-Drache":"art/monster-lenkdrachen-drache.webp","Gezeiten-Titan":"art/monster-gezeiten-titan.webp",
   "Inselschildkröte Ilse":"art/monster-inselschildkroete-ilse.webp",
+  "Seepferdchen-Ritter":"art/monster-seepferdchen-ritter.webp","Papageientaucher-Patrouille":"art/monster-papageientaucher-patrouille.webp","Flaschenpost-Phantom":"art/monster-flaschenpost-phantom.webp","Muräne im Bullauge":"art/monster-muraene-im-bullauge.webp","Hummer mit Hammer":"art/monster-hummer-mit-hammer.webp","Leuchtturm-Anglerfisch":"art/monster-leuchtturm-anglerfisch.webp",
   "Kellerkälte":"art/fluch-kellerkaelte.webp",
   "Licht aus!":"art/fluch-licht-aus.webp",
   "Kellerlaterne":"art/gegenstand-kellerlaterne.webp",
