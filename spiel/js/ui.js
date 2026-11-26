@@ -2585,6 +2585,12 @@ window.addEventListener('resize', () => tutPlace());
 
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  // Was nicht vorab geladen wurde (Sammelobjekte, spätere Welten), holt der Service Worker im Hintergrund nach,
+  // aber nur, wenn das Netz es erlaubt: nicht im Mobilfunk, nicht im Datensparmodus, nicht bei sehr langsamem Netz
+  const warm = () => { const c = navigator.connection; if (c && (c.saveData || c.type === 'cellular' || /2g/.test(c.effectiveType || ''))) return;
+    navigator.serviceWorker.ready.then(r => r.active && r.active.postMessage({type: 'warm'})).catch(() => {}); };
+  window.addEventListener('load', () => setTimeout(warm, 20000));
+  navigator.serviceWorker.addEventListener('controllerchange', () => setTimeout(warm, 20000));
 }
 (() => { const d = buildDecks(); buildCatalog([...d.door, ...d.tr]); })();
 applySettings();

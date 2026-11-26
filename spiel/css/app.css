@@ -3861,3 +3861,10 @@ html.pcnav .shoppage.two{align-content:start}
 .pd-warr:hover:not(:disabled){border-color:#f3c873;transform:scale(1.08)}
 .pd-warr:active:not(:disabled){transform:scale(.95)}
 .pd-warr:disabled{opacity:0;pointer-events:none}
+/* „Neu“ im Booster in der Farbe der Seltenheit (wie der Kreis unten rechts auf der Karte) */
+.bst-card.r-foil .bst-new{background:#2f5d7a}
+.bst-card.r-full .bst-new{background:#6b3a7a}
+.bst-card.r-alt .bst-new{background:linear-gradient(110deg,#7b2ff7,#ff4fb0 45%,#ffd23f 70%,#ff4fb0 85%,#7b2ff7);background-size:220% 100%;animation:bstNewFade 2.4s linear infinite;box-shadow:0 0 12px rgba(255,79,176,.6),0 2px 6px rgba(0,0,0,.4);text-shadow:0 1px 2px rgba(60,10,60,.6)}
+@keyframes bstNewFade{to{background-position:-220% 0}}
+.bst-new{border:1.5px solid rgba(255,248,234,.75)}
+@media (prefers-reduced-motion:reduce){.bst-card.r-alt .bst-new{animation:none}}
