@@ -1906,7 +1906,15 @@ function go(a) {
     case 'streakreset': resetStreak(); toast('Serie auf 0 gesetzt'); renderSaveInfo(); break;
     case 'unlockall': confirmDialog('Alles freischalten?', 'Alle Welten werden gekauft, jede Station gilt mit allen Sternen als geschafft, und alle Decks, Tische, Musikstücke, Titel, Rahmen und Porträts werden freigeschaltet.', 'Freischalten', 'Abbrechen').then(ok => { if (!ok) return; unlockAll(); toast('Alles freigeschaltet'); renderSaveInfo(); renderControls(); }); break;
     case 'buyreset': PURCHASE.worlds = {}; savePurchase(); toast('Käufe zurückgesetzt'); renderSaveInfo(); break;
-    case 'collreset': { STORY.coll = {}; STORY.cvar = {}; STORY.boosters = []; saveStory(); renderSaveInfo(); toast('Sammlung zurückgesetzt'); break; }
+    case 'collall': {
+      if (!STORY.collBak) STORY.collBak = {coll: STORY.coll || {}, cvar: STORY.cvar || {}};
+      const C = {}, V = {}; let i = 0;
+      cardPool().forEach(p => { const n = p.tpl.n; if (C[n]) return; C[n] = Object.assign({foil: 1, full: 1}, ALT_ART[n] ? {alt: 1} : {}); V[n] = ALT_ART[n] ? 'alt' : i++ % 2 ? 'full' : 'foil'; });
+      STORY.coll = C; STORY.cvar = V; saveStory(); renderSaveInfo(); toast('Alle Sammelkarten freigeschaltet und ausgewählt'); break; }
+    case 'collundo': {
+      if (!STORY.collBak) { toast('Es gibt nichts rückgängig zu machen'); break; }
+      STORY.coll = STORY.collBak.coll; STORY.cvar = STORY.collBak.cvar; delete STORY.collBak; saveStory(); renderSaveInfo(); toast('Sammlung wiederhergestellt'); break; }
+    case 'collreset': { STORY.coll = {}; STORY.cvar = {}; STORY.boosters = []; delete STORY.collBak; saveStory(); renderSaveInfo(); toast('Sammlung zurückgesetzt'); break; }
     case 'shopreroll': { const st = dailyState(); st.shop = rollShop(dayKey(), ':' + Date.now()); st.deal = null; saveDaily(); dailyState(); toast(st.shop.length ? 'Laden neu bestückt' : 'Im Laden gibt es nichts mehr, das du nicht hast'); break; }
     case 'online': openOnline(); break;
     case 'setup': freePlay(); break;
