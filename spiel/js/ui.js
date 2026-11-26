@@ -252,6 +252,8 @@ function saveSettings() { store(K_SET, SET); applySettings(); }
 function applySettings() {
   UI.advice = SCN && SCN.tips ? true : SET.advice && !SCN; UI.coach = SCN && SCN.tips ? true : SET.coach && !SCN;   // Probepartie der Einführung: Tipps immer an
   UI.open = SET.open; UI.speed = SET.speed; UI.goal = SET.goal || 10; UI.draft = true;   // Draft ist Standard
+  // Tempo während einer Partie von „Manuell“ weg geändert: wartenden Bot-Schritt freigeben, Weiter-Knopf verschwindet
+  if (UI.speed !== 'manuell' && UI.step) UI.step();
   if (!SCN) { UI.bots = SET.bots; UI.diff = SET.diff; }
   UI.reduce = SET.reduce || matchMedia('(prefers-reduced-motion: reduce)').matches;
   document.documentElement.classList.toggle('reduce', !!SET.reduce);
