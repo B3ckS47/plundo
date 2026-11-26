@@ -3677,7 +3677,7 @@ html.wide-any .sheet.bare .cv-note{width:380px;color:#f1e3c4}
 
 /* ---------- Booster öffnen ---------- */
 .bstov{position:fixed;inset:0;z-index:48;display:grid;place-items:center;overflow:hidden auto;background:radial-gradient(circle at 50% 42%,rgba(60,30,70,.94),rgba(8,5,12,.97) 72%);animation:fadeIn .25s}
-.bst-rays{position:absolute;inset:-50%;pointer-events:none;opacity:0;transition:opacity .6s}
+.bst-rays{position:fixed;left:50%;top:50%;width:170vmax;height:170vmax;transform:translate(-50%,-50%);pointer-events:none;opacity:0;transition:opacity .6s}
 .bst-rays i{position:absolute;inset:0;background:repeating-conic-gradient(from 0deg,rgba(255,230,160,.18) 0 6deg,transparent 6deg 18deg);animation:bstSpin 24s linear infinite}
 .bstov.open .bst-rays{opacity:.7}
 .bstov.peak-full .bst-rays i{background:repeating-conic-gradient(from 0deg,rgba(200,150,255,.25) 0 6deg,transparent 6deg 18deg)}
@@ -3732,3 +3732,7 @@ html.wide-any .sheet.bare .cv-note{width:380px;color:#f1e3c4}
 .bst-cards.ready .bst-card:not(.flip):hover .bst-in{transform:translateY(-8px) scale(1.04);animation:none}
 @keyframes bstWait{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-6px) rotate(-1.5deg)}}
 @media (prefers-reduced-motion: reduce){.bst-cards.ready .bst-card:not(.flip) .bst-in{animation:none}}
+
+.bst-cards.ready .bst-card.charge .bst-in{animation:bstCharge .12s linear infinite}
+.bst-cards.ready .bst-card.charge .bst-back{box-shadow:0 10px 24px rgba(0,0,0,.6),inset 0 0 0 4px #4a1e58,0 0 40px rgba(255,200,255,.95)}
+@keyframes bstCharge{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(-2px,1px) rotate(-1.5deg)}50%{transform:translate(2px,-1px) rotate(1.5deg)}75%{transform:translate(-1px,-2px) rotate(-1deg)}100%{transform:translate(0,0) rotate(0)}}

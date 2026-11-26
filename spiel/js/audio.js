@@ -105,6 +105,19 @@ const Snd = (() => {
     victory(t) { const n = [523, 659, 784, 1047, 784, 1047]; n.forEach((f, i) => brass(f, t + i * 0.14, i === 5 ? 1.1 : 0.15, 0.14)); [523, 659, 784].forEach(f => tone(f, t + 0.7, 1.2, 'triangle', 0.06, {rev: 0.5})); },
     wave(t)    { noise(t, 1.6, 0.22, 'lowpass', 300, 1900, {a: 0.6, loop: true}); noise(t + 0.9, 0.9, 0.12, 'highpass', 2500, 900, {a: 0.05, loop: true, rev: 0.4}); },
     ebb(t)     { noise(t, 1.2, 0.12, 'lowpass', 1600, 260, {a: 0.08, loop: true}); },
+    // Booster: Folie knistert beim Schütteln, reißt auf, Karten fliegen heraus
+    foil(t)    { for (let i = 0, x = 0; i < 14; i++) { x += 0.035 + Math.random() * 0.05; noise(t + x, 0.04, 0.05 + i * 0.008, 'highpass', 3000 + Math.random() * 3500, null, {q: 0.7}); } tone(70, t, 0.9, 'sine', 0.15, {to: 110}); },
+    tear(t)    { noise(t, 0.28, 0.38, 'bandpass', 900, 5200, {q: 1.6}); noise(t + 0.05, 0.22, 0.2, 'highpass', 4200, 2500); tone(160, t, 0.18, 'sine', 0.25, {to: 60}); noise(t + 0.25, 1.2, 0.05, 'highpass', 6000, 9000, {a: 0.05, rev: 0.7}); },
+    whoosh(t)  { noise(t, 0.35, 0.16, 'bandpass', 400, 2400, {q: 1.4, a: 0.12}); },
+    // Aufdecken je nach Seltenheit: S funkelt, E strahlt, L mit Trommelwirbel-Auflösung und Fanfare
+    revealS(t) { noise(t, 0.12, 0.18, 'bandpass', 3200, 900, {q: 1.2}); [1319, 1568, 1976, 2637].forEach((f, i) => tone(f, t + 0.04 + i * 0.05, 0.45, 'triangle', 0.07, {rev: 0.5})); },
+    revealE(t) { noise(t, 0.5, 0.14, 'bandpass', 500, 4500, {q: 1.2, a: 0.25}); [523, 659, 784].forEach(f => tone(f, t + 0.3, 1.1, 'triangle', 0.09, {rev: 0.6})); [1047, 1319, 1568, 2093, 2637].forEach((f, i) => tone(f, t + 0.32 + i * 0.06, 0.6, 'sine', 0.06, {rev: 0.7})); tone(131, t + 0.3, 0.8, 'sine', 0.3); },
+    revealL(t) { brass(523, t, 0.16, 0.14); brass(659, t + 0.14, 0.16, 0.14); brass(784, t + 0.28, 0.16, 0.14); brass(1047, t + 0.42, 1.4, 0.17); brass(659, t + 0.42, 1.4, 0.1); brass(784, t + 0.42, 1.4, 0.1);
+      tone(65, t + 0.42, 1.2, 'sine', 0.4); noise(t + 0.42, 1.6, 0.08, 'highpass', 5000, 9000, {a: 0.02, rev: 0.8});
+      for (let i = 0; i < 12; i++) tone(1047 * Math.pow(2, i / 6), t + 0.5 + i * 0.045, 0.7, 'sine', 0.05, {rev: 0.8}); },
+    // Spannung vor der seltenen Karte: Trommelwirbel, der lauter wird
+    roll(t, d = 0.8) { for (let x = 0; x < d; x += 0.04) noise(t + x, 0.05, 0.05 + 0.2 * x / d, 'bandpass', 1200 + 600 * x / d, null, {q: 1.5}); tone(55, t, d, 'sine', 0.12, {to: 90}); },
+    stamp(t)   { tone(140, t, 0.2, 'sine', 0.5, {to: 60}); noise(t, 0.08, 0.35, 'lowpass', 1200, 300); },
     defeat(t)  { [294, 277, 262, 247].forEach((f, i) => tone(f, t + i * 0.35, 0.5, 'triangle', 0.12, {rev: 0.5})); tone(123, t + 1.4, 1.4, 'sine', 0.2, {rev: 0.6}); }
   };
   function sfx(name, v) {

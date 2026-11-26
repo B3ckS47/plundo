@@ -363,25 +363,29 @@ function showBooster(onDone) {
     if (pack.disabled) return; pack.disabled = true;
     el.querySelector('.bst-hint').hidden = true; el.querySelector('.bst-later').hidden = true;
     pack.classList.remove('idle'); pack.classList.add('shake');
-    if (typeof Snd !== 'undefined') Snd.sfx('dice'); if (typeof buzz === 'function') buzz([20, 60, 20, 60, 30]);
+    if (typeof Snd !== 'undefined') Snd.sfx('foil'); if (typeof buzz === 'function') buzz([20, 60, 20, 60, 30]);
     const fast = typeof UI !== 'undefined' && UI.reduce;
     setTimeout(() => {
       const res = openBooster(); if (!res) { close(); return; }
       pack.classList.remove('shake'); pack.classList.add('torn'); el.classList.add('open');
-      if (typeof Snd !== 'undefined') Snd.sfx('flip');
+      if (typeof Snd !== 'undefined') { Snd.sfx('tear'); setTimeout(() => Snd.sfx('whoosh'), 250); }
       const box = el.querySelector('.bst-cards');
       box.innerHTML = res.cards.map((x, i) => `<button type="button" class="bst-card r-${x.v}" style="--i:${i}" data-bcard="${esc(x.n)}" data-bv="${x.v}">` +
         `<span class="bst-in"><span class="bst-back"><i style="-webkit-mask-image:url(icons/deck-${TC_WORLD[res.w].s}.png);mask-image:url(icons/deck-${TC_WORLD[res.w].s}.png)"></i></span>` +
         `<span class="bst-front">${tcHTML(POOLCAT[x.n] || CATALOG[x.n], x.v)}${x.dup ? `<span class="bst-dup">Doppelt</span><span class="bst-coin"><img src="icons/muenze-voll.png" alt="">+${x.coins}</span>` : '<span class="bst-new">Neu</span>'}</span></span></button>`).join('');
       // Der Spieler dreht jede Karte selbst um (in beliebiger Reihenfolge). Die dritte Karte (Vollbild bzw. Legendär) bekommt den großen Auftritt.
       const hint = el.querySelector('.bst-hint');
-      const flip = i => {
-        const b = box.children[i]; if (!b || b.classList.contains('flip')) return;
-        b.classList.add('flip');
+      const flip = (i, charged) => {
+        const b = box.children[i]; if (!b || b.classList.contains('flip') || b.classList.contains('charge')) return;
         const x = res.cards[i], last = i === res.cards.length - 1;
-        if (typeof Snd !== 'undefined') Snd.sfx(last ? 'levelup' : 'flip');
+        // Die seltene dritte Karte: erst zittern und Trommelwirbel, dann aufdecken
+        if (last && !charged && !fast) { b.classList.add('charge'); if (typeof Snd !== 'undefined') Snd.sfx('roll', x.v === 'alt' ? 1.1 : 0.7); if (typeof buzz === 'function') buzz([15, 40, 15, 40, 15, 40]);
+          setTimeout(() => { b.classList.remove('charge'); flip(i, true); }, x.v === 'alt' ? 1100 : 750); return; }
+        b.classList.add('flip');
+        if (typeof Snd !== 'undefined') Snd.sfx(x.v === 'alt' ? 'revealL' : x.v === 'full' ? 'revealE' : 'revealS');
+        if (last && typeof buzz === 'function') buzz(x.v === 'alt' ? [60, 40, 120] : [40, 30, 60]);
         if (last) { el.classList.add('peak', 'peak-' + x.v); if (typeof Particles !== 'undefined') { const r = b.getBoundingClientRect(); Particles.burst(r.left + r.width / 2, r.top + r.height / 2, x.v === 'alt' ? 60 : 30, 1.2); } }
-        if (x.dup) setTimeout(() => { b.classList.add('dup'); if (typeof Snd !== 'undefined') Snd.sfx('coin'); }, fast ? 0 : 420);
+        if (x.dup) setTimeout(() => { b.classList.add('dup'); if (typeof Snd !== 'undefined') { Snd.sfx('stamp'); setTimeout(() => Snd.sfx('coin'), 380); } }, fast ? 0 : last ? 900 : 420);
         if (box.querySelectorAll('.bst-card:not(.flip)').length === 0) { hint.hidden = true; setTimeout(finish, fast ? 0 : 900); }
       };
       box.querySelectorAll('.bst-card').forEach((b, i) => b.addEventListener('click', e => { if (!b.classList.contains('flip')) { e.stopPropagation(); flip(i); } }));
