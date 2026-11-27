@@ -1,11 +1,11 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-4cc1f74d01';
+const CACHE = 'loota-40ca77b8fe';
 // Pfad -> Prüfsumme. CORE wird beim Installieren geladen, LATER erst bei Bedarf bzw. im Hintergrund.
 const CORE = {
 "./": "0f63739320",
 "index.html": "0f63739320",
 "manifest.webmanifest": "250d872d85",
-"css/app.css": "6123ef8351",
+"css/app.css": "dee4763e84",
 "css/legal.css": "d5870f2b37",
 "js/audio.js": "1521fcdaea",
 "js/billing.js": "cfcc764e47",

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<base href="../"><title>Plundo · Glanz-Test</title>
+<link rel="stylesheet" href="css/app.css">
+<style>
+body{margin:0;min-height:100vh;background:radial-gradient(120% 80% at 50% 0%,#3a2414,#140b06 70%);color:#f3e2bf;font-family:var(--body);overflow-x:hidden}
+.gz-top{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;padding:12px 14px;background:rgba(20,11,6,.9);border-bottom:1px solid #5e3f23;backdrop-filter:blur(6px)}
+.gz-top h1{margin:0 8px 0 0;font:700 22px var(--display);color:#fff3dc}
+.gz-seg{display:flex;border:2px solid #b98a3e;border-radius:12px;overflow:hidden}
+.gz-seg button{appearance:none;border:0;padding:8px 16px;font:800 14px var(--body);color:#e8d6b0;background:transparent;cursor:pointer}
+.gz-seg button.on{background:linear-gradient(#f6d77e,#d9a23c);color:#3a2205}
+.gz-btn{appearance:none;padding:8px 14px;border-radius:12px;border:2px solid #b98a3e;background:#2a180c;color:#f3c873;font:800 14px var(--body);cursor:pointer}
+.gz-hint{width:100%;margin:0;text-align:center;font-size:13px;color:#cdb79a}
+.gz-row{display:flex;flex-wrap:wrap;justify-content:center;gap:26px;padding:24px 14px}
+.gz-col{display:flex;flex-direction:column;align-items:center;gap:10px}
+.gz-col>b{font:700 18px var(--display);color:#fff3dc}
+.gz-col .tc{width:min(300px,84vw)}
+.gz-minis{display:flex;gap:14px;justify-content:center;padding:0 14px 30px;flex-wrap:wrap}
+.gz-minis>div{width:116px}
+.gz-dbg{position:fixed;left:8px;bottom:8px;z-index:60;font:12px monospace;color:#9c8;background:rgba(0,0,0,.5);padding:4px 6px;border-radius:6px}
+.tc-glare{display:none}
+
+/* ===== NEU: Glanz folgt dem Licht, kein Film in Dauerschleife ===== */
+/* --gx/--gy: wo das Licht steht (0–100 %), --gi: wie stark die Karte gerade gekippt ist (0–1) */
+.glanz-neu .tc.v-foil .tc-art::after,.glanz-neu .tc.v-full .tc-f::after{animation:none;background-position:var(--gx,50%) var(--gy,50%);opacity:calc(.05 + var(--gi,0) * .5)}
+.glanz-neu .tc.v-alt .tc-f::after{animation:none;background-size:180% 100%;background-position:var(--gx,50%) 0;opacity:calc(.1 + var(--gi,0) * .9)}
+.glanz-neu .tc.v-alt .tc-f{animation:none;box-shadow:0 4cqw 9cqw -3cqw rgba(0,0,0,.8),0 0 calc(3cqw + var(--gi,0) * 5cqw) -1.5cqw rgba(255,79,176,.75),inset 0 0 0 .8cqw #7b2ff7,inset 0 0 0 1.3cqw #ffd23f}
+/* Glitzerpunkte blitzen nur beim Kippen auf, und je nach Winkel andere */
+.glanz-neu .tc .tc-spk,.glanz-neu .tc .tc-spk::after{animation:none!important;opacity:calc(var(--gi,0) * .95);background-position:calc(var(--gx,50%) * .6) calc(var(--gy,50%) * .6)}
+.glanz-neu .tc .tc-spk::after{opacity:calc(var(--gi,0) * (1 - var(--gx-n,.5)) * 1.4);background-position:calc(var(--gx,50%) * -.5) calc(var(--gy,50%) * -.5)}
+/* Sonnenreflex: ein weicher heller Fleck, der mit dem Licht wandert */
+.glanz-neu .tc.v-foil .tc-glare,.glanz-neu .tc.v-full .tc-glare,.glanz-neu .tc.v-alt .tc-glare{display:block;position:absolute;inset:0;z-index:22;pointer-events:none;border-radius:inherit;mix-blend-mode:overlay;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.9),rgba(255,255,255,.2) 25%,transparent 50%);opacity:calc(var(--gi,0) * .75)}
+.glanz-neu .tc.v-foil .tc-glare{inset:auto;left:0;right:0;top:0;height:58%}
+.glanz-neu .tc .tc-f{transition:transform .12s ease-out}
+/* kleine Karten: gleiche Idee, Licht kommt vom Handy-Sensor bzw. vom Mauszeiger */
+.glanz-neu .mc-artv::after,.glanz-neu .mc-gl,.glanz-neu .art-gl{animation:none;background-position:var(--gx,50%) var(--gy,50%);opacity:calc(.06 + var(--gi,0) * .6)}
+.glanz-neu .mc.v-alt .mc-gl{background-size:180% 100%;background-position:var(--gx,50%) 0;opacity:calc(.15 + var(--gi,0) * .75)}
+</style></head>
+<body class="glanz-neu">
+<div class="gz-top"><h1>Glanz-Test</h1>
+<div class="gz-seg"><button type="button" data-m="alt">Heute</button><button type="button" data-m="neu" class="on">Neu</button></div>
+<button type="button" class="gz-btn" id="gz-perm" hidden>Bewegungssensor erlauben</button>
+<p class="gz-hint" id="gz-hint">Handy kippen oder mit dem Finger über die Karte fahren. Am PC die Maus über die Karte bewegen.</p></div>
+<div class="gz-row">
+<div class="gz-col"><b>S · Glitzer</b><div class="tc k-monster v-foil"><div class="tc-f">
+    <div class="tc-art"><i class="tc-blur" style="background-image:url('art/monster-wuetender-gartenzwerg.webp')"></i><img src="art/monster-wuetender-gartenzwerg.webp" alt="" draggable="false"><i class="tc-spk"></i></div><i class="tc-pat"></i>
+    <div class="tc-coin tc-lv"><b>1</b><small>Stufe</small></div>
+    <div class="tc-coin tc-sym" title="Grunddeck"><i style="-webkit-mask-image:url(icons/deck-grund.png);mask-image:url(icons/deck-grund.png)"></i></div>
+    <div class="tc-rib" style="--nf:5.25cqw">Wütender Gartenzwerg</div><div class="tc-typ">Monster</div>
+    <div class="tc-zones"><div class="tc-zone z1"><b class="tc-lab">Fähigkeiten</b><span class="tc-none">Keine besonderen Fähigkeiten</span><span class="tc-flv">Verteidigt sein Beet mit dem Rechen.</span></div><div class="tc-zone z2 bad"><b class="tc-lab">Pech</b><span class="tc-chip bad" tabindex="0" data-tip="&lt;b&gt;Stufenverlust 1:&lt;/b&gt; Verliere 1 Stufe."><span class="tc-ic"><img src="icons/muenze-voll.png" alt=""></span>Stufenverlust 1</span></div></div><div class="tc-loot"><span title="Schätze"><img src="icons/truhe-holz-klein.png" alt="">1</span><span title="Stufen"><img src="icons/muenze-voll.png" alt="">1</span></div>
+    <span class="tc-rar" data-rar="2" title="Selten"><b>S</b>001</span>
+    <div class="tc-tip"></div><i class="tc-spk tc-spk-all"></i><i class="tc-glare"></i></div></div></div>
+<div class="gz-col"><b>E · Vollbild</b><div class="tc k-monster v-full"><div class="tc-f">
+    <div class="tc-art"><i class="tc-blur" style="background-image:url('art/monster-wuetender-gartenzwerg.webp')"></i><img src="art/monster-wuetender-gartenzwerg.webp" alt="" draggable="false"><i class="tc-spk"></i></div><i class="tc-pat"></i>
+    <div class="tc-coin tc-lv"><b>1</b><small>Stufe</small></div>
+    <div class="tc-coin tc-sym" title="Grunddeck"><i style="-webkit-mask-image:url(icons/deck-grund.png);mask-image:url(icons/deck-grund.png)"></i></div>
+    <div class="tc-rib" style="--nf:5.25cqw">Wütender Gartenzwerg</div><div class="tc-typ">Monster</div>
+    <div class="tc-zones"><div class="tc-zone z1"><b class="tc-lab">Fähigkeiten</b><span class="tc-none">Keine besonderen Fähigkeiten</span><span class="tc-flv">Verteidigt sein Beet mit dem Rechen.</span></div><div class="tc-zone z2 bad"><b class="tc-lab">Pech</b><span class="tc-chip bad" tabindex="0" data-tip="&lt;b&gt;Stufenverlust 1:&lt;/b&gt; Verliere 1 Stufe."><span class="tc-ic"><img src="icons/muenze-voll.png" alt=""></span>Stufenverlust 1</span></div></div><div class="tc-loot"><span title="Schätze"><img src="icons/truhe-holz-klein.png" alt="">1</span><span title="Stufen"><img src="icons/muenze-voll.png" alt="">1</span></div>
+    <span class="tc-rar" data-rar="3" title="Episch"><b>E</b>001</span>
+    <div class="tc-tip"></div><i class="tc-spk tc-spk-all"></i><i class="tc-glare"></i></div></div></div>
+<div class="gz-col"><b>L · Legendär</b><div class="tc k-monster v-full v-alt"><div class="tc-f">
+    <div class="tc-art"><i class="tc-blur" style="background-image:url('art/alt-wuetender-gartenzwerg.webp')"></i><img src="art/alt-wuetender-gartenzwerg.webp" alt="" draggable="false"><i class="tc-spk"></i></div><i class="tc-pat"></i>
+    <div class="tc-coin tc-lv"><b>1</b><small>Stufe</small></div>
+    <div class="tc-coin tc-sym" title="Grunddeck"><i style="-webkit-mask-image:url(icons/deck-grund.png);mask-image:url(icons/deck-grund.png)"></i></div>
+    <div class="tc-rib" style="--nf:5.25cqw">Wütender Gartenzwerg</div><div class="tc-typ">Monster</div>
+    <div class="tc-zones"><div class="tc-zone z1"><b class="tc-lab">Fähigkeiten</b><span class="tc-none">Keine besonderen Fähigkeiten</span><span class="tc-flv">Verteidigt sein Beet mit dem Rechen.</span></div><div class="tc-zone z2 bad"><b class="tc-lab">Pech</b><span class="tc-chip bad" tabindex="0" data-tip="&lt;b&gt;Stufenverlust 1:&lt;/b&gt; Verliere 1 Stufe."><span class="tc-ic"><img src="icons/muenze-voll.png" alt=""></span>Stufenverlust 1</span></div></div><div class="tc-loot"><span title="Schätze"><img src="icons/truhe-holz-klein.png" alt="">1</span><span title="Stufen"><img src="icons/muenze-voll.png" alt="">1</span></div>
+    <span class="tc-rar" data-rar="4" title="Legendär"><b>L</b>001</span>
+    <div class="tc-tip"></div><i class="tc-spk tc-spk-all"></i><i class="tc-glare"></i></div></div></div>
+</div>
+<div class="gz-minis"><div><button type="button" class="mc k-monster v-foil grid" data-cname="Wütender Gartenzwerg" aria-label="Wütender Gartenzwerg"><span class="mc-head"><span class="mc-type">Monster</span><span class="mc-num">1</span></span><span class="mc-art mc-artv" style="background-image:url('art/monster-wuetender-gartenzwerg.webp')"></span><span class="mc-name">Wütender Gartenzwerg</span></button></div><div><button type="button" class="mc k-monster v-full grid" data-cname="Wütender Gartenzwerg" aria-label="Wütender Gartenzwerg"><span class="mc-head"><span class="mc-type">Monster</span><span class="mc-num">1</span></span><span class="mc-art mc-artv" style="background-image:url('art/monster-wuetender-gartenzwerg.webp')"></span><i class="mc-gl"></i><span class="mc-name">Wütender Gartenzwerg</span></button></div><div><button type="button" class="mc k-monster v-alt grid" data-cname="Wütender Gartenzwerg" aria-label="Wütender Gartenzwerg"><span class="mc-head"><span class="mc-type">Monster</span><span class="mc-num">1</span></span><span class="mc-art mc-artv" style="background-image:url('art/alt-wuetender-gartenzwerg.webp')"></span><i class="mc-gl"></i><span class="mc-name">Wütender Gartenzwerg</span></button></div></div>
+<div class="gz-dbg" id="gz-dbg"></div>
+<script>
+(() => {
+  const root = document.documentElement, body = document.body, dbg = document.getElementById('gz-dbg');
+  const set = (el, x, y, i) => { el.style.setProperty('--gx', (x * 100).toFixed(1) + '%'); el.style.setProperty('--gy', (y * 100).toFixed(1) + '%'); el.style.setProperty('--gx-n', x.toFixed(3)); el.style.setProperty('--gi', i.toFixed(3)); };
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  document.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { document.querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b)); body.classList.toggle('glanz-neu', b.dataset.m === 'neu'); });
+  // Lage des Geräts: die Ruhelage wandert langsam mit, so zählt das Kippen, nicht wie man das Handy gerade hält
+  let tilt = {x: .5, y: .5, i: 0}, base = null, haveSensor = false;
+  function onOri(e) {
+    if (e.beta == null || e.gamma == null) return; haveSensor = true;
+    const b = e.beta, g = e.gamma;
+    if (!base) base = {b, g};
+    base.b += (b - base.b) * .015; base.g += (g - base.g) * .015;     // etwa 2 bis 3 Sekunden, bis eine neue Haltung als ruhig gilt
+    const dx = clamp((g - base.g) / 22, -1, 1), dy = clamp((b - base.b) / 22, -1, 1);
+    tilt = {x: .5 + dx * .5, y: .5 + dy * .5, i: clamp(Math.hypot(dx, dy) * 1.5, 0, 1), dx, dy};
+  }
+  function startSensor() { window.addEventListener('deviceorientation', onOri); }
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    const p = document.getElementById('gz-perm'); p.hidden = false;
+    p.onclick = () => DeviceOrientationEvent.requestPermission().then(s => { if (s === 'granted') p.hidden = true; }).catch(() => {});
+  }
+  startSensor();   // Android liefert die Werte ohne Nachfrage, iPhone erst nach dem Tipp auf den Knopf
+  setInterval(() => { if (haveSensor) { const p = document.getElementById('gz-perm'); if (p) p.hidden = true; } }, 1000);
+  // Maus oder Finger direkt auf einer Karte hat Vorrang vor dem Sensor
+  let active = null, actPt = null, lastMove = 0;
+  document.addEventListener('pointermove', e => {
+    const f = e.target.closest && e.target.closest('.tc-f');
+    if (f) { const r = f.getBoundingClientRect(); actPt = {x: clamp((e.clientX - r.left) / r.width, 0, 1), y: clamp((e.clientY - r.top) / r.height, 0, 1)}; active = f; lastMove = performance.now(); }
+    else if (active && e.pointerType === 'mouse') { active = null; }
+    // kleine Karten folgen am PC dem Mauszeiger über die ganze Seite
+    if (e.pointerType === 'mouse') { const x = e.clientX / innerWidth, y = e.clientY / innerHeight; mouseAll = {x, y, i: 0}; mouseAt = performance.now(); }
+  }, {passive: true});
+  document.addEventListener('pointerleave', () => { active = null; });
+  document.addEventListener('pointerup', e => { if (e.pointerType !== 'mouse') active = null; });
+  let mouseAll = null, mouseAt = 0;
+  // Werte weich nachführen, damit es wie echtes Licht wirkt
+  const cards = new Map();
+  function frame(t) {
+    document.querySelectorAll('.tc-f').forEach(f => {
+      let s = cards.get(f) || {x: .5, y: .5, i: 0, rx: 0, ry: 0};
+      let tx, ty, ti, rotX = 0, rotY = 0;
+      if (active === f && actPt) { tx = actPt.x; ty = actPt.y; ti = clamp(Math.hypot(tx - .5, ty - .5) * 2.4, .25, 1); rotY = (tx - .5) * 16; rotX = (.5 - ty) * 16; }
+      else if (haveSensor) { tx = tilt.x; ty = tilt.y; ti = tilt.i; rotY = (tilt.dx || 0) * 10; rotX = -(tilt.dy || 0) * 10; }
+      else { tx = .5; ty = .5; ti = 0; }
+      const k = .18; s.x += (tx - s.x) * k; s.y += (ty - s.y) * k; s.i += (ti - s.i) * .12; s.rx += (rotX - s.rx) * k; s.ry += (rotY - s.ry) * k;
+      cards.set(f, s); set(f, s.x, s.y, s.i);
+      f.style.transform = `rotateY(${s.ry.toFixed(2)}deg) rotateX(${s.rx.toFixed(2)}deg)`;
+    });
+    // kleine Karten: Sensor am Handy, Mauszeiger (mit Abklingen) am PC
+    let g = window.__g || {x: .5, y: .5, i: 0}, tg;
+    if (haveSensor) tg = tilt;
+    else if (mouseAll && t - mouseAt < 900) { const sp = Math.min(1, (t - mouseAt) / 900); tg = {x: mouseAll.x, y: mouseAll.y, i: .8 * (1 - sp)}; }
+    else tg = {x: g.x, y: g.y, i: 0};
+    g.x += (tg.x - g.x) * .15; g.y += (tg.y - g.y) * .15; g.i += (tg.i - g.i) * .1; window.__g = g;
+    document.querySelectorAll('.gz-minis .mc').forEach(m => set(m, g.x, g.y, g.i));
+    dbg.textContent = haveSensor ? `Sensor: kippen ${tilt.i.toFixed(2)}` : 'kein Sensor';
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body></html>

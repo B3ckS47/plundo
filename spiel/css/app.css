@@ -621,7 +621,7 @@ input[type=range]{width:100%;accent-color:var(--red);height:30px}
 .dk-warn{margin:6px 0 0;font-size:13px;color:#7a4b12}
 .dk-warn::before{content:'Hinweis: ';font-weight:800}
 .deckp .hint{margin-top:10px}
-.cfilter{position:sticky;top:-5px;z-index:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;overflow:visible;margin:0 -14px;padding:8px 14px 10px}
+.cfilter{position:sticky;top:-5px;z-index:10;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;overflow:visible;margin:0 -14px;padding:8px 14px 10px}
 /* dunkler Grund nur, wenn die Leiste oben festklebt – sonst wirkt er wie ein Schnitt im Holz */
 .cfilter::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(rgba(30,16,7,.94),rgba(30,16,7,.8) 82%,rgba(30,16,7,0));opacity:0;transition:opacity .18s}
 .cfilter.stuck::before{opacity:1}
