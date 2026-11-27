@@ -2256,6 +2256,7 @@ const Drag = (() => {
   function move(x, y) {
     const dx = x - st.x0;
     st.g.style.transform = `translate(${x - st.offX}px, ${y - st.offY}px) rotate(${Math.max(-8, Math.min(8, dx / 25))}deg) scale(1.08)`;
+    if (typeof glanzDrag === 'function') glanzDrag(st.g, x, y, st.x0, st.y0);
     const zone = zoneAt(x, y), it = intentFor(zone);
     if (st.hover !== (zone && zone.el)) { if (st.hover) st.hover.classList.remove('dzh'); st.hover = zone && it ? zone.el : null; if (st.hover) st.hover.classList.add('dzh'); }
     st.zone = zone; st.it = it;

@@ -233,7 +233,7 @@ function tcHTML(c, v = '') {
     <div class="tc-rib" style="--nf:${nf}cqw">${esc(c.n)}</div><div class="tc-typ">${human ? 'Volk · keine Karte' : typ}</div>
     <div class="tc-zones">${z1}${z2}</div><div class="tc-loot">${loot}</div>
     ${nr ? `<span class="tc-rar" data-rar="${rar}" title="${RARITY ? RARITY[rar].n : ''}"><b>${'GSEL'[rar - 1]}</b>${String(nr).padStart(3, '0')}</span>` : ''}
-    <div class="tc-tip"></div><i class="tc-spk tc-spk-all"></i></div></div>`;
+    <div class="tc-tip"></div><i class="tc-spk tc-spk-all"></i><i class="tc-glare"></i></div></div>`;
 }
 
 // Erklärung eines Schlagworts: erscheint auf der Karte direkt über dem Schlagwort
@@ -251,13 +251,62 @@ if (typeof document !== 'undefined') {
     const open = ch && ch.closest('.tc-f').querySelector('.tc-tip.on');
     tcHideTips(); if (ch && !open) { e.stopPropagation(); tcShowTip(ch); }
   }, true);
-  // Glitzer und Neigung folgen Maus oder Finger
-  document.addEventListener('pointermove', e => {
-    const f = e.target.closest && e.target.closest('.tc.v-foil .tc-f, .tc.v-full .tc-f'); if (!f) return;
-    const r = f.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-    f.style.transform = `rotateY(${(x - .5) * 14}deg) rotateX(${(.5 - y) * 14}deg)`; f.style.setProperty('--mx', x * 100 + '%'); f.style.setProperty('--my', y * 100 + '%');
-  });
-  document.addEventListener('pointerout', e => { const f = e.target.closest && e.target.closest('.tc-f'); if (f && f.style.transform && !f.contains(e.relatedTarget)) f.style.transform = ''; });
+  // Glanz folgt Maus (PC) oder Finger (Handy): Ohne Berührung bleibt nur ein leichter Schimmer, kein Dauerfilm
+  glanzInit();
+
+}
+
+/* ================= Glanz: Licht folgt Maus oder Finger =================
+   Jede Karte mit Variante bekommt --gx/--gy (wo das Licht steht, 0–100 %) und --gi (wie stark, 0–1).
+   Große Karten neigen sich dabei leicht. Lässt man los oder verlässt die Karte, klingt der Glanz weich ab. */
+const GLANZ_SEL = '.tc.v-foil .tc-f, .tc.v-full .tc-f, .tc.v-alt .tc-f, .mc.v-foil, .mc.v-full, .mc.v-alt, .art.v-foil, .art.v-full, .art.v-alt';
+const GLANZ = new Map();
+let glanzRaf = 0;
+function glanzSet(el, x, y, i) {
+  el.style.setProperty('--gx', (x * 100).toFixed(1) + '%'); el.style.setProperty('--gy', (y * 100).toFixed(1) + '%'); el.style.setProperty('--gi', i.toFixed(3));
+}
+function glanzAim(el, x, y, on) {
+  let s = GLANZ.get(el);
+  if (!s) { s = {x, y, i: 0, rx: 0, ry: 0}; GLANZ.set(el, s); }
+  s.tx = x; s.ty = y; s.ti = on ? Math.min(1, .35 + Math.hypot(x - .5, y - .5) * 1.7) : 0; s.on = on;
+  if (!glanzRaf) glanzRaf = requestAnimationFrame(glanzTick);
+}
+function glanzTick() {
+  glanzRaf = 0;
+  for (const [el, s] of GLANZ) {
+    if (!el.isConnected) { GLANZ.delete(el); continue; }
+    const big = el.classList.contains('tc-f');
+    s.x += (s.tx - s.x) * .25; s.y += (s.ty - s.y) * .25; s.i += (s.ti - s.i) * (s.on ? .3 : .12);
+    const try_ = s.on && big ? (s.tx - .5) * 16 : 0, trx = s.on && big ? (.5 - s.ty) * 16 : 0;
+    s.ry += (try_ - s.ry) * .25; s.rx += (trx - s.rx) * .25;
+    glanzSet(el, s.x, s.y, s.i);
+    if (big) el.style.transform = Math.abs(s.rx) + Math.abs(s.ry) > .05 ? `rotateY(${s.ry.toFixed(2)}deg) rotateX(${s.rx.toFixed(2)}deg)` : '';
+    if (!s.on && s.i < .004 && Math.abs(s.rx) + Math.abs(s.ry) < .05) { glanzSet(el, s.x, s.y, 0); GLANZ.delete(el); continue; }
+  }
+  if (GLANZ.size) glanzRaf = requestAnimationFrame(glanzTick);
+}
+function glanzInit() {
+  const at = (e, el) => { const r = el.getBoundingClientRect(); return [Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), Math.max(0, Math.min(1, (e.clientY - r.top) / r.height))]; };
+  let cur = null;
+  const leave = () => { if (cur) { const s = GLANZ.get(cur); glanzAim(cur, s ? s.tx : .5, s ? s.ty : .5, false); cur = null; } };
+  const track = e => {
+    if (e.pointerType !== 'mouse' && e.type === 'pointermove' && !e.pressure && !e.buttons) return;
+    const el = e.target.closest && e.target.closest(GLANZ_SEL);
+    if (el !== cur) leave();
+    if (!el || el.classList.contains('ghost')) return;
+    cur = el; const [x, y] = at(e, el); glanzAim(el, x, y, true);
+  };
+  document.addEventListener('pointerdown', track, {passive: true});
+  document.addEventListener('pointermove', track, {passive: true});
+  document.addEventListener('pointerup', e => { if (e.pointerType !== 'mouse') leave(); }, {passive: true});
+  document.addEventListener('pointercancel', leave, {passive: true});
+  document.addEventListener('pointerout', e => { if (cur && e.pointerType === 'mouse' && !cur.contains(e.relatedTarget)) leave(); }, {passive: true});
+}
+// Beim Ziehen einer Karte aufs Spielfeld: Die Karte fängt das Licht, je nachdem wohin man sie bewegt
+function glanzDrag(g, x, y, x0, y0) {
+  if (!g || !/\bv-(foil|full|alt)\b/.test(g.className)) return;
+  const gx = .5 + Math.max(-.5, Math.min(.5, (x - x0) / 260)), gy = .5 + Math.max(-.5, Math.min(.5, (y - y0) / 420));
+  glanzSet(g, gx, gy, .85);
 }
 
 /* ================= Sammlung: Varianten, die man besitzt, und das gewählte Design ================= */
