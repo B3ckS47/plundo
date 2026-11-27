@@ -3868,3 +3868,30 @@ html.pcnav .shoppage.two{align-content:start}
 @keyframes bstNewFade{to{background-position:-220% 0}}
 .bst-new{border:1.5px solid rgba(255,248,234,.75)}
 @media (prefers-reduced-motion:reduce){.bst-card.r-alt .bst-new{animation:none}}
+/* ===== PC-Feinschliff (Prüfung 27.11.) ===== */
+/* Gegen Bots: Auswahlen mit drei oder mehr Knöpfen über die volle Breite, Beschriftung darüber */
+.su-mid>.panel:has(>.seg:not(.big)){grid-template-columns:1fr}
+.su-mid>.panel:has(>.seg:not(.big))>*{grid-column:1}
+.su-mid .seg:not(.big) button{padding-left:4px;padding-right:4px;font-size:13.5px;white-space:nowrap}
+.su-mid .sd-vars5{grid-template-columns:repeat(6,minmax(0,1fr))}
+.su-mid .sd-vars5 .sd-var{grid-column:span 2;white-space:nowrap}
+.su-mid .sd-vars5 .sd-var:nth-child(n+4){grid-column:span 3}
+/* „Los geht’s“ bleibt unten sichtbar, auch wenn die Einstellungen scrollen */
+.su-mid .su-start{position:sticky;bottom:0;z-index:3;flex:none;box-shadow:0 -14px 18px -4px rgba(18,10,5,.85),0 4px 0 #a34f12}
+/* Spielen: Bald-Kacheln ohne abgeschnittene Titel, „Bald“ als kleines Schild oben rechts */
+.pd-card{position:relative;padding-right:14px}
+.pd-card b{white-space:normal;overflow:visible}
+.pd-card em{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pd-card .pd-bald{position:absolute;top:10px;right:10px;padding:3px 8px;font-size:10.5px}
+.pd-card>span:not(.pd-chip){padding-right:34px}
+.pd-tile>span{max-width:calc(100% - 210px)}
+.pd-tile small{line-height:1.35}
+/* Auftrags-Serie mit Überschrift, damit klar ist, was die Leiste zählt */
+.hub-streak .hs-cap{display:block;font:800 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:#f3c873;margin:0 0 2px 4px;text-align:left}
+.t-daily:not(.hub-streak) .hs-cap{display:none}
+/* Spieltisch: Namen in der Ausrüstung brechen an Silben, nicht mitten im Wort */
+#app.pcg .geq .et-n{overflow-wrap:normal;word-break:normal;-webkit-hyphens:auto;hyphens:auto;font-size:9.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+/* Hinweise oben nicht über der Menüleiste */
+html.pcnav .toast{top:calc(var(--sat) + 100px)}
+.hub-streak{position:relative}
+.hub-streak .hs-cap{position:absolute;top:7px;left:0;right:0;margin:0;text-align:center;pointer-events:none}

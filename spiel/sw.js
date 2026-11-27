@@ -1,11 +1,11 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-04ad3dbc49';
+const CACHE = 'loota-5efcb739c5';
 // Pfad -> Prüfsumme. CORE wird beim Installieren geladen, LATER erst bei Bedarf bzw. im Hintergrund.
 const CORE = {
 "./": "0f63739320",
 "index.html": "0f63739320",
 "manifest.webmanifest": "250d872d85",
-"css/app.css": "5ab40793fe",
+"css/app.css": "6123ef8351",
 "css/legal.css": "d5870f2b37",
 "js/audio.js": "1521fcdaea",
 "js/billing.js": "cfcc764e47",
@@ -17,7 +17,7 @@ const CORE = {
 "js/online.js": "7cef89b0d7",
 "js/story.js": "6a50fa23d2",
 "js/tisch-server.js": "b0853ff1b7",
-"js/ui.js": "1d9e4847b1",
+"js/ui.js": "4c543684dc",
 "fonts/alegreya-sans-latin-400-normal.woff2": "123cd4a1e1",
 "fonts/alegreya-sans-latin-500-normal.woff2": "005c64e2da",
 "fonts/alegreya-sans-latin-700-normal.woff2": "403b09118b",

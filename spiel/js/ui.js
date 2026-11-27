@@ -1313,7 +1313,10 @@ function banner(text, kind) {
 }
 function flash(kind) { if (UI.reduce) return; const f = document.createElement('div'); f.className = 'flash ' + kind; document.body.appendChild(f); setTimeout(() => f.remove(), 700); }
 function shake() { if (UI.reduce) return; const g = $('#scr-game'); g.classList.remove('shake'); void g.offsetWidth; g.classList.add('shake'); }
-function toast(text) { if (SHEETS.length) return; $$('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = text; document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
+function toast(text) { if (SHEETS.length) return; $$('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = text;
+  // PC-Spieltisch: Hinweis oben auf dem Tisch statt über den Gegnern
+  if (CUR === 'game' && typeof PCGX === 'function' && PCGX()) { const tb = $('#table'); if (tb) { const r = tb.getBoundingClientRect(); if (r.height) { t.style.top = Math.round(r.top + 16) + 'px'; t.style.left = Math.round(r.left + r.width / 2) + 'px'; } } }
+  document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
 const Particles = (() => {
   const cv = $('#fxcanvas'), cx = cv.getContext('2d'), coin = new Image(); coin.src = 'icons/muenze-voll.png';
   let parts = [], running = false;
@@ -3023,7 +3026,7 @@ function renderHub() {
       `<button type="button" class="hub-me${bx[2] ? ' hasbg' : ''}" data-go="profile"${bx[2] ? ` style="--bg:url('${new URL(bgSrc(bx), document.baseURI).href}');--bgp:${bx[4] || '50% 50%'}"` : ''}>` +
         `<span class="pf-bigw"><img class="pf-big" src="${myPortrait()}" alt=""></span><span class="hub-who"><b>${esc(PROFILE.name || 'Abenteurer')}</b><small>${esc(myTitle() || 'Dein Charakter')}</small><em>${coinImg}${STORY.coins} Münzen</em></span></button>` +
       `<section class="hub-daily"><header><img src="icons/portrait-hilde.png" alt=""><div><h3>Hildes Aufträge</h3><span>${dn} von 3 erledigt · neue in ${untilMidnight()}</span></div></header><div class="notes">${hubNotes(st)}</div></section>` +
-      `<button type="button" class="t-daily hub-streak${sk ? '' : ' dark'}" data-go="${wait ? 'chest' : 'daily'}">${candleHtml(sk > 0)}<span class="td-main">${streakTrack(sk).track}</span></button>` +
+      `<button type="button" class="t-daily hub-streak${sk ? '' : ' dark'}" data-go="${wait ? 'chest' : 'daily'}" title="Erledige jeden Tag alle drei Aufträge, dann wächst deine Serie. Am Ziel wartet eine Truhe.">${candleHtml(sk > 0)}<span class="td-main"><span class="hs-cap">Auftrags-Serie · ${sk} ${sk === 1 ? 'Tag' : 'Tage'}</span>${streakTrack(sk).track}</span></button>` +
     `</aside>` +
     `<main class="hub-c">` +
       `<h1 class="hub-logo"><img src="art/logo-plundo.webp" alt="Plundo" width="1158" height="530"></h1>` +
@@ -3145,7 +3148,7 @@ function pcPlayHTML(cw, nx, st, sk, dn, wait, ay, fg) {
       `</div>` +
       `<div class="pd-solo"><span class="pd-h">Allein spielen</span><div class="pd-solo-row">` +
         `<div class="pd-tile"><img src="art/karte-welt${cw.id.replace('w', '')}.webp" alt="" style="object-position:50% ${ay}%"><button type="button" class="pd-hit" data-go="story" aria-label="Zur Weltkarte"></button>` +
-          `<span><b>Storymodus</b><small>${wLabel(cw)} · ${worldStars(cw)} / ${worldMaxStars(cw)} Sterne · schaltet Decks frei</small></span>` +
+          `<span><b>Storymodus</b><small>${wLabel(cw)} · ${worldStars(cw)} / ${worldMaxStars(cw)} Sterne<br>schaltet neue Decks frei</small></span>` +
           `<button type="button" class="t-cta pd-go" data-go="storygo" title="${esc($('#t-cta').textContent)}">${play}<span>Weiter</span></button></div>` +
         `<div class="pd-tile"><img src="art/kachel-frei.webp" alt=""><button type="button" class="pd-hit" data-go="setup" aria-label="Spiel erstellen"></button><span><b>Gegen Bots</b><small>${fg ? `${fg.live ? 'Läuft' : 'Gespeichert'} · Runde ${fg.turn}` : 'Freies Spiel mit deinen Regeln'}</small></span>` +
           `<button type="button" class="t-cta pd-go" data-go="setup">${play}<span>Spiel erstellen</span></button></div>` +
@@ -3156,7 +3159,7 @@ function pcPlayHTML(cw, nx, st, sk, dn, wait, ay, fg) {
 function pcSideHTML(st, sk, dn, wait) {
   return `<aside class="pp-side">` +
   `<section class="hub-daily"><header><img src="icons/portrait-hilde.png" alt=""><div><h3>Hildes Aufträge</h3><span>${dn} von 3 erledigt · neue in ${untilMidnight()}</span></div></header><div class="notes">${hubNotes(st)}</div></section>` +
-  `<button type="button" class="t-daily hub-streak${sk ? '' : ' dark'}" data-go="${wait ? 'chest' : 'daily'}">${candleHtml(sk > 0)}<span class="td-main">${streakTrack(sk).track}</span></button>` +
+  `<button type="button" class="t-daily hub-streak${sk ? '' : ' dark'}" data-go="${wait ? 'chest' : 'daily'}" title="Erledige jeden Tag alle drei Aufträge, dann wächst deine Serie. Am Ziel wartet eine Truhe.">${candleHtml(sk > 0)}<span class="td-main"><span class="hs-cap">Auftrags-Serie · ${sk} ${sk === 1 ? 'Tag' : 'Tage'}</span>${streakTrack(sk).track}</span></button>` +
   `</aside>`;
 }
 
