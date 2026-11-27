@@ -1,5 +1,5 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-5efcb739c5';
+const CACHE = 'loota-4cc1f74d01';
 // Pfad -> Prüfsumme. CORE wird beim Installieren geladen, LATER erst bei Bedarf bzw. im Hintergrund.
 const CORE = {
 "./": "0f63739320",
@@ -17,7 +17,7 @@ const CORE = {
 "js/online.js": "7cef89b0d7",
 "js/story.js": "6a50fa23d2",
 "js/tisch-server.js": "b0853ff1b7",
-"js/ui.js": "4c543684dc",
+"js/ui.js": "ec26310cea",
 "fonts/alegreya-sans-latin-400-normal.woff2": "123cd4a1e1",
 "fonts/alegreya-sans-latin-500-normal.woff2": "005c64e2da",
 "fonts/alegreya-sans-latin-700-normal.woff2": "403b09118b",
@@ -343,9 +343,15 @@ const LATER = {
 "art/gegenstand-schwimmfluegel.webp": "f03dd03149",
 "art/gegenstand-sonnenschirm.webp": "332f4e32f6",
 "art/gegenstand-taucherhelm.webp": "916e59d84c",
+"art/karte-welt0-hd.webp": "d37d014ab2",
+"art/karte-welt1-hd.webp": "7511e5365f",
+"art/karte-welt2-hd.webp": "ed2e3cd66e",
 "art/karte-welt2.webp": "49b07e5866",
+"art/karte-welt3-hd.webp": "8b324d3390",
 "art/karte-welt3.webp": "eac749f54f",
+"art/karte-welt4-hd.webp": "1d488299d3",
 "art/karte-welt4.webp": "e1cea050a9",
+"art/karte-welt5-hd.webp": "9d3615b971",
 "art/karte-welt5.webp": "66a3a3a752",
 "art/klasse-pirat.webp": "3c38956d7a",
 "art/kulisse-abendrot-k.webp": "84c1d4ea0d",

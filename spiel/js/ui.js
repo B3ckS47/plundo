@@ -1887,7 +1887,8 @@ SHEET_VIEWS.station = s => {
 };
 // Mitte der Storykarte am PC: Kopfbild aus der Weltkarte rund um die Station, darunter wer mitspielt
 function hubStationHead(st) {
-  const w = worldById(st.world), bg = w.map ? `background-image:url(${w.map});background-position:${st.ax}% ${st.ay}%` : '';
+  // Kopfbild aus der hochgerechneten Weltkarte (-hd), darunter die normale als Rückfall, falls es keine HD-Fassung gibt
+  const w = worldById(st.world), bg = w.map ? `background-image:url(${w.map.replace(/\.webp$/, '-hd.webp')}),url(${w.map});background-position:${st.ax}% ${st.ay}%` : '';
   return `<div class="hs-hero t-${st.type}" style="${bg}"><div class="hs-hero-in"><span class="sn-medal">${medalIcon(st.type)}<i>${esc(st.no)}</i></span>` +
     `<div><span class="hs-kind">${ST_TYPES[st.type]}${st.hard ? ' · schwer' : st.easy ? ' · leicht' : ''} · ${esc(st.place)}</span><h2>${esc(st.name)}</h2></div></div></div>`;
 }
