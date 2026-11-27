@@ -1,5 +1,5 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-1eaf29afb2';
+const CACHE = 'loota-04ad3dbc49';
 // Pfad -> Prüfsumme. CORE wird beim Installieren geladen, LATER erst bei Bedarf bzw. im Hintergrund.
 const CORE = {
 "./": "0f63739320",
@@ -9,7 +9,7 @@ const CORE = {
 "css/legal.css": "d5870f2b37",
 "js/audio.js": "1521fcdaea",
 "js/billing.js": "cfcc764e47",
-"js/cards.js": "9d62fafbab",
+"js/cards.js": "22d03b673e",
 "js/cloud.js": "cbdd53c0a5",
 "js/community.js": "94db0447f4",
 "js/engine.js": "e72c46ff42",
@@ -279,15 +279,24 @@ const LATER = {
 "art/alt-baerlauch-baer.webp": "2dd19e8930",
 "art/alt-diebischer-waschbaer.webp": "2c27e459eb",
 "art/alt-drache-des-montagmorgens.webp": "f5fb0f11d5",
+"art/alt-eichhoernchen-inkasso.webp": "c5c733bc0b",
 "art/alt-gezeiten-titan.webp": "73c03dd094",
 "art/alt-hai-mit-schwimmfluegeln.webp": "c1227ee6d2",
 "art/alt-kaeptn-achtarm.webp": "8374573c86",
 "art/alt-kanal-krokodil-klaus.webp": "5d900473be",
 "art/alt-krabbenbaron-kneifer.webp": "4b3e751c24",
 "art/alt-krieger.webp": "9effe1eecb",
+"art/alt-kung-fu-pelikan.webp": "c387b04028",
+"art/alt-muskel-kokosnuss.webp": "18f58345ba",
 "art/alt-pilzkoenigin-morchella.webp": "56e0353356",
 "art/alt-rattenkoenig-ruediger.webp": "64a5e56a42",
 "art/alt-riesenkrake-klara.webp": "691bc9754c",
+"art/alt-seepferdchen-ritter.webp": "aed704794a",
+"art/alt-spinne-mit-strickzeug.webp": "0317ec8753",
+"art/alt-staubmaus-bande.webp": "875c12074f",
+"art/alt-trueffelschwein-trude.webp": "1ffa8eb3ea",
+"art/alt-vampir-kaninchen.webp": "663f79bc79",
+"art/alt-wuetender-gartenzwerg.webp": "c9a788729a",
 "art/besonders-schatzkarte-links.webp": "7b91fdc538",
 "art/besonders-schatzkarte-rechts.webp": "c8316ba471",
 "art/booster-grund.webp": "ba87244875",

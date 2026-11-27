@@ -122,7 +122,13 @@ const ALT_ART = {
   'Diebischer Waschbär': 'art/alt-diebischer-waschbaer.webp', 'Pilzkönigin Morchella': 'art/alt-pilzkoenigin-morchella.webp',
   'Gezeiten-Titan': 'art/alt-gezeiten-titan.webp', 'Krabbenbaron Kneifer': 'art/alt-krabbenbaron-kneifer.webp', 'Riesenkrake Klara': 'art/alt-riesenkrake-klara.webp',
   'Krieger': 'art/alt-krieger.webp', 'Kanal-Krokodil Klaus': 'art/alt-kanal-krokodil-klaus.webp', 'Bärlauch-Bär': 'art/alt-baerlauch-baer.webp',
-  'Hai mit Schwimmflügeln': 'art/alt-hai-mit-schwimmfluegeln.webp', 'Käpt’n Achtarm': 'art/alt-kaeptn-achtarm.webp'
+  'Hai mit Schwimmflügeln': 'art/alt-hai-mit-schwimmfluegeln.webp', 'Käpt’n Achtarm': 'art/alt-kaeptn-achtarm.webp',
+  // Runde 3: Publikumslieblinge
+  'Wütender Gartenzwerg': 'art/alt-wuetender-gartenzwerg.webp', 'Vampir-Kaninchen': 'art/alt-vampir-kaninchen.webp',
+  'Staubmaus-Bande': 'art/alt-staubmaus-bande.webp', 'Spinne mit Strickzeug': 'art/alt-spinne-mit-strickzeug.webp',
+  'Trüffelschwein Trude': 'art/alt-trueffelschwein-trude.webp', 'Eichhörnchen-Inkasso': 'art/alt-eichhoernchen-inkasso.webp',
+  'Kung-Fu-Pelikan': 'art/alt-kung-fu-pelikan.webp', 'Muskel-Kokosnuss': 'art/alt-muskel-kokosnuss.webp',
+  'Seepferdchen-Ritter': 'art/alt-seepferdchen-ritter.webp'
 };
 const TC_VAR_RAR = {'': 1, foil: 2, full: 3, alt: 4};
 
