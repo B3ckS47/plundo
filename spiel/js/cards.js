@@ -277,10 +277,11 @@ function glanzTick() {
     if (!el.isConnected) { GLANZ.delete(el); continue; }
     const big = el.classList.contains('tc-f');
     s.x += (s.tx - s.x) * .25; s.y += (s.ty - s.y) * .25; s.i += (s.ti - s.i) * (s.on ? .3 : .12);
-    const try_ = s.on && big ? (s.tx - .5) * 16 : 0, trx = s.on && big ? (.5 - s.ty) * 16 : 0;
+    const try_ = s.on && big ? (s.tx - .5) * 22 : 0, trx = s.on && big ? (.5 - s.ty) * 22 : 0;
     s.ry += (try_ - s.ry) * .25; s.rx += (trx - s.rx) * .25;
     glanzSet(el, s.x, s.y, s.i);
-    if (big) el.style.transform = Math.abs(s.rx) + Math.abs(s.ry) > .05 ? `rotateY(${s.ry.toFixed(2)}deg) rotateX(${s.rx.toFixed(2)}deg)` : '';
+    // beim Neigen etwas kleiner, damit die vordere Kante nicht aus dem Fenster ragt und abgeschnitten wird
+    if (big) { const k = Math.min(1, (Math.abs(s.rx) + Math.abs(s.ry)) / 12); el.style.transform = k > .004 ? `scale(${(1 - .06 * k).toFixed(3)}) rotateY(${s.ry.toFixed(2)}deg) rotateX(${s.rx.toFixed(2)}deg)` : ''; }
     if (!s.on && s.i < .004 && Math.abs(s.rx) + Math.abs(s.ry) < .05) { glanzSet(el, s.x, s.y, 0); GLANZ.delete(el); continue; }
   }
   if (GLANZ.size) glanzRaf = requestAnimationFrame(glanzTick);
@@ -337,7 +338,7 @@ const cardVariants = n => ['', 'foil', 'full'].concat(ALT_ART[n] ? ['alt'] : [])
 const BOOSTER = {price: 60, alt: 0.05, full: 0.45, pity: 0.5, dup: {foil: 10, full: 25, alt: 100}};
 const BOOSTER_DECK = {2: 'keller', 3: 'wald', 4: 'strand', 5: 'meer'};
 // Welten, deren Booster man bekommen kann: Grunddeck immer, die anderen, sobald ihr Deck freigeschaltet ist
-const BOOSTER_SLOTS = 5;
+const BOOSTER_SLOTS = 4;
 const boosterAll = () => Object.keys(TC_WORLD).map(Number).sort((a, b) => a - b);
 const boosterWorlds = () => boosterAll().filter(w => w === 1 || (typeof deckById === 'function' && deckById(BOOSTER_DECK[w]) && deckById(BOOSTER_DECK[w]).unlocked()));
 const boosterPool = w => [...new Set(cardPool().filter(p => (p.tpl.w || 1) === w).map(p => p.tpl.n))];
@@ -348,51 +349,40 @@ function collStats(w) {
   const pool = boosterPool(w), cnt = v => pool.filter(n => collOwned(n, v)).length;
   return {n: pool.length, foil: cnt('foil'), full: cnt('full'), alt: pool.filter(n => ALT_ART[n] && collOwned(n, 'alt')).length, altN: pool.filter(n => ALT_ART[n]).length};
 }
-// Alles gesammelt (jede Karte in Glitzer und Vollbild, alle alternativen Artworks): ein Booster bringt nur noch Münzen
+// Alles gesammelt (jede Karte in Glitzer und Vollbild, alle alternativen Artworks): ein Booster brächte nur noch Münzen
 function collComplete(w) { const c = collStats(w); return c.n > 0 && c.foil === c.n && c.full === c.n && c.alt === c.altN; }
-// Auswahl der Vitrine für einen Tag (rein rechnerisch, damit sie sich testen lässt).
-// Fach 1: die neueste freigeschaltete Welt. Passen alle übrigen in die Fächer, liegen sie alle drin.
-// Sonst kommen sie aus einem gemischten Stapel, ohne Zurücklegen: jede Welt ist dran, bevor neu gemischt wird.
-// Komplett gesammelte Welten kommen nur bei jedem zweiten Mischen in den Stapel.
-// st = {bag: [...], round: n} wird dabei fortgeschrieben; keep = schon gezogene Welten dieses Tages, die bleiben.
-function boosterPick(unlocked, st, complete = () => false, keep = [], r = Math.random) {
-  const u = [...unlocked].sort((a, b) => a - b); if (!u.length) return [];
-  const newest = u[u.length - 1], rest = u.slice(0, -1), n = BOOSTER_SLOTS - 1;
-  if (rest.length <= n) return [newest, ...rest];
-  const out = keep.filter(w => rest.includes(w)).slice(0, n);
-  st.bag = (st.bag || []).filter(w => rest.includes(w) && !out.includes(w));
-  let guard = 0;
-  while (out.length < n && guard++ < 50) {
-    if (!st.bag.length) {
-      st.round = (st.round || 0) + 1;
-      let fresh = rest.filter(w => !out.includes(w) && (!complete(w) || st.round % 2 === 0));
-      if (!fresh.length) fresh = rest.filter(w => !out.includes(w));
-      for (let i = fresh.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [fresh[i], fresh[j]] = [fresh[j], fresh[i]]; }
-      st.bag = fresh;
-    }
-    out.push(st.bag.shift());
+// Welten, aus denen es Booster gibt: freigeschaltet und noch nicht komplett gesammelt
+const boosterEligible = () => boosterWorlds().filter(w => !collComplete(w));
+// Vier Booster aus zufälligen Welten: erst jede Welt einmal, doppelt nur, wenn es weniger als vier Welten gibt
+function boosterPick(eligible, n = BOOSTER_SLOTS, r = Math.random) {
+  const out = []; if (!eligible.length) return out;
+  while (out.length < n) {
+    const bag = eligible.slice();
+    for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
+    for (const w of bag) if (out.length < n) out.push(w);
   }
-  return [newest, ...out.sort((a, b) => a - b)];
+  return out.slice(0, n);
 }
-const boosterRotates = () => boosterWorlds().length > BOOSTER_SLOTS;
-// Booster-Regal im Krämerladen: bis zu 5 Welten am Tag, je ein Booster. Gekauft ist er bis morgen weg.
-// Die Auswahl wird einmal am Tag festgelegt und gespeichert; wird mittags eine neue Welt frei, rückt sie in Fach 1.
+// Booster-Regal im Krämerladen: vier Fächer am Tag. Gekauft ist ein Fach bis morgen leer.
+// Wird tagsüber eine Welt komplett oder neu freigeschaltet, werden nur die freien Fächer neu belegt.
 function boosterOffers() {
-  const d = dailyState(), u = boosterWorlds();
-  if (!d.bSold || d.bSold.day !== d.day) { d.bSold = {day: d.day, w: []}; saveDaily(); }
-  const key = u.join(',');
-  if (!d.bPick || d.bPick.day !== d.day || d.bPick.u !== key) {
-    const st = STORY.bRot = STORY.bRot || {bag: [], round: 0};
-    const keep = d.bPick && d.bPick.day === d.day ? d.bPick.w.slice(1) : [];
-    d.bPick = {day: d.day, u: key, w: boosterPick(u, st, collComplete, keep)};
-    saveDaily(); saveStory();
-  }
-  return d.bPick.w.map(w => ({w, sold: d.bSold.w.includes(w)}));
+  const d = dailyState(), el = boosterEligible(), key = el.join(',');
+  let sh = d.bShop;
+  if (!sh || sh.day !== d.day) sh = d.bShop = {day: d.day, key, slots: boosterPick(el).map(w => ({w, sold: false}))};
+  else if (sh.key !== key) {
+    const keep = sh.slots.filter(s => s.sold || el.includes(s.w)), cand = boosterPick(el, BOOSTER_SLOTS * 2);
+    for (const w of cand) { if (keep.length >= BOOSTER_SLOTS) break; if (!keep.some(s => s.w === w)) keep.push({w, sold: false}); }
+    // doppelt nur, wenn es nicht anders geht, und dann gleichmäßig verteilt
+    while (el.length && keep.length < BOOSTER_SLOTS) { const cnt = w => keep.filter(s => s.w === w).length, min = Math.min(...el.map(cnt)), opt = el.filter(w => cnt(w) === min); keep.push({w: opt[Math.floor(Math.random() * opt.length)], sold: false}); }
+    sh.slots = keep; sh.key = key;
+  } else return sh.slots.map((s, i) => ({w: s.w, sold: s.sold, i}));
+  saveDaily();
+  return sh.slots.map((s, i) => ({w: s.w, sold: s.sold, i}));
 }
-function buyBooster(w) {
-  const o = boosterOffers().find(x => x.w === w); if (!o || o.sold) return 'none';
+function buyBooster(i) {
+  const o = boosterOffers()[i]; if (!o || o.sold) return 'none';
   if (STORY.coins < BOOSTER.price) return 'poor';
-  STORY.coins -= BOOSTER.price; dailyState().bSold.w.push(w); saveDaily(); grantBooster(w); return 'ok';
+  STORY.coins -= BOOSTER.price; dailyState().bShop.slots[i].sold = true; saveDaily(); grantBooster(o.w); return 'ok';
 }
 // Einen Booster öffnen: 2 Glitzer, dazu ein dritter Platz mit Glitzer, Vollbild oder Legendär (siehe BOOSTER). Jeder Platz zieht mit 50 % aus fehlenden Karten.
 // Doppelte werden zu Münzen. Neue Varianten werden gleich als Design gewählt, wenn die Karte bisher normal gespielt wurde.

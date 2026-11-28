@@ -1693,36 +1693,35 @@ function cosPreview(id) {
 function afterBooster() { renderTitle(); renderWnav(); if (CUR === 'cards') renderCards(); if (CUR === 'shop') renderShopPage(); if (SHEETS.length) renderSheet(false); }
 // Booster-Regal des Krämerladens: ein Booster je freigeschalteter Welt und Tag
 function boosterItems() {
-  return boosterOffers().map(({w, sold}) => {
+  const offers = boosterOffers();
+  if (!offers.length) return '<p class="kl-empty">Du hast alle Karten in allen Varianten. Booster gibt es erst wieder mit einer neuen Welt.</p>';
+  return offers.map(({w, sold, i}) => {
     const poor = STORY.coins < BOOSTER.price;
     return `<div class="sitem sbooster${sold ? ' own' : ''}" data-rar="3"><span class="si-ware"><span class="ptag"><span>${coinImg}<s>${BOOSTER.price}</s></span></span>${boosterPackHTML(w, ' shelf')}</span>` +
       `<span class="si-t"><b class="rn" data-rar="3">${esc(TC_WORLD[w].n)}</b><small>Booster · 3 Sammelkarten</small></span>` +
-      `<button type="button" class="btn small sbuy${sold || poor ? '' : ' primary'}" data-bbuy="${w}"${sold || poor ? ' disabled' : ''}>${sold ? 'Morgen wieder' : 'Kaufen'}</button></div>`;
+      `<button type="button" class="btn small sbuy${sold || poor ? '' : ' primary'}" data-bbuy="${i}"${sold || poor ? ' disabled' : ''}>${sold ? 'Morgen wieder' : `Kaufen (${BOOSTER.price})`}</button></div>`;
   }).join('');
 }
-// PC: Booster-Vitrine. Alle fünf Welten stehen drin, noch gesperrte abgedunkelt; dazu offen, was in einem Booster steckt.
+// PC: Booster-Vitrine mit den vier Boostern des Tages; dazu offen, was in einem Booster steckt.
 function boosterCaseHTML() {
-  const offers = boosterOffers(), poor = STORY.coins < BOOSTER.price, rot = boosterRotates();
-  // Freie Fächer zeigen die nächsten gesperrten Welten als Vorschau
-  const show = offers.map(o => o.w).concat(boosterAll().filter(w => !boosterWorlds().includes(w))).slice(0, BOOSTER_SLOTS);
-  const cells = show.map((w, i) => {
-    const o = offers.find(x => x.w === w), cs = collStats(w), pct = cs.n ? Math.round(100 * cs.foil / cs.n) : 0;
-    const btn = !o ? `<span class="bx-btn lock">${LOCK_SVG}Nach Welt ${w}</span>`
-      : o.sold ? '<span class="bx-btn sold">Morgen wieder</span>'
-      : `<button type="button" class="bx-btn buy" data-bbuy="${w}"${poor ? ' disabled' : ''}>${coinImg}<b>${BOOSTER.price}</b></button>`;
-    return `<div class="bx-item w-${BOOSTER_LOOK[w] || 'grund'}${!o ? ' locked' : o.sold ? ' sold' : ''}">${rot && i === 0 ? '<span class="bx-new">Neueste Welt</span>' : ''}<div class="bx-stage">${boosterPackHTML(w, ' bx')}${o && o.sold ? '<span class="bx-stamp">Gekauft</span>' : ''}</div>` +
+  const offers = boosterOffers(), poor = STORY.coins < BOOSTER.price;
+  const cells = offers.length ? offers.map(({w, sold, i}) => {
+    const cs = collStats(w), pct = cs.n ? Math.round(100 * cs.foil / cs.n) : 0;
+    const btn = sold ? '<span class="bx-btn sold">Morgen wieder</span>'
+      : `<button type="button" class="bx-btn buy" data-bbuy="${i}"${poor ? ' disabled' : ''}>${coinImg}<b>${BOOSTER.price}</b></button>`;
+    return `<div class="bx-item w-${BOOSTER_LOOK[w] || 'grund'}${sold ? ' sold' : ''}"><div class="bx-stage">${boosterPackHTML(w, ' bx')}${sold ? '<span class="bx-stamp">Gekauft</span>' : ''}</div>` +
       `<b class="bx-name">${esc(TC_WORLD[w].n)}</b>` +
       `<span class="bx-coll" title="Glitzer ${cs.foil}/${cs.n} · Vollbild ${cs.full}/${cs.n}${cs.altN ? ` · Legendär ${cs.alt}/${cs.altN}` : ''}"><i><em style="width:${pct}%"></em></i><small>${cs.foil}/${cs.n}</small></span>${btn}</div>`;
-  }).join('');
+  }).join('') : '<div class="bx-item bx-none"><b class="bx-name">Alles gesammelt</b><small>Neue Booster gibt es mit der nächsten Welt.</small></div>';
   const r = (cls, l, t) => `<li><span class="bx-r ${cls}">${l}</span>${t}</li>`;
   const info = `<div class="bx-info"><b>Was steckt drin?</b><ul>` +
     r('s', 'S', '2 Glitzerkarten') +
     `<li class="bx-third"><span class="bx-r q">?</span><span>Dritte Karte<small>Glitzer ${Math.round((1 - BOOSTER.full - BOOSTER.alt) * 100)} % · Vollbild ${Math.round(BOOSTER.full * 100)} % · Legendär ${Math.round(BOOSTER.alt * 100)} %</small></span></li></ul>` +
-    `<p>Doppelte werden zu Münzen: ${BOOSTER.dup.foil}, ${BOOSTER.dup.full} oder ${BOOSTER.dup.alt}.</p><p class="bx-day">${rot ? `Jeden Tag eine neue Auswahl. Die nächste in ${untilMidnight()}.` : `Jede Welt einmal am Tag. Neue Ware in ${untilMidnight()}.`}</p></div>`;
+    `<p>Doppelte werden zu Münzen: ${BOOSTER.dup.foil}, ${BOOSTER.dup.full} oder ${BOOSTER.dup.alt}.</p><p class="bx-day">Vier Booster am Tag aus wechselnden Welten. Neue Auswahl in ${untilMidnight()}.</p></div>`;
   return cells + info;
 }
 // Ab mehr als 5 Welten wechselt die Auswahl täglich, Kuno sagt das dann auch
-const boosterSay = () => `<div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „${boosterRotates() ? 'Frische Booster, jeden Tag aus anderen Welten.' : 'Frische Booster, von jeder Welt einer am Tag.'} Was drin ist, weiß nicht mal ich!“</p></div>`;
+const boosterSay = () => `<div class="say"><img src="icons/portrait-kuno.png" alt=""><p>Krämer Kuno: „Vier frische Booster am Tag, jedes Mal aus anderen Welten. Was drin ist, weiß nicht mal ich!“</p></div>`;
 const BOOSTER_HINT = 'In jedem Booster stecken 3 Karten aus der Welt: 2 Glitzerkarten und eine dritte, die mit etwas Glück eine Vollbild-Karte ist, mit viel Glück sogar Legendär. Doppelte werden zu Münzen.';
 function shelfItem(id, base, price, pct, buyAttr) {
   const own = owns(id), poor = STORY.coins < price, [k, key] = id.split(':'), nm = esc(cosmeticName(id).replace(/^\S+ „|“$/g, ''));
@@ -1730,7 +1729,7 @@ function shelfItem(id, base, price, pct, buyAttr) {
   const tag = `<span class="ptag${pct ? ' old' : ''}"><span>${coinImg}<s>${base}</s></span></span>`;
   const sale = pct ? `<span class="sale" aria-label="Angebot: ${price} Münzen statt ${base}"><b>${price}</b><em>−${pct} %</em></span>` : '';
   return `<div class="sitem${own ? ' own' : ''}${pct ? ' deal' : ''}" data-rar="${rarityOf(id)}"><span class="si-ware">${tag}${ware}${sale}</span><span class="si-t"><b class="rn" data-rar="${rarityOf(id)}">${nm}</b><small>${{portrait: 'Porträt', frame: 'Rahmen', bg: 'Hintergrund', title: 'Titel'}[k]}<em class="si-rar"> · ${rarityName(id)}</em></small></span>` +
-    `<button type="button" class="btn small sbuy${own || poor ? '' : ' primary'}" ${buyAttr}="${id}"${own || poor ? ' disabled' : ''}>${own ? 'Gekauft' : 'Kaufen'}</button></div>`;
+    `<button type="button" class="btn small sbuy${own || poor ? '' : ' primary'}" ${buyAttr}="${id}"${own || poor ? ' disabled' : ''}>${own ? 'Gekauft' : `Kaufen (${price})`}</button></div>`;
 }
 SHEET_VIEWS.shop = () => {
   const st = dailyState();

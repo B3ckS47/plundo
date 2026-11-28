@@ -3895,22 +3895,28 @@ html.pcnav .shoppage.two{align-content:start}
 html.pcnav .toast{top:calc(var(--sat) + 100px)}
 .hub-streak{position:relative}
 .hub-streak .hs-cap{position:absolute;top:7px;left:0;right:0;margin:0;text-align:center;pointer-events:none}
-/* ===== Glanz folgt Maus oder Finger (27.11.): kein Dauerfilm mehr =====
-   --gx/--gy: wo das Licht steht, --gi: wie stark (0 = nur ein leichter Schimmer). Gesetzt von glanzAim() in cards.js. */
-.tc.v-foil .tc-art::after,.tc.v-full .tc-f::after{animation:none;background-position:var(--gx,50%) var(--gy,50%);opacity:calc(.05 + var(--gi,0) * .5)}
-.tc.v-alt .tc-f::after{animation:none;background-size:180% 100%;background-position:var(--gx,50%) 0;opacity:calc(.1 + var(--gi,0) * .9)}
-.tc.v-alt .tc-f{animation:none;box-shadow:0 4cqw 9cqw -3cqw rgba(0,0,0,.8),0 0 calc(3cqw + var(--gi,0) * 5cqw) -1.5cqw rgba(255,79,176,.75),inset 0 0 0 .8cqw #7b2ff7,inset 0 0 0 1.3cqw #ffd23f}
-/* Glitzerpunkte: bei Glitzer (S) gar nicht, bei Vollbild und Legendär nur beim Berühren, je nach Lichtstand andere */
-.tc.v-foil .tc-art .tc-spk{display:none}
-.tc .tc-spk,.tc .tc-spk::after{animation:none!important;opacity:calc(var(--gi,0) * .95);background-position:calc(var(--gx,50%) * .6) calc(var(--gy,50%) * .6)}
-.tc .tc-spk::after{opacity:calc(var(--gi,0) * .7);background-position:calc(var(--gx,50%) * -.5) calc(var(--gy,50%) * -.5)}
-/* Sonnenreflex, der mit dem Licht wandert */
+/* ===== Glanz der großen Karte (28.11.): ein Streifen läuft durchgehend über die Karte.
+   Er beginnt und endet vollständig außerhalb der Karte, so sieht man weder Anfang noch Wiederholung.
+   Berührung oder Maus (--gi, gesetzt von glanzAim() in cards.js) macht ihn heller und zeigt den Sonnenreflex. */
+@keyframes tcGlide{0%{background-position:18% 18%}62%,100%{background-position:112% 112%}}
+@keyframes tcGlideX{0%{background-position:-12% 0}62%,100%{background-position:92% 0}}
+.tc.v-foil .tc-art::after,.tc.v-full .tc-f::after{background:linear-gradient(115deg,transparent 41%,#ff6fc0 44%,#ffe680 46.5%,#6dffc4 49%,#6fc8ff 51.5%,#c48aff 54%,transparent 57%);background-size:400% 400%;background-repeat:no-repeat;animation:tcGlide 7s linear infinite;opacity:calc(.42 + var(--gi,0) * .25)}
+.tc.v-alt .tc-f::after{background-size:300% 100%;background-repeat:no-repeat;animation:tcGlideX 5.5s linear infinite;opacity:calc(.75 + var(--gi,0) * .2)}
+/* Glitzerpunkte: nur noch bei Legendär (funkeln wie bisher), bei Glitzer und Vollbild gar nicht */
+.tc.v-foil .tc-art .tc-spk,.tc.v-full .tc-spk-all{display:none}
+/* Sonnenreflex beim Berühren */
 .tc-glare{display:none}
 .tc.v-foil .tc-glare,.tc.v-full .tc-glare,.tc.v-alt .tc-glare{display:block;position:absolute;inset:0;z-index:22;pointer-events:none;border-radius:inherit;mix-blend-mode:overlay;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.9),rgba(255,255,255,.2) 25%,transparent 50%);opacity:calc(var(--gi,0) * .75)}
 .tc.v-foil .tc-glare{inset:0 0 auto;height:58%}
-.tc .tc-f{touch-action:pan-y}
+/* Neigen per Finger: die Karte gehört dem Finger, damit das Schwenken leicht geht */
+.tc .tc-f{touch-action:none}
 /* kleine Karten in Sammlung, Hand und auf dem Tisch */
 .mc-artv::after,.mc-gl,.art-gl{animation:none;background-position:var(--gx,50%) var(--gy,50%);opacity:calc(.05 + var(--gi,0) * .55)}
 .mc.v-alt .mc-gl,.art.v-alt .art-gl{animation:none;background-size:180% 100%;background-position:var(--gx,50%) 0;opacity:calc(.12 + var(--gi,0) * .75)}
-.tc.v-full .tc-spk-all,.tc.v-alt .tc-spk-all{opacity:calc(var(--gi,0) * .95)}
-.tc.v-full .tc-spk-all::after,.tc.v-alt .tc-spk-all::after{opacity:calc(var(--gi,0) * .7)}
+
+/* Laden: Farbband nur so breit wie der Name, damit es nicht über dem Preisschild liegt */
+.sitem .si-t .rn[data-rar]{justify-self:center;width:max-content;max-width:100%}
+/* PC-Vitrine: vier Booster und die Infokachel */
+.bx-grid .bx-info{grid-column:span 2}
+.bx-none{grid-column:span 3;justify-content:center;text-align:center;min-height:200px}
+.bx-none small{color:#c7b2da}

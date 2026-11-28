@@ -847,7 +847,7 @@ function openChest() {
   const coins = gold ? (id ? 20 : 60 + 5 * Math.floor(Math.random() * 9)) : (id ? 0 : 15 + 5 * Math.floor(Math.random() * 5));
   if (id) grant(id);
   // Mit Glück steckt zusätzlich ein Booster drin (Holztruhe 15 %, Goldtruhe 50 %)
-  let booster = null; const bw = typeof boosterWorlds === 'function' ? boosterWorlds() : [];
+  let booster = null; const bw = typeof boosterEligible === 'function' ? boosterEligible() : [];   // nur Welten, deren Sammlung noch nicht komplett ist
   if (bw.length && Math.random() < (gold ? 0.5 : 0.15)) { booster = bw[Math.floor(Math.random() * bw.length)]; (STORY.boosters = STORY.boosters || []).push(booster); }
   STORY.coins += coins; saveStory(); saveDaily();
   return {t: c.t, id, coins, booster};

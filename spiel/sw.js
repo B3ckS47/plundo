@@ -1,23 +1,23 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-0d186e8456';
+const CACHE = 'loota-f720ab084e';
 // Pfad -> Prüfsumme. CORE wird beim Installieren geladen, LATER erst bei Bedarf bzw. im Hintergrund.
 const CORE = {
 "./": "0f63739320",
 "index.html": "0f63739320",
 "manifest.webmanifest": "250d872d85",
-"css/app.css": "629be4ad50",
+"css/app.css": "d29ec1d282",
 "css/legal.css": "d5870f2b37",
 "js/audio.js": "1521fcdaea",
 "js/billing.js": "cfcc764e47",
-"js/cards.js": "6eb70992b9",
+"js/cards.js": "bf1f115c46",
 "js/cloud.js": "cbdd53c0a5",
 "js/community.js": "94db0447f4",
 "js/engine.js": "e72c46ff42",
 "js/fb-sdk.js": "e586aa8764",
 "js/online.js": "7cef89b0d7",
-"js/story.js": "6a50fa23d2",
+"js/story.js": "3f67b90a62",
 "js/tisch-server.js": "b0853ff1b7",
-"js/ui.js": "e5f934d921",
+"js/ui.js": "860f33e5ec",
 "fonts/alegreya-sans-latin-400-normal.woff2": "123cd4a1e1",
 "fonts/alegreya-sans-latin-500-normal.woff2": "005c64e2da",
 "fonts/alegreya-sans-latin-700-normal.woff2": "403b09118b",
