@@ -9,7 +9,7 @@ const TC_ICON = {run: 'icons/wert-weglaufen.png', kampf: 'icons/wert-kampf.png',
   aerger: 'icons/phase-aerger.png', tuer: 'icons/phase-tuer.png', none: 'icons/icon-sonstiges.png',
   slot: {kopf: 'icons/icon-kopf.png', ruestung: 'icons/icon-ruestung.png', schuhe: 'icons/icon-schuhe.png', hand: 'icons/icon-haende.png', none: 'icons/icon-sonstiges.png'}};
 const TC_WAVE = '<svg viewBox="0 0 24 24"><path fill="#2a6b9a" d="M2 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2v3c-2.5 0-2.5-2-5-2s-2.5 2-5 2-2.5-2-5-2-2.5 2-5 2zM2 9c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2v3c-2.5 0-2.5-2-5-2s-2.5 2-5 2-2.5-2-5-2-2.5 2-5 2z"/></svg>';
-// Welten (Decks): Name und Set-Symbol (einfarbige Maske, eingefärbt per CSS)
+// Welten (Decks): Name und Set-Kürzel. icons/welt-<s>.webp ist die Set-Münze, icons/deck-<s>.png die einfarbige Maske (Muster der Rückseite)
 const TC_WORLD = {1: {n: 'Grunddeck', s: 'grund'}, 2: {n: 'Keller', s: 'keller'}, 3: {n: 'Wald', s: 'wald'}, 4: {n: 'Strand', s: 'strand'}, 5: {n: 'Hohe See', s: 'meer'}};
 const TC_SLOT = {kopf: 'Kopf', ruestung: 'Rüstung', schuhe: 'Schuhe', hand: 'Hand', none: 'Kein Platz'};
 const TC_FOES = {zwerg: ['Zwergenfeind', 'Zwerge'], elf: ['Elfenfeind', 'Elfen'], halbling: ['Koboldfeind', 'Kobolde'],
@@ -229,7 +229,7 @@ function tcHTML(c, v = '') {
   return `<div class="tc k-${c.k}${vCls}"><div class="tc-f">
     <div class="tc-art">${art ? `<i class="tc-blur" style="background-image:url('${art}')"></i>` : ''}${artH}<i class="tc-spk"></i></div><i class="tc-pat"></i>
     <div class="tc-coin tc-lv"><b>${val}</b><small>${valL}</small></div>
-    <div class="tc-coin tc-sym" title="${w.n}"><i style="-webkit-mask-image:url(icons/deck-${w.s}.png);mask-image:url(icons/deck-${w.s}.png)"></i></div>
+    <div class="tc-coin tc-sym" title="${w.n}"><img src="icons/welt-${w.s}.webp" alt="" draggable="false"></div>
     <div class="tc-rib" style="--nf:${nf}cqw">${esc(c.n)}</div><div class="tc-typ">${human ? 'Volk · keine Karte' : typ}</div>
     <div class="tc-zones">${z1}${z2}</div><div class="tc-loot">${loot}</div>
     ${nr ? `<span class="tc-rar" data-rar="${rar}" title="${RARITY ? RARITY[rar].n : ''}"><b>${'GSEL'[rar - 1]}</b>${String(nr).padStart(3, '0')}</span>` : ''}
@@ -453,7 +453,7 @@ function showBooster(onDone) {
       if (typeof Snd !== 'undefined') { Snd.sfx('tear'); setTimeout(() => Snd.sfx('whoosh'), 250); }
       const box = el.querySelector('.bst-cards');
       box.innerHTML = res.cards.map((x, i) => `<button type="button" class="bst-card r-${x.v}" style="--i:${i}" data-bcard="${esc(x.n)}" data-bv="${x.v}">` +
-        `<span class="bst-in"><span class="bst-back"><i style="-webkit-mask-image:url(icons/deck-${TC_WORLD[res.w].s}.png);mask-image:url(icons/deck-${TC_WORLD[res.w].s}.png)"></i></span>` +
+        `<span class="bst-in"><span class="bst-back w-${TC_WORLD[res.w].s}"><img class="bb-co" src="icons/welt-${TC_WORLD[res.w].s}.webp" alt=""><img class="bb-wm" src="art/logo-klein.webp" alt=""></span>` +
         `<span class="bst-front">${tcHTML(POOLCAT[x.n] || CATALOG[x.n], x.v)}${x.dup ? `<span class="bst-dup">Doppelt</span><span class="bst-coin"><img src="icons/muenze-voll.png" alt="">+${x.coins}</span>` : '<span class="bst-new">Neu</span>'}</span></span></button>`).join('');
       // Der Spieler dreht jede Karte selbst um (in beliebiger Reihenfolge). Die dritte Karte (Vollbild bzw. Legendär) bekommt den großen Auftritt.
       const hint = el.querySelector('.bst-hint');

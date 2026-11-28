@@ -1,15 +1,15 @@
 /* Service Worker: macht die App offline spielbar. Wird von build_mobile.py erzeugt. */
-const CACHE = 'loota-f720ab084e';
+const CACHE = 'loota-29dde4f9a6';
 // Pfad -> Prüfsumme. CORE wird beim Installieren geladen, LATER erst bei Bedarf bzw. im Hintergrund.
 const CORE = {
 "./": "0f63739320",
 "index.html": "0f63739320",
 "manifest.webmanifest": "250d872d85",
-"css/app.css": "d29ec1d282",
+"css/app.css": "43216f334a",
 "css/legal.css": "d5870f2b37",
 "js/audio.js": "1521fcdaea",
 "js/billing.js": "cfcc764e47",
-"js/cards.js": "bf1f115c46",
+"js/cards.js": "7696fc0c67",
 "js/cloud.js": "cbdd53c0a5",
 "js/community.js": "94db0447f4",
 "js/engine.js": "e72c46ff42",
@@ -17,7 +17,7 @@ const CORE = {
 "js/online.js": "7cef89b0d7",
 "js/story.js": "3f67b90a62",
 "js/tisch-server.js": "b0853ff1b7",
-"js/ui.js": "860f33e5ec",
+"js/ui.js": "47cfe668d8",
 "fonts/alegreya-sans-latin-400-normal.woff2": "123cd4a1e1",
 "fonts/alegreya-sans-latin-500-normal.woff2": "005c64e2da",
 "fonts/alegreya-sans-latin-700-normal.woff2": "403b09118b",
@@ -264,6 +264,7 @@ const CORE = {
 "icons/truhe-holz-auf.png": "5af579188a",
 "icons/truhe-holz-klein.png": "ca4d6949ba",
 "icons/truhe-holz-zu.png": "e4c7153746",
+"icons/welt-grund.webp": "45d39a915a",
 "icons/wert-gold.png": "4695900017",
 "icons/wert-hand.png": "cbbc9629f5",
 "icons/wert-kampf.png": "2b7873c89d",
@@ -537,6 +538,10 @@ const LATER = {
 "icons/rahmen-walblau.webp": "ae020d5600",
 "icons/rahmen-wochenstammgast-k.webp": "7ed8b460ae",
 "icons/rahmen-wochenstammgast.webp": "d43dab0c18",
+"icons/welt-keller.webp": "dc171b1f5f",
+"icons/welt-meer.webp": "b7ff329546",
+"icons/welt-strand.webp": "e2dee6dfa2",
+"icons/welt-wald.webp": "6cffe87469",
 "app-icons/apple-touch-icon.png": "6f45106b4b",
 "app-icons/icon-192.png": "8fa6d8dee4",
 "app-icons/icon-512.png": "eeaa748617",

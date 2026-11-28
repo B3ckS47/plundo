@@ -1426,7 +1426,7 @@ const collDots = c => { const vs = cardVariants(c.n).filter(v => v && collOwned(
 function renderBoosterPane() {
   const el = $('#booster-pane'); if (!el) return;
   const n = boostersWaiting().length;
-  const rows = boosterWorlds().map(w => { const s = collStats(w); return `<li><i class="bp-mini" style="-webkit-mask-image:url(icons/deck-${TC_WORLD[w].s}.png);mask-image:url(icons/deck-${TC_WORLD[w].s}.png)"></i><b>${TC_WORLD[w].n}</b><span><em data-rar="2">S</em>${s.foil}/${s.n}</span><span><em data-rar="3">E</em>${s.full}/${s.n}</span>${s.altN ? `<span><em data-rar="4">L</em>${s.alt}/${s.altN}</span>` : '<span></span>'}</li>`; }).join('');
+  const rows = boosterWorlds().map(w => { const s = collStats(w); return `<li><img class="bp-mini" src="icons/welt-${TC_WORLD[w].s}.webp" alt=""><b>${TC_WORLD[w].n}</b><span><em data-rar="2">S</em>${s.foil}/${s.n}</span><span><em data-rar="3">E</em>${s.full}/${s.n}</span>${s.altN ? `<span><em data-rar="4">L</em>${s.alt}/${s.altN}</span>` : '<span></span>'}</li>`; }).join('');
   patch(el, `<div class="bpane-head"><div><b>Sammlung</b><span>Glitzer, Vollbild und Legendär aus Boostern. Tippe eine Karte an, um ihr Design zu wählen.</span></div>${n ? boosterPackHTML(boostersWaiting()[0], ' mini') : ''}</div>` +
     `<ul class="bpane-list">${rows}</ul>` + (n ? `<button type="button" class="btn primary" data-bopen>${n === 1 ? 'Booster öffnen' : `Booster öffnen (${n})`}</button>` : `<p class="hint">Booster gibt es ab und zu im Krämerladen und mit Glück in Truhen.</p>`));
 }
