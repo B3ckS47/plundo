@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<base href="../"><title>Plundo · Set-Logos und Rückseiten</title>
+<link rel="stylesheet" href="css/app.css">
+<style>
+body{margin:0;min-height:100vh;background:radial-gradient(120% 80% at 50% 0%,#3a2414,#140b06 70%);color:#f3e2bf;font-family:var(--body);overflow-x:hidden}
+h1{margin:0;padding:18px 14px 4px;text-align:center;font:700 26px var(--display);color:#fff3dc}
+h2{margin:28px 0 4px;text-align:center;font:700 21px var(--display);color:#ffd98a}
+p.hint{margin:0 auto;max-width:760px;padding:0 14px;text-align:center;font-size:14px;color:#cdb79a}
+.row{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;padding:14px}
+.lab{width:100%;text-align:center;font:800 13px var(--body);letter-spacing:.08em;text-transform:uppercase;color:#b9a07a;margin-top:6px}
+.row .tc{width:min(210px,44vw)}
+/* ---- Neu: Set-Logo als Bild statt eingefärbtem Symbol ---- */
+.tc-sym.lg{background:none;box-shadow:0 1cqw 1.6cqw rgba(0,0,0,.5);width:16cqw;height:16cqw;right:2.4cqw;top:2.4cqw}
+.tc-sym.lg i{display:none}
+.tc-sym.lg img{display:block;width:100%;height:100%}
+.tc.v-alt .tc-sym.lg{background:none;box-shadow:0 0 0 .5cqw #ff6fc0,0 0 2.4cqw rgba(255,111,192,.8)}
+/* ---- Rückseiten ---- */
+.backs{display:grid;grid-template-columns:repeat(5,minmax(0,170px));gap:16px;justify-content:center;padding:14px}
+@media (max-width:700px){.backs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.bk{position:relative;aspect-ratio:63/88;border-radius:8%;overflow:hidden;container-type:inline-size;box-shadow:0 10px 24px rgba(0,0,0,.6)}
+.bk-n{display:block;text-align:center;font:700 14px var(--display);color:#fff3dc;margin-top:6px}
+/* Variante A: Wappen */
+.bkA{background:radial-gradient(circle at 50% 42%,var(--c1),var(--c2) 72%)}
+.bkA::before{content:"";position:absolute;inset:0;background:var(--c3);opacity:.13;-webkit-mask:var(--sym) 0 0/22cqw 22cqw;mask:var(--sym) 0 0/22cqw 22cqw;-webkit-mask-repeat:repeat;mask-repeat:repeat;transform:rotate(-14deg) scale(1.5)}
+.bkA::after,.bkB::after{content:"";position:absolute;inset:3.2cqw;border-radius:6%;border:1.4cqw solid #d8ad52;box-shadow:inset 0 0 0 .8cqw rgba(0,0,0,.45),inset 0 0 0 1.6cqw #8a6421,0 0 0 .8cqw rgba(0,0,0,.4);pointer-events:none}
+.bkA .co{position:absolute;left:50%;top:42%;width:56cqw;transform:translate(-50%,-50%);filter:drop-shadow(0 2cqw 3cqw rgba(0,0,0,.6))}
+.bkA .co::before{content:"";position:absolute;inset:-14cqw;border-radius:50%;background:radial-gradient(circle,rgba(255,220,140,.35),transparent 62%);z-index:-1}
+.bk .wm{position:absolute;left:50%;bottom:9cqw;width:52cqw;transform:translateX(-50%);filter:drop-shadow(0 1cqw 1.4cqw rgba(0,0,0,.7))}
+/* Variante B: Szene aus dem Booster */
+.bkB{background:#000 var(--img) center/cover}
+.bkB::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,transparent 35%,rgba(0,0,0,.65) 100%),linear-gradient(transparent 62%,rgba(0,0,0,.7))}
+/* Öffnungs-Screen nachgestellt */
+.stage{margin:10px auto 0;max-width:720px;padding:22px 16px;border-radius:18px;background:radial-gradient(circle at 50% 30%,#3d2a52,#120a1c 75%)}
+.stage .backs{grid-template-columns:repeat(3,minmax(0,170px))}
+.seg{display:flex;justify-content:center;gap:8px;margin-top:10px}
+.seg button{appearance:none;padding:8px 14px;border-radius:12px;border:2px solid #b98a3e;background:#2a180c;color:#f3c873;font:800 14px var(--body);cursor:pointer}
+.seg button.on{background:linear-gradient(#f6d77e,#d9a23c);color:#3a2205}
+</style></head><body>
+<h1>Set-Logos und Welt-Rückseiten</h1>
+<p class="hint">Entwurf · Die Münzen sind aus den Gemini-Boostern ausgeschnitten.</p>
+
+<h2>1 · Set-Logo auf der Karte</h2>
+<div class="row" id="old"><div class="lab">Bisher</div></div>
+<div class="row" id="neu"><div class="lab">Neu · Booster-Münze</div></div>
+
+<h2>2 · Rückseite je Welt</h2>
+<p class="hint">A „Wappen“: Weltfarbe, Muster aus dem Weltsymbol, Münze in der Mitte. B „Szene“: das Motiv vom Booster, abgedunkelt.</p>
+<div class="lab">Variante A · Wappen</div><div class="backs" id="bA"></div>
+<div class="lab">Variante B · Szene</div><div class="backs" id="bB"></div>
+
+<h2>3 · So sähe das Öffnen aus</h2>
+<div class="seg"><button data-w="1" class="on">Grunddeck</button><button data-w="2">Keller</button><button data-w="3">Wald</button><button data-w="4">Strand</button><button data-w="5">Hohe See</button></div>
+<div class="seg"><button data-v="A" class="on">Wappen</button><button data-v="B">Szene</button></div>
+<div class="stage"><div class="backs" id="stg"></div></div>
+<div style="height:40px"></div>
+
+<script src="js/engine.js"></script><script src="js/story.js"></script><script src="js/cards.js"></script>
+<script>
+(() => {
+  const W = {1: {s: 'grund', c1: '#5a3a1c', c2: '#1b0f07', c3: '#ffcf6e'}, 2: {s: 'keller', c1: '#3c4652', c2: '#10141a', c3: '#c9d6e3'},
+    3: {s: 'wald', c1: '#2f5a2c', c2: '#0c1a0b', c3: '#b6f08a'}, 4: {s: 'strand', c1: '#1f8a90', c2: '#0b2e36', c3: '#ffe6a8'}, 5: {s: 'meer', c1: '#1c3f72', c2: '#060f22', c3: '#8fd0ff'}};
+  const pick = [['Wütender Gartenzwerg', ''], ['Spinne mit Strickzeug', 'foil'], ['Eichhörnchen-Inkasso', 'full'], ['Möwen-Bande', 'foil'], ['Tintenfisch-Taschendieb', '']];
+  const pool = Object.fromEntries(cardPool().map(p => [p.tpl.n, p.tpl]));
+  const html = (n, v) => tcHTML(pool[n], v);
+  const old = document.getElementById('old'), neu = document.getElementById('neu');
+  pick.forEach(([n, v]) => {
+    old.insertAdjacentHTML('beforeend', html(n, v));
+    const s = W[pool[n].w || 1].s;
+    neu.insertAdjacentHTML('beforeend', html(n, v).replace(/<div class="tc-coin tc-sym"([^>]*)><i[^>]*><\/i><\/div>/, `<div class="tc-coin tc-sym lg"$1><img src="icons/welt-${s}.webp" alt=""></div>`));
+  });
+  const back = (w, v) => { const d = W[w];
+    return v === 'A'
+      ? `<div class="bk bkA" style="--c1:${d.c1};--c2:${d.c2};--c3:${d.c3};--sym:url(icons/deck-${d.s}.png)"><img class="co" src="icons/welt-${d.s}.webp" alt=""><img class="wm" src="art/logo-klein.webp" alt=""></div>`
+      : `<div class="bk bkB" style="--img:url(art/rueck-${d.s}.webp)"><img class="wm" src="art/logo-klein.webp" alt=""></div>`; };
+  for (const w in W) {
+    document.getElementById('bA').insertAdjacentHTML('beforeend', `<div>${back(w, 'A')}<span class="bk-n">${TC_WORLD[w].n}</span></div>`);
+    document.getElementById('bB').insertAdjacentHTML('beforeend', `<div>${back(w, 'B')}<span class="bk-n">${TC_WORLD[w].n}</span></div>`);
+  }
+  let sw = 1, sv = 'A';
+  const stg = () => { document.getElementById('stg').innerHTML = [0, 1, 2].map(() => back(sw, sv)).join(''); };
+  document.querySelectorAll('[data-w]').forEach(b => b.onclick = () => { sw = +b.dataset.w; document.querySelectorAll('[data-w]').forEach(x => x.classList.toggle('on', x === b)); stg(); });
+  document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { sv = b.dataset.v; document.querySelectorAll('[data-v]').forEach(x => x.classList.toggle('on', x === b)); stg(); });
+  stg();
+})();
+</script>
+</body></html>
